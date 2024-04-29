@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+    }
+}
+
+dependencies {
+    // Add any dependencies your project might have
+}
+
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'X.X'
+        )
+    }
+
+    from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
