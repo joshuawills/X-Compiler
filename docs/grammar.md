@@ -3,14 +3,14 @@
 $$
 \begin{align}
 \textit{program} &\to (\textit{function }|\textit{ global-var})^*  \\ \\
-\textit{global-var} &\to \textit{decl} \textit{ assign-expr}?  \text{ ";"}\\
-\textit{local-var} &\to \textit{decl} \textit{ assign-expr}?  \text{ ";"}\\
+\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})?  \text{ ";"}\\
+\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})?  \text{ ";"}\\
 \textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{type} \textit{ compound-stmt}\\ \\
 
 \text{compound-stmt} &\to \text{"\\\{" } (\textit{stmt } | \textit{ local-var})^* \text{ "\\\}"}  \\
 \text{stmt} &\to 
 \begin{cases}
-\textit{compount-stmt} \\
+\textit{compound-stmt} \\
 \textit{if-stmt} \\
 \textit{for-stmt} \\
 \textit{while-stmt} \\
@@ -27,8 +27,6 @@ $$
 \textit{return-stmt} &\to \textbf{return} \textit{ expr}? \text{ ";"} \\
 \textit{decl-stmt} &\to  \textit{ident} \text{ "="} \textit{expr} \text{ ";"} \\ \\
 
-
-\textit{assign-expr} &\to \text{"=}" \textit{ expr}\\
 \textit{expr} &\to \textit{or-expr}\\
 \textit{or-expr} &\to \textit{and-expr } (\text{"||" } \textit{and-expr})^* \\
 \textit{and-expr} &\to \textit{equality-expr } (\text{"\\\&\\\&" } \textit{equality-expr})^* \\
