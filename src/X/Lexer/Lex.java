@@ -3,7 +3,7 @@ package X.Lexer;
 import java.util.ArrayList;
 
 public class Lex {
-    
+
     private final File file;
 
     private int line = 1;
@@ -34,8 +34,8 @@ public class Lex {
     }
 
     private boolean isWhiteSpace() {
-        return currChar == ' ' || currChar == '\n' || currChar == '\t' || 
-            currChar == '\f' || currChar == '\r';
+        return currChar == ' ' || currChar == '\n' || currChar == '\t' ||
+                currChar == '\f' || currChar == '\r';
     }
 
     private boolean isComment() {
@@ -68,7 +68,8 @@ public class Lex {
                 }
                 accept();
             }
-            accept(); accept();
+            accept();
+            accept();
         }
         loopWhiteSpace();
         if (isComment()) {
@@ -100,7 +101,7 @@ public class Lex {
 
     private TokenType nextToken() {
         return switch (currChar) {
-           case '(' -> {
+            case '(' -> {
                 acceptWithSpelling();
                 yield TokenType.OPEN_PAREN;
             }
@@ -194,7 +195,7 @@ public class Lex {
                 } else {
                     yield TokenType.PLUS;
                 }
-            }  
+            }
             case '-' -> {
                 acceptWithSpelling();
                 if (currChar == '=') {
@@ -206,7 +207,7 @@ public class Lex {
                 } else {
                     yield TokenType.DASH;
                 }
-            }   
+            }
             case '*' -> {
                 acceptWithSpelling();
                 if (currChar == '=') {
@@ -215,7 +216,7 @@ public class Lex {
                 } else {
                     yield TokenType.STAR;
                 }
-            }  
+            }
             case '/' -> {
                 acceptWithSpelling();
                 if (currChar == '=') {
@@ -224,14 +225,14 @@ public class Lex {
                 } else {
                     yield TokenType.DASH;
                 }
-            }   
+            }
             case '\u0000' -> TokenType.EOF;
             default -> handleOther();
         };
     }
-   
+
     private TokenType handleOther() {
-    
+
         if (currChar == '"') {
             accept();
             while (currChar != '"') {
@@ -268,8 +269,8 @@ public class Lex {
                 case "fn" -> TokenType.FN;
                 case "int", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
-                case "else" -> TokenType.ELSE; 
-                case "else if" -> TokenType.ELIF; 
+                case "else" -> TokenType.ELSE;
+                case "else if" -> TokenType.ELIF;
                 case "while" -> TokenType.WHILE;
                 case "for" -> TokenType.FOR;
                 case "continue" -> TokenType.CONTINUE;
@@ -277,8 +278,7 @@ public class Lex {
                 case "do" -> TokenType.DO;
                 case "out" -> TokenType.OUT;
                 case "in" -> TokenType.IN;
-                case "true" -> TokenType.TRUE;
-                case "false" -> TokenType.FALSE;
+                case "true", "false" -> TokenType.BOOL_LIT;
                 case "mut" -> TokenType.MUT;
                 default -> TokenType.IDENT;
             };
@@ -302,14 +302,14 @@ public class Lex {
     }
 
     private boolean nextCharElIf() {
-        return file.inspectChar(1) == ' ' && file.inspectChar(2) == 'i' 
-            && file.inspectChar(3) == 'f';
+        return file.inspectChar(1) == ' ' && file.inspectChar(2) == 'i'
+                && file.inspectChar(3) == 'f';
     }
 
     private boolean isValidEscape() {
         char nextChar = file.inspectChar(1);
-        return nextChar == '\\' || nextChar == 'n' || nextChar == 'b' || nextChar == 'f' || 
-            nextChar == 'r' || nextChar == 't' || nextChar == '\'' || nextChar == '"'; 
+        return nextChar == '\\' || nextChar == 'n' || nextChar == 'b' || nextChar == 'f' ||
+                nextChar == 'r' || nextChar == 't' || nextChar == '\'' || nextChar == '"';
     }
 
     private void acceptEscape() {
@@ -343,8 +343,8 @@ public class Lex {
     }
 
     private boolean isLetter() {
-        return (currChar <= 'z' && currChar >= 'a') || 
-            (currChar <= 'Z' && currChar >= 'A') || currChar == '_';
+        return (currChar <= 'z' && currChar >= 'a') ||
+                (currChar <= 'Z' && currChar >= 'A') || currChar == '_';
     }
 
     private boolean isDigit() {

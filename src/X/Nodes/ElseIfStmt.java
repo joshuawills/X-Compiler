@@ -10,7 +10,7 @@ public class ElseIfStmt extends Stmt {
 
     public Stmt S2; // Potential chaining else if, or empty stmt
 
-    public ElseIfStmt(Expr eAST, Stmt s1AST, Stmt s2AST, Stmt s3AST, Position pos) {
+    public ElseIfStmt(Expr eAST, Stmt s1AST, Stmt s2AST, Position pos) {
         super(pos);
         E = eAST;
         S1 = s1AST;

@@ -4,7 +4,7 @@ import X.Lexer.Position;
 
 public class StmtList extends List {
 
-    public Object S; // can be a stmt or a LocalVar
+    public Stmt S;
     public List SL;
 
     public StmtList(Stmt sAST, List slAST, Position pos) {

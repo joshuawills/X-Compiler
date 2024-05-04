@@ -24,7 +24,7 @@ dependencies {
 jar {
     manifest {
         attributes(
-            'Main-Class': 'X.X'
+                'Main-Class': 'X.X'
         )
     }
 

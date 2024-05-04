@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.LineNumberReader;
 
 public class File {
-    
+
     public static char EOF = '\u0000';
     private LineNumberReader fileReader;
 

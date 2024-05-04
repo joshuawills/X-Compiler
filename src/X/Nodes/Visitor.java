@@ -1,7 +1,7 @@
 package X.Nodes;
 
 public interface Visitor {
-    
+
     Object visitProgram(Program ast, Object o);
 
     Object visitIdent(Ident ast, Object o);
@@ -46,4 +46,49 @@ public interface Visitor {
 
     Object visitEmptyStmtList(EmptyStmtList ast, Object o);
 
+    Object visitBooleanExpr(BooleanExpr ast, Object o);
+
+    Object visitBooleanLiteral(BooleanLiteral ast, Object o);
+
+    Object visitBooleanType(BooleanType ast, Object o);
+
+    Object visitVoidType(VoidType ast, Object o);
+
+    Object visitErrorType(ErrorType ast, Object o);
+
+    Object visitIntExpr(IntExpr ast, Object o);
+
+    Object visitIntLiteral(IntLiteral ast, Object o);
+
+    Object visitIntType(IntType ast, Object o);
+
+    Object visitArgList(Args ast, Object o);
+
+    Object visitParaList(ParaList ast, Object o);
+
+    Object visitStringExpr(StringExpr ast, Object o);
+
+    Object visitStringLiteral(StringLiteral ast, Object o);
+
+    Object visitStringType(StringType ast, Object o);
+
+    Object visitEmptyParaList(EmptyParaList ast, Object o);
+
+    Object visitParaDecl(ParaDecl ast, Object o);
+
+    Object visitEmptyCompStmt(EmptyCompStmt ast, Object o);
+
+    Object visitEmptyDeclList(EmptyDeclList ast, Object o);
+
+    Object visitVarExpr(VarExpr ast, Object o);
+
+    Object visitSimpleVar(SimpleVar ast, Object o);
+
+    Object visitCallExpr(CallExpr ast, Object o);
+
+    Object visitArgList(ArgList ast, Object o);
+
+    Object visitEmptyArgList(EmptyArgList ast, Object o);
+
+    Object visitLocalVarStmt(LocalVarStmt ast, Object o);
 }

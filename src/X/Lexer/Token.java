@@ -1,11 +1,11 @@
 package X.Lexer;
 
 public class Token {
-    
+
     public TokenType kind;
     public String lexeme;
     public Position pos;
-    
+
     public Token(TokenType kind, String lexeme, Position pos) {
         this.kind = kind;
         this.lexeme = lexeme;

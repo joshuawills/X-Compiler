@@ -2,7 +2,7 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-public class DeclStmt extends Stmt{
+public class DeclStmt extends Stmt {
 
     public Ident I;
     public Expr E;

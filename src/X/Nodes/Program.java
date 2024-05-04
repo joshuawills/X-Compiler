@@ -3,7 +3,7 @@ package X.Nodes;
 import X.Lexer.Position;
 
 public class Program extends AST {
-    
+
     public List PL;
 
     public Program(List PL, Position pos) {

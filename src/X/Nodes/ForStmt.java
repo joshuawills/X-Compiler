@@ -18,6 +18,7 @@ public class ForStmt extends Stmt {
         S = sAST;
         E1.parent = E2.parent = E3.parent = S.parent = this;
     }
+
     public Object visit(Visitor v, Object o) {
         return v.visitForStmt(this, o);
     }

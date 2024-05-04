@@ -6,8 +6,8 @@ public class GlobalVar extends Decl {
 
     public Expr E; // should only be assign or empty
 
-    public GlobalVar(Type tAST, Ident iAST, Expr eAST, Position pos) {
-        super(pos);
+    public GlobalVar(Type tAST, Ident iAST, Expr eAST, Position pos, boolean isMut) {
+        super(pos, isMut);
         T = tAST;
         I = iAST;
         E = eAST;

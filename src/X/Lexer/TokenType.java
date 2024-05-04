@@ -44,7 +44,7 @@ public enum TokenType {
     LOOP,
     FOR,
     FN,
-    ARROW, 
+    ARROW,
     COMMA,
     PERCENT,
     BITWISE_OR,
@@ -57,6 +57,5 @@ public enum TokenType {
     LEFT_SQUARE,
     RIGHT_SQUARE,
     DOLLAR,
-    TRUE,
-    FALSE
+    BOOL_LIT
 }
