@@ -19,6 +19,7 @@ $$
 \textit{continue-stmt} \\
 \textit{return-stmt} \\
 \textit{decl-stmt} \\
+\textit{func-call-stmt} \\
 \end{cases} \\
 \textit{if-stmt} &\to \textbf{if} \textit{ expr stmt } (\textbf{else if } \textit{expr stmt})^* (\textbf{else} \textit{
 stmt})? \\
@@ -27,7 +28,8 @@ stmt})? \\
 \textit{break-stmt} &\to \textbf{break} \text{ ";"} \\
 \textit{continue-stmt} &\to \textbf{continue } \text{ ";"} \\
 \textit{return-stmt} &\to \textbf{return} \textit{ expr}? \text{ ";"} \\
-\textit{decl-stmt} &\to \textit{ident} \text{ "="} \textit{expr} \text{ ";"} \\ \\
+\textit{decl-stmt} &\to \textit{ident} \text{ "="} \textit{expr} \text{ ";"} \\
+\textit{func-call-stmt} &\to \textit{func-call} \text{ ";"} \\ \\
 
 \textit{expr} &\to \textit{or-expr}\\
 \textit{or-expr} &\to \textit{and-expr } (\text{"||" } \textit{and-expr})^* \\

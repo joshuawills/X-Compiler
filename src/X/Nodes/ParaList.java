@@ -11,6 +11,7 @@ public class ParaList extends List {
         super(pos);
         P = pAST;
         PL = plAST;
+        P.parent = this;
     }
 
     public Object visit(Visitor v, Object o) {

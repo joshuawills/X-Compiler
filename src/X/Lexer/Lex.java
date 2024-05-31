@@ -265,7 +265,7 @@ public class Lex {
             }
             handleElseIf();
             return switch (spelling.toString()) {
-                case "ret" -> TokenType.RETURN;
+                case "return" -> TokenType.RETURN;
                 case "fn" -> TokenType.FN;
                 case "int", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
@@ -276,8 +276,6 @@ public class Lex {
                 case "continue" -> TokenType.CONTINUE;
                 case "break" -> TokenType.BREAK;
                 case "do" -> TokenType.DO;
-                case "out" -> TokenType.OUT;
-                case "in" -> TokenType.IN;
                 case "true", "false" -> TokenType.BOOL_LIT;
                 case "mut" -> TokenType.MUT;
                 default -> TokenType.IDENT;
@@ -348,7 +346,7 @@ public class Lex {
     }
 
     private boolean isDigit() {
-        return (currChar <= '9' && currChar >= '0');
+        return currChar <= '9' && currChar >= '0';
     }
 
 }

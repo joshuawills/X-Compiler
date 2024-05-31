@@ -27,8 +27,9 @@ public class Parser {
     void syntacticError(String messageTemplate, String tokenQuoted) throws SyntaxError {
         Position pos = currentToken.pos;
         handler.reportError(messageTemplate, tokenQuoted, pos);
-        throw(new SyntaxError());
+        throw (new SyntaxError());
     }
+
     private void accept() {
         previousPosition = currentToken.pos;
         currentToken = tokenStream.get(tokenIndex);
@@ -41,8 +42,8 @@ public class Parser {
     }
 
     void finish(Position pos) {
-        pos.lineStart = currentToken.pos.lineStart;
-        pos.charStart = currentToken.pos.charStart;
+        pos.lineFinish = currentToken.pos.lineStart;
+        pos.charFinish = currentToken.pos.charStart;
     }
 
     private void match(TokenType typeExpected) throws SyntaxError {
@@ -74,7 +75,7 @@ public class Parser {
                 syntacticError("\"%\" unknown type", currentToken.lexeme);
             }
             return programAST;
-        } catch(SyntaxError s) {
+        } catch (SyntaxError s) {
             return null;
         }
     }
@@ -108,7 +109,7 @@ public class Parser {
             Type tAST = parseType();
             Ident iAST = parseIdent();
             Expr eAST;
-            if (tryConsume(TokenType.EQUAL)) {
+            if (tryConsume(TokenType.ASSIGN)) {
                 eAST = parseExpr();
             } else {
                 finish(pos);
@@ -183,10 +184,33 @@ public class Parser {
             case WHILE -> parseWhileStmt();
             case BREAK -> parseBreakStmt();
             case CONTINUE -> parseContinueStmt();
-            case RETURN ->  parseReturnStmt();
-            case IDENT-> parseDeclStmt();
+            case RETURN -> parseReturnStmt();
+            case IDENT -> parseDeclOrFuncCallStmt(); // this could also be a func call
             default -> parseLocalVarStmt();
         };
+    }
+
+    private Stmt parseDeclOrFuncCallStmt() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Ident iAST= parseIdent();
+        if (tryConsume(TokenType.OPEN_PAREN)) {
+            // Func call
+            List aLIST;
+            if (tryConsume(TokenType.CLOSE_PAREN)) {
+                finish(pos);
+                aLIST = new EmptyArgList(pos);
+            } else {
+                aLIST = parseArgList();
+                match(TokenType.CLOSE_PAREN);
+            }
+            finish(pos);
+            match(TokenType.SEMI);
+            CallExpr E = new CallExpr(iAST, aLIST, pos);
+            return new CallStmt(E, pos);
+        }
+
+        return parseDeclStmt(iAST);
     }
 
     private LocalVarStmt parseLocalVarStmt() throws SyntaxError {
@@ -194,17 +218,16 @@ public class Parser {
         return new LocalVarStmt(vAST, vAST.pos);
     }
 
-    private DeclStmt parseDeclStmt() throws SyntaxError {
+    private DeclStmt parseDeclStmt(Ident iAST) throws SyntaxError {
         Position pos = new Position();
         start(pos);
-        Ident idAST = parseIdent();
         Expr eAST = new EmptyExpr(pos);
         if (tryConsume(TokenType.ASSIGN)) {
             eAST = parseExpr();
         }
         match(TokenType.SEMI);
         finish(pos);
-        return new DeclStmt(idAST, eAST, pos);
+        return new DeclStmt(iAST, eAST, pos);
     }
 
     private IfStmt parseIfStmt() throws SyntaxError {
@@ -319,6 +342,7 @@ public class Parser {
         if (currentToken.kind != TokenType.SEMI) {
             eAST = parseExpr();
         }
+        match(TokenType.SEMI);
         finish(pos);
         return new ReturnStmt(eAST, pos);
     }
@@ -456,7 +480,7 @@ public class Parser {
         start(pos);
         Expr e1AST = parseAdditiveExpr();
         while (currentToken.kind == TokenType.LESS_THAN || currentToken.kind == TokenType.LESS_EQ
-            || currentToken.kind == TokenType.GREATER_THAN || currentToken.kind == TokenType.GREATER_EQ) {
+                || currentToken.kind == TokenType.GREATER_THAN || currentToken.kind == TokenType.GREATER_EQ) {
             Operator opAST = acceptOperator();
             Expr e2AST = parseAdditiveExpr();
             finish(pos);
@@ -521,7 +545,7 @@ public class Parser {
                     yield new VarExpr(simVAST, pos);
                 }
             }
-            case OPEN_PAREN ->  {
+            case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);
                 Expr exprAST = parseExpr();
                 match(TokenType.CLOSE_PAREN);
@@ -595,13 +619,13 @@ public class Parser {
 
         if (currentToken.kind == TokenType.CLOSE_PAREN) {
             finish(pos);
-            return new ArgList(e1AST, new EmptyArgList(pos), pos);
+            return new Args(e1AST, new EmptyArgList(pos), pos);
         }
 
         match(TokenType.COMMA);
         List alAST = parseArgList();
         finish(pos);
-        return new ArgList(e1AST, alAST, pos);
+        return new Args(e1AST, alAST, pos);
     }
 
     private Operator acceptOperator() {

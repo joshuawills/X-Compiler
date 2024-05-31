@@ -9,6 +9,7 @@ public class LocalVarStmt extends Stmt {
     public LocalVarStmt(LocalVar vAST, Position pos) {
         super(pos);
         V = vAST;
+        V.parent = this;
     }
 
     @Override

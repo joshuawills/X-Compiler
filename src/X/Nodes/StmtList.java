@@ -11,6 +11,7 @@ public class StmtList extends List {
         super(pos);
         S = sAST;
         SL = slAST;
+        S.parent = this;
     }
 
     public Object visit(Visitor v, Object o) {

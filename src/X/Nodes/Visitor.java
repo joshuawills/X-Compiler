@@ -86,9 +86,10 @@ public interface Visitor {
 
     Object visitCallExpr(CallExpr ast, Object o);
 
-    Object visitArgList(ArgList ast, Object o);
 
     Object visitEmptyArgList(EmptyArgList ast, Object o);
 
     Object visitLocalVarStmt(LocalVarStmt ast, Object o);
+
+    Object visitCallStmt(CallStmt ast, Object o);
 }

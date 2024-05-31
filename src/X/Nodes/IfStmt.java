@@ -18,7 +18,7 @@ public class IfStmt extends Stmt {
         S1 = s1AST;
         S2 = s2AST;
         S3 = s3AST;
-        E.parent = S1.parent = S2.parent = this;
+        E.parent = S1.parent = S2.parent = S3.parent = this;
     }
 
     public Object visit(Visitor v, Object o) {

@@ -8,7 +8,7 @@ public class StringType extends Type {
         super(pos);
     }
 
-    public Object visit (Visitor v, Object o) {
+    public Object visit(Visitor v, Object o) {
         return v.visitStringType(this, o);
     }
 

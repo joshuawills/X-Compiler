@@ -31,8 +31,6 @@ public enum TokenType {
     ELIF,
     ELSE,
     WHILE,
-    OUT,
-    IN,
     PLUS_EQUAL,
     DASH_EQUAL,
     STAR_EQUAL,
