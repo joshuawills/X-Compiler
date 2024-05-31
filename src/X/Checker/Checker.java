@@ -332,7 +332,8 @@ public class Checker implements Visitor {
                 ast.type = Environment.booleanType;
             }
             case "+", "-", "/", "*" -> {
-                if (!t1.isInt() || t2.isInt()) {
+                if (!t1.isInt() || !t2.isInt()) {
+                    System.out.println("HAHA");
                     handler.reportError(errors[7], "", t1.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -454,7 +455,9 @@ public class Checker implements Visitor {
         }
 
         Type expectedType = ((ParaList) PL).P.T;
-        if (expectedType.isVoid() || !expectedType.assignable(realType)) {
+        if (((Function) ((ParaList) PL).parent).I.spelling.equals("out")) {
+            ;
+        } else if (expectedType.isVoid() || !expectedType.assignable(realType)) {
             handler.reportError(errors[18], "", ast.E.pos);
         }
 

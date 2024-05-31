@@ -8,7 +8,9 @@ import X.Nodes.AST;
 import X.Parser.Parser;
 import X.Parser.SyntaxError;
 import X.TreeDrawer.Drawer;
+import X.TreePrinter.Printer;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -23,6 +25,7 @@ public class X {
         System.out.println("\t-o | --out => Specify the name of the executable (default to a.out)");
         System.out.println("\t-t | --tokens => Logs to stdout a summary of all the tokens");                // HANDLED
         System.out.println("\t-p | --parser => Generates a graphic parse tree");                            // HANDLED
+        System.out.println("\t-pr | --parser_raw => Generates a deconstructed parse tree");                 // HANDLED
         System.out.println("\t-a | --assembly => Generates a .s file instead of an executable");
         System.out.println("\t-q | --quiet  => Silence any non-crucial warnings");
         System.out.println("\nDeveloped by Joshua Wills 2024");
@@ -35,6 +38,9 @@ public class X {
             switch (args[i]) {
                 case "-h", "--help" -> {
                     CLArgs.put("help", "true");
+                }
+                case "-pr", "--parser_raw" -> {
+                    CLArgs.put("parser_raw", "true");
                 }
                 case "-r", "--run" -> {
                     CLArgs.put("run", "true");
@@ -73,12 +79,13 @@ public class X {
             System.exit(1);
         }
 
-        String file_name = args[0];
 
         HashMap<String, String> clARGS = X.handleArgs(args);
         if (clARGS.containsKey("help")) {
             X.help();
         }
+
+        String file_name = clARGS.get("source");
 
         ErrorHandler handler = new ErrorHandler();
         File file = new File(file_name);
@@ -101,18 +108,21 @@ public class X {
             System.exit(1);
         }
 
+        if (handler.numErrors == 0 && clARGS.containsKey("parser_raw")) {
+            Printer printer = new Printer("tests/.tree");
+            printer.print(ast);
+        }
+
         if (handler.numErrors == 0 && clARGS.containsKey("parse")) {
             Drawer drawer = new Drawer();
             drawer.draw(ast);
-            System.exit(0);
-        }
-
-        Checker checker = new Checker(handler);
-        try {
-            checker.check(ast);
-        } catch (Exception s) {
-            System.exit(1);
+        } else {
+            Checker checker = new Checker(handler);
+            try {
+                checker.check(ast);
+            } catch (Exception s) {
+                System.exit(1);
+            }
         }
     }
-
 }

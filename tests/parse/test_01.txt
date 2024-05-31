@@ -1,0 +1,13 @@
+Program
+  DeclList
+    Function
+      int
+      main
+      EmpyParaList
+      CompoundStmt
+        StmtList
+          ReturnStmt
+            IntExpr
+              0
+          EmptyStmtList
+    EmptyDeclList
