@@ -6,7 +6,7 @@ public class Frame {
 
     private final boolean isMain;
     private int label;
-    private int localVarIndex;
+    public int localVarIndex;
     public int currentStack;
     public int maxStack;
     public Stack<String> conStack;
@@ -16,7 +16,8 @@ public class Frame {
 
     public Frame(boolean isMain) {
         this.isMain = isMain;
-        label = localVarIndex = currentStack = maxStack = 0;
+        label = currentStack = maxStack = 0;
+        localVarIndex = 1;
         conStack = new Stack<>();
         brkStack = new Stack<>();
         scopeStart = new Stack<>();

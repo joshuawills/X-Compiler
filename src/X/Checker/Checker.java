@@ -331,13 +331,11 @@ public class Checker implements Visitor {
                     ast.type = Environment.errorType;
                 } else {
                     ast.type = Environment.booleanType;
-                    ast.O.spelling = "i" + ast.O.spelling;
                 }
             }
             case "==", "!=" -> {
                 if (t1.isBoolean() && t2.isBoolean()) {
                     ast.type = Environment.booleanType;
-                    ast.O.spelling = "i" + ast.O.spelling;
                     break;
                 }
                 boolean v1 = t1.isInt() || t1.isError();
@@ -350,7 +348,6 @@ public class Checker implements Visitor {
                 if (t1.isError() || t2.isError()) {
                     break;
                 }
-                ast.O.spelling = "i" +  ast.O.spelling;
                 ast.type = Environment.booleanType;
             }
             case "<", "<=", ">", ">=" -> {
@@ -364,7 +361,6 @@ public class Checker implements Visitor {
                 if (t1.isError() || t2.isError()) {
                     break;
                 }
-                ast.O.spelling = "i" +  ast.O.spelling;
                 ast.type = Environment.booleanType;
             }
             case "+", "-", "/", "*" -> {
@@ -393,7 +389,6 @@ public class Checker implements Visitor {
                     break;
                 }
                 ast.type = eT;
-                ast.O.spelling = "i" + ast.O.spelling;
             }
             case "!" -> {
                 if (eT.isError()) {
@@ -405,7 +400,6 @@ public class Checker implements Visitor {
                     break;
                 }
                 ast.type = eT;
-                ast.O.spelling = "i" + ast.O.spelling;
             }
         }
         return ast.type;
@@ -567,6 +561,7 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
+        ast.I.decl = decl;
         return decl.T;
     }
 

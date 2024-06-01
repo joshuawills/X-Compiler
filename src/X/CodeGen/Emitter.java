@@ -3,6 +3,8 @@ package X.CodeGen;
 import X.ErrorHandler;
 import X.Nodes.*;
 
+import java.sql.SQLOutput;
+
 public class Emitter implements Visitor {
 
     private ErrorHandler handler;
@@ -36,12 +38,18 @@ public class Emitter implements Visitor {
 
     public Object visitFunction(Function ast, Object o) {
 
+        Frame f = new Frame(ast.I.spelling.equals("main"));
         emit("define ");
-        ast.T.visit(this, o);
+        ast.T.visit(this, f);
         emit(" @" + ast.I.spelling);
-        ast.PL.visit(this, o);
+        ast.PL.visit(this, f);
         emitN(" {");
-        ast.S.visit(this, o);
+        ast.S.visit(this, f);
+
+        if (ast.I.spelling.equals("main")) {
+           emitN("\tret i32 0");
+        }
+
         emitN("}");
         return null;
     }
@@ -49,16 +57,31 @@ public class Emitter implements Visitor {
     public Object visitGlobalVar(GlobalVar ast, Object o) {
         emit("@" + ast.I.spelling + "= external global ");
         ast.T.visit(this, o);
+        // This won't work, need to reconsider - o needs to be a frame
         ast.E.visit(this, o);
         emitN("");
         return null;
     }
 
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {
+        ast.SL.visit(this, o);
         return null;
     }
 
     public Object visitLocalVar(LocalVar ast, Object o) {
+
+        Frame f = (Frame) o;
+        emit("\t%" + ast.I.spelling + " = alloca ");
+        ast.T.visit(this, o);
+        emitN("");
+        ast.E.visit(this, f);
+
+        emit("\tstore ");
+        ast.T.visit(this, o);
+        int value = f.localVarIndex - 1;
+        emit(" %" + value + ", ");
+        ast.T.visit(this, o);
+        emitN("* %" + ast.I.spelling);
         return null;
     }
 
@@ -87,6 +110,13 @@ public class Emitter implements Visitor {
     }
 
     public Object visitReturnStmt(ReturnStmt ast, Object o) {
+        Frame f = (Frame) o;
+        ast.E.visit(this, o);
+        emit("\tret ");
+        if (ast.E.type instanceof IntType) {
+            int index = f.localVarIndex - 1;
+            emitN("i32 %" + index);
+        }
         return null;
     }
 
@@ -95,14 +125,68 @@ public class Emitter implements Visitor {
     }
 
     public Object visitOperator(Operator ast, Object o) {
+        Frame f = (Frame) o;
+
+        switch (ast.spelling) {
+            case "+" -> {
+                if (ast.parent instanceof BinaryExpr parent) {
+                    int numOne = parent.E1.tempIndex;
+                    int numTwo = parent.E2.tempIndex;
+                    int newNum = f.getNewIndex();
+                    parent.tempIndex = newNum;
+                    emitN("\t%" + newNum + " = add i32 %" + numOne + ", %" + numTwo);
+                }
+            }
+            case "-" -> {
+                if (ast.parent instanceof BinaryExpr parent) {
+                    int numOne = parent.E1.tempIndex;
+                    int numTwo = parent.E2.tempIndex;
+                    int newNum = f.getNewIndex();
+                    parent.tempIndex = newNum;
+                    emitN("\t%" + newNum + " = sub i32 %" + numOne + ", %" + numTwo);
+                } else if (ast.parent instanceof UnaryExpr parent) {
+                    int numOne = parent.E.tempIndex;
+                    int newNum = f.getNewIndex();
+                    parent.tempIndex = newNum;
+                    emitN("\t%" + newNum + " = sub i32 0, %" + numOne);
+                }
+            }
+            case "*" -> {
+                if (ast.parent instanceof BinaryExpr parent) {
+                    int numOne = parent.E1.tempIndex;
+                    int numTwo = parent.E2.tempIndex;
+                    int newNum = f.getNewIndex();
+                    parent.tempIndex = newNum;
+                    emitN("\t%" + newNum + " = mul i32 %" + numOne + ", %" + numTwo);
+                }
+            }
+            case "/" -> {
+                if (ast.parent instanceof BinaryExpr parent) {
+                    int numOne = parent.E1.tempIndex;
+                    int numTwo = parent.E2.tempIndex;
+                    int newNum = f.getNewIndex();
+                    parent.tempIndex = newNum;
+                    emitN("\t%" + newNum + " = udiv i32 %" + numOne + ", %" + numTwo);
+                }
+            }
+            default -> {
+                System.out.println("OPERATOR NOT IMPLEMENTED");
+                System.exit(1);
+            }
+        }
         return null;
     }
 
     public Object visitBinaryExpr(BinaryExpr ast, Object o) {
+        ast.E1.visit(this, o);
+        ast.E2.visit(this, o);
+        ast.O.visit(this, o);
         return null;
     }
 
     public Object visitUnaryExpr(UnaryExpr ast, Object o) {
+        ast.E.visit(this, o);
+        ast.O.visit(this, o);
         return null;
     }
 
@@ -119,6 +203,15 @@ public class Emitter implements Visitor {
     }
 
     public Object visitStmtList(StmtList ast, Object o) {
+        List SL = ast;
+        while (true) {
+            ((StmtList) SL).S.visit(this, o);
+            if (((StmtList) SL).SL instanceof EmptyStmtList) {
+                break;
+            } else {
+                SL = ((StmtList) SL).SL;
+            }
+        }
         return null;
     }
 
@@ -149,6 +242,11 @@ public class Emitter implements Visitor {
     }
 
     public Object visitIntExpr(IntExpr ast, Object o) {
+        Frame f = (Frame) o;
+        String value = ast.IL.spelling;
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = add i32 0, " + value);
+        ast.tempIndex = num;
         return null;
     }
 
@@ -213,12 +311,25 @@ public class Emitter implements Visitor {
     }
 
     public Object visitVarExpr(VarExpr ast, Object o) {
+        ast.V.visit(this, o);
+        ast.tempIndex = ((Frame) o).localVarIndex - 1;
         return null;
     }
 
+    // TODO: Handle global vars
     public Object visitSimpleVar(SimpleVar ast, Object o) {
+        Frame f = (Frame) o;
+        AST d = ast.I.decl;
+        if (d instanceof LocalVar) {
+            int newIndex = f.getNewIndex();
+            emit("\t%" + newIndex + " = load ");
+            ((LocalVar) d).T.visit(this, o);
+            emit(", ");
+            ((LocalVar) d).T.visit(this, o);
+            emitN("* %" + ast.I.spelling);
+        }
         return null;
-    }
+   }
 
     public Object visitCallExpr(CallExpr ast, Object o) {
         return null;
@@ -229,6 +340,7 @@ public class Emitter implements Visitor {
     }
 
     public Object visitLocalVarStmt(LocalVarStmt ast, Object o) {
+        ast.V.visit(this, o);
         return null;
     }
 
