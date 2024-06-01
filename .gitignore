@@ -1,3 +1,4 @@
+a.out
 *.ll
 *.s
 .idea/
@@ -8,4 +9,4 @@ bin/
 .vscode/
 gradlew
 gradlew.bat
-*.x
+test.x

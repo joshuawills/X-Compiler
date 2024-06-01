@@ -11,8 +11,6 @@ import X.Parser.SyntaxError;
 import X.TreeDrawer.Drawer;
 import X.TreePrinter.Printer;
 
-import java.awt.*;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -38,37 +36,20 @@ public class X {
         HashMap<String, String> CLArgs = new HashMap<>();
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
-                case "-h", "--help" -> {
-                    CLArgs.put("help", "true");
-                }
-                case "-pr", "--parser_raw" -> {
-                    CLArgs.put("parser_raw", "true");
-                }
-                case "-r", "--run" -> {
-                    CLArgs.put("run", "true");
-                }
+                case "-h", "--help" -> CLArgs.put("help", "true");
+                case "-pr", "--parser_raw" -> CLArgs.put("parser_raw", "true");
+                case "-r", "--run" -> CLArgs.put("run", "true");
+                case "-t", "--tokens" -> CLArgs.put("tokens", "true");
+                case "-p", "--parser" -> CLArgs.put("parse", "true");
+                case "-a", "--assembly" -> CLArgs.put("asm", "true");
+                case "-q", "--quiet" -> CLArgs.put("quiet", "true");
                 case "-o", "--out" -> {
                     if (i + 1 == args.length)
                         break;
                     CLArgs.put("exe", args[i + 1]);
                     i += 1;
                 }
-                case "-t", "--tokens" -> {
-                    CLArgs.put("tokens", "true");
-                }
-                case "-p", "--parser" -> {
-                    CLArgs.put("parse", "true");
-                }
-                case "-a", "--assembly" -> {
-                    CLArgs.put("asm", "true");
-                }
-                case "-q", "--quiet" -> {
-                    CLArgs.put("quiet", "true");
-                }
-                default -> {
-                    // Assume source filename is provided
-                    CLArgs.put("source", args[i]);
-                }
+                default -> CLArgs.put("source", args[i]);
             }
         }
         return CLArgs;
@@ -129,7 +110,7 @@ public class X {
 
             if (handler.numErrors == 0) {
                 String file_name_format = "out.ll";
-                Emitter emitter = new Emitter(file_name_format, handler);
+                Emitter emitter = new Emitter(file_name_format);
                 emitter.gen(ast);
             }
         }

@@ -1,17 +1,12 @@
 package X.CodeGen;
 
-import X.ErrorHandler;
 import X.Nodes.*;
-
-import java.sql.SQLOutput;
 
 public class Emitter implements Visitor {
 
-    private ErrorHandler handler;
     private final String outputName;
 
-    public Emitter(String outputName, ErrorHandler handler) {
-        this.handler = handler;
+    public Emitter(String outputName) {
         this.outputName = outputName;
     }
 
@@ -37,7 +32,6 @@ public class Emitter implements Visitor {
     }
 
     public Object visitFunction(Function ast, Object o) {
-
         Frame f = new Frame(ast.I.spelling.equals("main"));
         emit("define ");
         ast.T.visit(this, f);
@@ -45,11 +39,9 @@ public class Emitter implements Visitor {
         ast.PL.visit(this, f);
         emitN(" {");
         ast.S.visit(this, f);
-
         if (ast.I.spelling.equals("main")) {
            emitN("\tret i32 0");
         }
-
         emitN("}");
         return null;
     }
@@ -85,11 +77,51 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    private String trueBottom = "";
+
     public Object visitIfStmt(IfStmt ast, Object o) {
+
+        Frame f = (Frame) o;
+        String middle= f.getNewLabel();
+        String elseC = f.getNewLabel();
+        String bottom = f.getNewLabel();
+        trueBottom = bottom;
+
+        ast.E.visit(this, o);
+        int index = ast.E.tempIndex;
+        emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + elseC);
+        emitN("\n" + middle + ":");
+        ast.S1.visit(this, o);
+        if (!ast.S1.containsExit) {
+            emitN("\tbr label %" + bottom);
+        }
+
+        ast.S2.visit(this, o);
+        emitN("\n" + elseC + ":");
+        ast.S3.visit(this, o);
+        emitN("\tbr label %" + bottom);
+
+        emitN("\n" + bottom + ":");
+        trueBottom = "";
         return null;
     }
 
     public Object visitElseIfStmt(ElseIfStmt ast, Object o) {
+
+        Frame f = (Frame) o;
+        String middle= f.getNewLabel();
+        String nextCondition = f.getNewLabel();
+        ast.E.visit(this, o);
+        int index = ast.E.tempIndex;
+        emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + nextCondition);
+        emitN("\n" + middle + ":");
+        ast.S1.visit(this, o);
+        if (!ast.S1.containsExit) {
+            emitN("\tbr label %" + trueBottom);
+        }
+
+        emitN(nextCondition + ":");
+        ast.S2.visit(this, o);
         return null;
     }
 
@@ -98,14 +130,43 @@ public class Emitter implements Visitor {
     }
 
     public Object visitWhileStmt(WhileStmt ast, Object o) {
+        Frame f = (Frame) o;
+        String top = f.getNewLabel();
+        String middle= f.getNewLabel();
+        String bottom = f.getNewLabel();
+
+        f.brkStack.push(bottom);
+        f.conStack.push(top);
+
+        emitN("\tbr label %" + top);
+        emitN("\n" + top + ":");
+        ast.E.visit(this, o);
+        int index = ast.E.tempIndex;
+        emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + bottom);
+        emitN("\n" + middle + ":");
+        ast.S.visit(this, o);
+        if (!ast.S.containsExit) {
+            emitN("\tbr label %" + top);
+        }
+        emitN("\n" + bottom+ ":");
+
+        f.brkStack.pop();
+        f.conStack.pop();
+
         return null;
     }
 
     public Object visitBreakStmt(BreakStmt ast, Object o) {
+        Frame f = (Frame) o;
+        String label = f.brkStack.peek();
+        emitN("\tbr label %" + label);
         return null;
     }
 
     public Object visitContinueStmt(ContinueStmt ast, Object o) {
+        Frame f = (Frame) o;
+        String label = f.conStack.peek();
+        emitN("\tbr label %" + label);
         return null;
     }
 
@@ -121,6 +182,14 @@ public class Emitter implements Visitor {
     }
 
     public Object visitDeclStmt(DeclStmt ast, Object o) {
+        Frame f = (Frame) o;
+        ast.E.visit(this, f);
+        int value = f.localVarIndex - 1;
+        emit("\tstore ");
+        ast.E.type.visit(this, o);
+        emit(" %" + value + ", ");
+        ast.E.type.visit(this, o);
+        emitN("* %" + ast.I.spelling);
         return null;
     }
 
@@ -128,15 +197,6 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
 
         switch (ast.spelling) {
-            case "+" -> {
-                if (ast.parent instanceof BinaryExpr parent) {
-                    int numOne = parent.E1.tempIndex;
-                    int numTwo = parent.E2.tempIndex;
-                    int newNum = f.getNewIndex();
-                    parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = add i32 %" + numOne + ", %" + numTwo);
-                }
-            }
             case "-" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
@@ -151,22 +211,22 @@ public class Emitter implements Visitor {
                     emitN("\t%" + newNum + " = sub i32 0, %" + numOne);
                 }
             }
-            case "*" -> {
-                if (ast.parent instanceof BinaryExpr parent) {
-                    int numOne = parent.E1.tempIndex;
-                    int numTwo = parent.E2.tempIndex;
+            case "!" -> {
+                if (ast.parent instanceof UnaryExpr parent) {
+                    int numOne = parent.E.tempIndex;
                     int newNum = f.getNewIndex();
                     parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = mul i32 %" + numOne + ", %" + numTwo);
+                    emitN("\t%" + newNum + " = " +  "xor i1 1, " + " %" + numOne);
                 }
             }
-            case "/" -> {
+            case "+", "*", "/", "==", "!=", "<", "<=", ">", ">=", "&&", "||" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
                     int newNum = f.getNewIndex();
                     parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = udiv i32 %" + numOne + ", %" + numTwo);
+                    emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
+                        " %" + numOne + ", %" + numTwo);
                 }
             }
             default -> {
@@ -175,6 +235,22 @@ public class Emitter implements Visitor {
             }
         }
         return null;
+    }
+
+    public String opToCommand(String input) {
+        return switch (input)  {
+            case "*" -> "mul i32";
+            case "/" -> "udiv i32";
+            case "==" -> "icmp eq i32";
+            case "!=" -> "icmp ne i32";
+            case "<=" -> "icmp sle i32";
+            case "<" -> "icmp slt i32";
+            case ">" -> "icmp sgt i32";
+            case ">=" -> "icmp sge i32";
+            case "&&" -> "and i1";
+            case "||" -> "or i1";
+            default -> "";
+        };
     }
 
     public Object visitBinaryExpr(BinaryExpr ast, Object o) {
@@ -220,6 +296,11 @@ public class Emitter implements Visitor {
     }
 
     public Object visitBooleanExpr(BooleanExpr ast, Object o) {
+        Frame f = (Frame) o;
+        int value = ast.BL.spelling.equals("true") ? 1 : 0;
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = add i1 0, " + value);
+        ast.tempIndex = num;
         return null;
     }
 
@@ -346,10 +427,6 @@ public class Emitter implements Visitor {
 
     public Object visitCallStmt(CallStmt ast, Object o) {
         return null;
-    }
-
-    public String getType(Type t) {
-        return "";
     }
 
     public void emit(String s) {

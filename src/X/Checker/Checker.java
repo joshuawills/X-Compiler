@@ -161,7 +161,7 @@ public class Checker implements Visitor {
 
         Type returnType = (Type) E.visit(this, ast);
         if (!T.assignable(returnType) && !returnType.isError()) {
-            String message = "expected " + T.toString() + ", received " + returnType.toString();
+            String message = "expected " + T + ", received " + returnType;
             handler.reportError(errors[5] + ": %", message, E.pos);
             T = Environment.errorType;
         }
@@ -170,6 +170,7 @@ public class Checker implements Visitor {
 
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {
         ast.SL.visit(this, o);
+        ast.containsExit = ast.SL.containsExit;
         return null;
     }
 
@@ -255,12 +256,24 @@ public class Checker implements Visitor {
         if (this.loopDepth <= 0) {
             handler.reportError(errors[14], "", ast.pos);
         }
+        ast.containsExit = true;
+        if (ast.parent instanceof Stmt) {
+            ((Stmt) ast.parent).containsExit = true;
+        } else if (ast.parent instanceof List) {
+            ((List) ast.parent).containsExit = true;
+        }
         return null;
     }
 
     public Object visitContinueStmt(ContinueStmt ast, Object o) {
         if (this.loopDepth <= 0) {
             handler.reportError(errors[15], "", ast.pos);
+        }
+        ast.containsExit = true;
+        if (ast.parent instanceof Stmt) {
+            ((Stmt) ast.parent).containsExit = true;
+        } else if (ast.parent instanceof List) {
+            ((List) ast.parent).containsExit = true;
         }
         return null;
     }
@@ -279,6 +292,15 @@ public class Checker implements Visitor {
             String message = "expected " + this.currentFunctionType.toString() +
                 ", received " + conditionType.toString();
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
+        }
+
+        ast.containsExit = true;
+        if (ast.parent instanceof Stmt) {
+            ((Stmt) ast.parent).containsExit = true;
+        } else if (ast.parent instanceof List) {
+            ((List) ast.parent).containsExit = true;
+        } else {
+            System.out.println("WHAT");
         }
 
         return null;
