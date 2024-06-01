@@ -9,6 +9,7 @@ public abstract class Type extends AST {
     }
 
     public abstract boolean equals(Object obj);
+    public abstract String toString();
 
     public abstract boolean assignable(Object obj);
 

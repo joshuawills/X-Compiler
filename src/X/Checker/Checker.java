@@ -9,11 +9,11 @@ public class Checker implements Visitor {
 
     private final String[] errors = {
         "*0: main function is missing",
-        "*1: return type of main is not int",
+        "*1: return type of 'main' is not int",
         "*2: identifier redeclared",
         "*3: identifier declared void",
         "*4: identifier undeclared",
-        "*5: incompatible type for =",
+        "*5: incompatible type for assignment",
         "*6: incompatible type for return",
         "*7: incompatible type for this binary operator",
         "*8: incompatible type for this unary operator",
@@ -31,7 +31,7 @@ public class Checker implements Visitor {
         "*20: main function may not call itself",
         "*21: statement(s) not reached",
         "*22: missing return statement",
-        "*23: attempting to redeclare a constant"
+        "*23: attempting to redeclare a constant" // 23 todo
     };
 
     private final SymbolTable idTable;
@@ -52,6 +52,26 @@ public class Checker implements Visitor {
     }
 
     public void check(AST ast) {
+
+        // Load in function names and global vars
+        DeclList L = (DeclList) ((Program) ast).PL;
+        while (true) {
+            if (L.D instanceof GlobalVar V) {
+                visitVarDecl(V, V.T, V.I, V.E);
+            } else if (L.D instanceof Function F) {
+                Decl e = idTable.retrieve(F.I.spelling);
+                if (e != null) {
+                    String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
+                            e.pos.lineStart);
+                    handler.reportError(errors[2] + ": %", message, F.I.pos);
+                }
+                stdFunction(F.T, F.I.spelling, F.PL);
+            }
+            if (L.DL instanceof EmptyDeclList) {
+                break;
+            }
+            L = (DeclList) L.DL;
+        }
         ast.visit(this, null);
         if (!hasMain) {
             handler.reportError(errors[0], "", ast.pos);
@@ -98,15 +118,12 @@ public class Checker implements Visitor {
 
     public Object visitFunction(Function ast, Object o) {
         // Check if func already exists with that name
-        if (idTable.retrieve(ast.I.spelling) != null) {
-            handler.reportError(errors[2] + ": %", ast.I.spelling, ast.I.pos);
-        }
-        idTable.insert(ast.I.spelling, false, ast);
         this.currentFunctionType = ast.T;
         if (ast.I.spelling.equals("main")) {
             inMain = hasMain = true;
             if (!ast.T.isInt()) {
-                handler.reportError(errors[1], "", ast.I.pos);
+                String message = "set to " + ast.T.toString();
+                handler.reportError(errors[1] + ": %", message, ast.I.pos);
             }
             if (!(ast.PL instanceof EmptyParaList)) {
                handler.reportError(errors[19], "", ast.I.pos);
@@ -126,21 +143,21 @@ public class Checker implements Visitor {
     }
 
     public Object visitGlobalVar(GlobalVar ast, Object o) {
-        ast.T = (Type) visitVarDecl(ast, ast.T, ast.I, ast.E);
-        return ast.T;
+        return null;
     }
 
     private Object visitVarDecl(Decl ast, Type T, Ident I, Expr E) {
         declareVariable(ast.I, ast);
         if (T.isVoid()) {
-            handler.reportError(errors[3], "", ast.T.pos);
+            handler.reportError(errors[3] + ": %", ast.I.spelling, ast.T.pos);
             T = Environment.errorType;
             return T;
         }
         I.visit(this, ast);
         Type returnType = (Type) E.visit(this, ast);
         if (!T.assignable(returnType) && !returnType.isError()) {
-            handler.reportError(errors[5], "", E.pos);
+            String message = "expected " + T.toString() + ", received " + returnType.toString();
+            handler.reportError(errors[5] + ": %", message, E.pos);
             T = Environment.errorType;
         }
         return T;
@@ -248,12 +265,15 @@ public class Checker implements Visitor {
 
         // Returning nothing but there's something to return
         if (ast.E instanceof EmptyExpr && !(this.currentFunctionType.isVoid())) {
-            handler.reportError(errors[6], "", ast.E.pos);
+            String message = "expected " + this.currentFunctionType.toString() + ", received void";
+            handler.reportError(errors[6] + ": %", message, ast.E.pos);
         }
 
         Type conditionType = (Type) ast.E.visit(this, ast);
         if (!this.currentFunctionType.assignable(conditionType)) {
-            handler.reportError(errors[6], "", ast.E.pos);
+            String message = "expected " + this.currentFunctionType.toString() +
+                ", received " + conditionType.toString();
+            handler.reportError(errors[6] + ": %", message, ast.E.pos);
         }
 
         return null;
@@ -263,13 +283,24 @@ public class Checker implements Visitor {
 
         Decl decl = idTable.retrieve(ast.I.spelling);
         if (decl == null) {
-            handler.reportError(errors[4], "", ast.E.pos);
+            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
+            return null;
+        }
+
+        if (decl instanceof Function) {
+            handler.reportError(errors[9], "", ast.E.pos);
+            return null;
+        }
+
+        if (!decl.isMut) {
+            handler.reportError(errors[23], "", ast.E.pos);
             return null;
         }
 
         Type t = (Type) ast.E.visit(this, o);
         if (!decl.T.assignable(t)) {
-            handler.reportError(errors[5], "", ast.E.pos);
+            String message = "expected " + decl.T.toString() + ", received " + t.toString();
+            handler.reportError(errors[5] + ": %", message, ast.E.pos);
             return null;
         }
 
@@ -333,7 +364,6 @@ public class Checker implements Visitor {
             }
             case "+", "-", "/", "*" -> {
                 if (!t1.isInt() || !t2.isInt()) {
-                    System.out.println("HAHA");
                     handler.reportError(errors[7], "", t1.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -455,8 +485,8 @@ public class Checker implements Visitor {
         }
 
         Type expectedType = ((ParaList) PL).P.T;
-        if (((Function) ((ParaList) PL).parent).I.spelling.equals("out")) {
-            ;
+        if (((Function) PL.parent).I.spelling.equals("out")) {
+
         } else if (expectedType.isVoid() || !expectedType.assignable(realType)) {
             handler.reportError(errors[18], "", ast.E.pos);
         }
@@ -491,7 +521,7 @@ public class Checker implements Visitor {
     public Object visitParaDecl(ParaDecl ast, Object o) {
         declareVariable(ast.I, ast);
         if (ast.T.isVoid()) {
-            handler.reportError(errors[3], "", ast.I.pos);
+            handler.reportError(errors[3] + ": %", ast.I.spelling, ast.I.pos);
         }
         return null;
     }
@@ -499,7 +529,9 @@ public class Checker implements Visitor {
     private void declareVariable(Ident ident, Decl decl) {
         IdEntry entry = idTable.retrieveOneLevel(ident.spelling);
         if (entry != null) {
-            handler.reportError(errors[2], "", ident.pos);
+            String message = String.format("'%s'. Previously declared at line %d", ident.spelling,
+                entry.attr.pos.lineStart);
+            handler.reportError(errors[2] +": %", message, ident.pos);
         }
         idTable.insert(ident.spelling, decl.isMut, decl);
         ident.visit(this, null);
@@ -521,11 +553,14 @@ public class Checker implements Visitor {
     public Object visitSimpleVar(SimpleVar ast, Object o) {
         Decl decl = idTable.retrieve(ast.I.spelling);
         if (decl == null) {
-            handler.reportError(errors[4], "", ast.I.pos);
+            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
 
-        // TODO: handle functions used as scalars
+        if (decl instanceof Function) {
+            handler.reportError(errors[9], "", ast.I.pos);
+            return Environment.errorType;
+        }
 
         return decl.T;
     }
@@ -545,7 +580,7 @@ public class Checker implements Visitor {
         // Check function exists
         Decl type = (Decl) ast.I.visit(this, null);
         if (type == null) {
-            handler.reportError(errors[4], "", ast.I.pos);
+            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
 

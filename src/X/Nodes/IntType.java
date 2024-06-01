@@ -20,6 +20,10 @@ public class IntType extends Type {
         }
     }
 
+    @Override
+    public String toString() {
+        return "int";
+    }
     public boolean assignable(Object obj) {
         return equals(obj);
     }

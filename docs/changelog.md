@@ -7,5 +7,5 @@
 # TODO
 
 - Implement mutability checks in `Checker.java`
-- Set up testing env
+- Set up testing env - IN PROGRESS
 - Set up basic code gen with QBE??

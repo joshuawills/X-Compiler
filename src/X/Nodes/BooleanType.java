@@ -16,6 +16,11 @@ public class BooleanType extends Type {
         }
     }
 
+    @Override
+    public String toString() {
+        return "bool";
+    }
+
     public boolean assignable(Object obj) {
         return equals(obj);
     }

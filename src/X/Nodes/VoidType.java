@@ -20,6 +20,11 @@ public class VoidType extends Type {
         }
     }
 
+    @Override
+    public String toString() {
+        return "void";
+    }
+
     public boolean assignable(Object obj) {
         return equals(obj);
     }

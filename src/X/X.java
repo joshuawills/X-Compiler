@@ -87,7 +87,7 @@ public class X {
 
         String file_name = clARGS.get("source");
 
-        ErrorHandler handler = new ErrorHandler();
+        ErrorHandler handler = new ErrorHandler(file_name);
         File file = new File(file_name);
 
         Lex lexer = new Lex(file);

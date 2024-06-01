@@ -20,6 +20,11 @@ public class StringType extends Type {
         }
     }
 
+    @Override
+    public String toString() {
+        return "string";
+    }
+
 
     public boolean assignable(Object obj) {
         if (obj instanceof ErrorType) {

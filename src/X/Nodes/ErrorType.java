@@ -3,7 +3,6 @@ package X.Nodes;
 import X.Lexer.Position;
 
 public class ErrorType extends Type {
-
     public ErrorType(Position pos) {
         super(pos);
     }
@@ -14,6 +13,11 @@ public class ErrorType extends Type {
 
     public boolean equals(Object obj) {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "error";
     }
 
     public boolean assignable(Object obj) {
