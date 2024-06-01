@@ -316,6 +316,8 @@ public class Emitter implements Visitor {
             ((StmtList) SL).S.visit(this, o);
             if (((StmtList) SL).SL instanceof EmptyStmtList) {
                 break;
+            } else if (((StmtList) SL).S instanceof ReturnStmt) {
+                break;
             } else {
                 SL = ((StmtList) SL).SL;
             }

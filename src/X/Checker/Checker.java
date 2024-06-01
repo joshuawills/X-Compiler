@@ -134,7 +134,11 @@ public class Checker implements Visitor {
         ast.S.visit(this, ast);
         idTable.closeScope();
         if (!hasReturn && !ast.T.isVoid()) {
-            handler.reportError(errors[22], "", ast.I.pos);
+            if (ast.I.spelling.equals("main")) {
+                handler.reportMinorError(errors[22], "", ast.I.pos);
+            } else {
+                handler.reportError(errors[22], "", ast.I.pos);
+            }
         }
 
         this.currentFunctionType = null;
@@ -451,7 +455,7 @@ public class Checker implements Visitor {
         }
         // Unreached statements
         if (ast.S instanceof ReturnStmt && ast.SL instanceof StmtList) {
-            handler.reportError(errors[21], "", ast.SL.pos);
+            handler.reportMinorError(errors[21], "", ast.SL.pos);
         }
         ast.SL.visit(this, o);
         return null;

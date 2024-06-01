@@ -8,6 +8,7 @@ import java.nio.file.Path;
 
 public class ErrorHandler {
 
+    public boolean isQuiet = false;
     public int numErrors = 0;
     public String fileName;
     public int numLines;
@@ -18,7 +19,8 @@ public class ErrorHandler {
     private static final String ANSI_BLUE = "\u001b[34m";
     private static final String ANSI_YELLOW = "\u001B[33m";
 
-    public ErrorHandler(String fileName) {
+    public ErrorHandler(String fileName, boolean isQuiet) {
+        this.isQuiet = isQuiet;
         this.fileName = fileName;
         try {
             fileContents = Files.readString(Path.of(fileName));
@@ -41,6 +43,20 @@ public class ErrorHandler {
         System.out.println();
         logLines(pos.lineStart, pos.charStart);
         numErrors++;
+    }
+
+    public void reportMinorError(String message, String tokenName, Position pos) {
+        if (isQuiet) return;
+        System.out.print(ANSI_BLUE + "MINOR ERROR: " + ANSI_RESET);
+        for (int c = 0; c < message.length(); c++) {
+            if (message.charAt(c) == '%') {
+                System.out.print(tokenName);
+            } else {
+                System.out.print(message.charAt(c));
+            }
+        }
+        System.out.println();
+        logLines(pos.lineStart, pos.charStart);
     }
 
     public void logLines(int line, int col) {

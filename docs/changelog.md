@@ -8,7 +8,9 @@
 
 - Implement mutability checks in `Checker.java`
 - Set up testing env - IN PROGRESS
+- Begin code gen with LLVM IR
 
 # TODO
 
-- Figure out code gen ideas 
+- Minor error checks for unused variables/functions
+- Minor error checks for unecessary mutable declarations
