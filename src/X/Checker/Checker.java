@@ -218,8 +218,8 @@ public class Checker implements Visitor {
     }
 
     public Object visitForStmt(ForStmt ast, Object o) {
-        if (!(ast.E1 instanceof EmptyExpr)) {
-            ast.E1.visit(this, ast);
+        if (!(ast.S1 instanceof EmptyStmt)) {
+            ast.S1.visit(this, ast);
         }
 
         if (!(ast.E2 instanceof EmptyExpr)) {
@@ -228,8 +228,8 @@ public class Checker implements Visitor {
                 handler.reportError(errors[12], "", ast.E2.pos);
             }
         }
-        if (!(ast.E3 instanceof EmptyExpr)) {
-            ast.E3.visit(this, ast);
+        if (!(ast.S3 instanceof EmptyStmt)) {
+            ast.S3.visit(this, ast);
         }
         this.loopDepth++;
         idTable.openScope();

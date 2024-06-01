@@ -126,6 +126,37 @@ public class Emitter implements Visitor {
     }
 
     public Object visitForStmt(ForStmt ast, Object o) {
+        Frame f = (Frame) o;
+
+        String top = f.getNewLabel();
+        String middle = f.getNewLabel();
+        String m2 = f.getNewLabel();
+        String bottom = f.getNewLabel();
+
+        f.brkStack.push(bottom);
+        f.conStack.push(m2);
+
+        ast.S1.visit(this, o);
+
+        emitN("\tbr label %" + top);
+        emitN("\n" + top + ":");
+        ast.E2.visit(this, o);
+        int index = ast.E2.tempIndex;
+        emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + bottom);
+        emitN("\n" + middle + ":");
+        ast.S.visit(this, o);
+        if (!ast.S.containsExit) {
+            emitN("\tbr label %" + m2);
+        }
+        emitN("\n" + m2 + ":");
+        ast.S3.visit(this, o);
+        if (!ast.S.containsExit) {
+            emitN("\tbr label %" + top);
+        }
+        emitN("\n" + bottom+ ":");
+
+        f.brkStack.pop();
+        f.conStack.pop();
         return null;
     }
 
@@ -239,6 +270,7 @@ public class Emitter implements Visitor {
 
     public String opToCommand(String input) {
         return switch (input)  {
+            case "+" -> "add i32";
             case "*" -> "mul i32";
             case "/" -> "udiv i32";
             case "==" -> "icmp eq i32";

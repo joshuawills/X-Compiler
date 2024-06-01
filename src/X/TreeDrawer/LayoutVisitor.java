@@ -94,7 +94,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitForStmt(ForStmt ast, Object obj) {
-        return layoutQuaternary("ForStmt", ast.E1, ast.E2, ast.E3, ast.S);
+        return layoutQuaternary("ForStmt", ast.S1, ast.E2, ast.S3, ast.S);
     }
 
     public Object visitBreakStmt(BreakStmt ast, Object obj) {

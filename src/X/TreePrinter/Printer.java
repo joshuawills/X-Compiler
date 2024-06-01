@@ -129,9 +129,9 @@ public class Printer implements Visitor {
     public Object visitForStmt(ForStmt ast, Object o) {
         print(indentString() + "ForStmt");
         ++indent;
-        ast.E1.visit(this, o);
+        ast.S1.visit(this, o);
         ast.E2.visit(this, o);
-        ast.E3.visit(this, o);
+        ast.S3.visit(this, o);
         ast.S.visit(this, o);
         --indent;
         return null;

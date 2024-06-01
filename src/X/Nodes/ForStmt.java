@@ -4,19 +4,19 @@ import X.Lexer.Position;
 
 public class ForStmt extends Stmt {
 
-    public Expr E1;
+    public Stmt S1;
     public Expr E2;
-    public Expr E3;
+    public Stmt S3;
     public Stmt S;
 
 
-    public ForStmt(Expr e1AST, Expr e2AST, Expr e3AST, Stmt sAST, Position pos) {
+    public ForStmt(Stmt s1AST, Expr e2AST, Stmt s3AST, Stmt sAST, Position pos) {
         super(pos);
-        E1 = e1AST;
+        S1 = s1AST;
         E2 = e2AST;
-        E3 = e3AST;
+        S3 = s3AST;
         S = sAST;
-        E1.parent = E2.parent = E3.parent = S.parent = this;
+        S1.parent = E2.parent = S3.parent = S.parent = this;
     }
 
     public Object visit(Visitor v, Object o) {

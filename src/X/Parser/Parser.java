@@ -205,7 +205,9 @@ public class Parser {
                 match(TokenType.CLOSE_PAREN);
             }
             finish(pos);
-            match(TokenType.SEMI);
+            if (!inFor) {
+                match(TokenType.SEMI);
+            }
             CallExpr E = new CallExpr(iAST, aLIST, pos);
             return new CallStmt(E, pos);
         }
@@ -225,7 +227,9 @@ public class Parser {
         if (tryConsume(TokenType.ASSIGN)) {
             eAST = parseExpr();
         }
-        match(TokenType.SEMI);
+        if (!inFor) {
+            match(TokenType.SEMI);
+        }
         finish(pos);
         return new DeclStmt(iAST, eAST, pos);
     }
@@ -270,17 +274,19 @@ public class Parser {
         return new ElseIfStmt(eAST, s1AST, s2AST, pos);
     }
 
+    private boolean inFor = false;
+
     private ForStmt parseForStmt() throws SyntaxError {
+        inFor = true;
         Position pos = new Position();
         start(pos);
         match(TokenType.FOR);
         boolean hasParen = tryConsume(TokenType.OPEN_PAREN);
         finish(pos);
-        Expr e1AST = new EmptyExpr(pos);
+        Stmt s1AST = new EmptyStmt(pos);
         if (currentToken.kind != TokenType.SEMI) {
-            e1AST = parseExpr();
+            s1AST = parseStmt();
         }
-        match(TokenType.SEMI);
 
         finish(pos);
         Expr e2AST = new EmptyExpr(pos);
@@ -289,20 +295,21 @@ public class Parser {
         }
         match(TokenType.SEMI);
 
-
         finish(pos);
-        Expr e3AST = new EmptyExpr(pos);
-        if (currentToken.kind != TokenType.SEMI) {
-            e3AST = parseExpr();
+        Stmt s3AST = new EmptyStmt(pos);
+        if ((hasParen && currentToken.kind == TokenType.CLOSE_PAREN) ||
+            currentToken.kind != TokenType.CLOSE_CURLY) {
+            s3AST = parseStmt();
         }
 
         if (hasParen) {
             match(TokenType.CLOSE_PAREN);
         }
 
+        inFor = false;
         Stmt sAST = parseStmt();
         finish(pos);
-        return new ForStmt(e1AST, e2AST, e3AST, sAST, pos);
+        return new ForStmt(s1AST, e2AST, s3AST, sAST, pos);
     }
 
     private WhileStmt parseWhileStmt() throws SyntaxError {
