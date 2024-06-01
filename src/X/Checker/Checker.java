@@ -31,7 +31,7 @@ public class Checker implements Visitor {
         "*20: main function may not call itself",
         "*21: statement(s) not reached",
         "*22: missing return statement",
-        "*23: attempting to redeclare a constant" // 23 todo
+        "*23: attempting to redeclare a constant"
     };
 
     private final SymbolTable idTable;
@@ -154,6 +154,11 @@ public class Checker implements Visitor {
             return T;
         }
         I.visit(this, ast);
+
+        if (E instanceof EmptyExpr) {
+            return T;
+        }
+
         Type returnType = (Type) E.visit(this, ast);
         if (!T.assignable(returnType) && !returnType.isError()) {
             String message = "expected " + T.toString() + ", received " + returnType.toString();

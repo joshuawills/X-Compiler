@@ -1,6 +1,7 @@
 package X;
 
 import X.Checker.Checker;
+import X.CodeGen.Emitter;
 import X.Lexer.File;
 import X.Lexer.Lex;
 import X.Lexer.Token;
@@ -11,6 +12,7 @@ import X.TreeDrawer.Drawer;
 import X.TreePrinter.Printer;
 
 import java.awt.*;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -121,7 +123,14 @@ public class X {
             try {
                 checker.check(ast);
             } catch (Exception s) {
+                System.out.println(s);
                 System.exit(1);
+            }
+
+            if (handler.numErrors == 0) {
+                String file_name_format = "out.ll";
+                Emitter emitter = new Emitter(file_name_format, handler);
+                emitter.gen(ast);
             }
         }
     }

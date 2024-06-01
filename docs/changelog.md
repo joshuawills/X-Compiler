@@ -4,8 +4,11 @@
 
 - Set up basic CL args
 
-# TODO
+*1.06.2024*
 
 - Implement mutability checks in `Checker.java`
 - Set up testing env - IN PROGRESS
-- Set up basic code gen with QBE??
+
+# TODO
+
+- Figure out code gen ideas 

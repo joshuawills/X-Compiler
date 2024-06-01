@@ -1,3 +1,5 @@
+*.ll
+*.s
 .idea/
 .gradle/
 gradle/
