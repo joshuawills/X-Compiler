@@ -205,10 +205,9 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         ast.E.visit(this, o);
         emit("\tret ");
-        if (ast.E.type instanceof IntType) {
-            int index = f.localVarIndex - 1;
-            emitN("i32 %" + index);
-        }
+        int index = f.localVarIndex - 1;
+        ast.E.type.visit(this, o);
+        emitN(" %" + index);
         return null;
     }
 
@@ -414,6 +413,8 @@ public class Emitter implements Visitor {
     }
 
     public Object visitParaDecl(ParaDecl ast, Object o) {
+        ast.T.visit(this, o);
+        emit(" %" + ast.I.spelling);
         return null;
     }
 
@@ -442,15 +443,64 @@ public class Emitter implements Visitor {
             emit(", ");
             ((LocalVar) d).T.visit(this, o);
             emitN("* %" + ast.I.spelling);
+        } else if (d instanceof ParaDecl) {
+            int newIndex = f.getNewIndex();
+            emit("\t%" + newIndex + " = ");
+            Type T = ((ParaDecl) d).T;
+            if (T.isInt() || T.isBoolean()) {
+                emit("add ");
+                T.visit(this, o);
+                emit(" 0, ");
+            }
+            emitN(" %" + ast.I.spelling);
         }
         return null;
    }
 
     public Object visitCallExpr(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+
+        // Evaluate all the expressions
+        if (!(ast.AL instanceof EmptyArgList)) {
+            Args AL = (Args) ast.AL;
+            while (true) {
+                AL.E.visit(this, o);
+                if (AL.EL instanceof EmptyArgList) {
+                    break;
+                }
+                AL = (Args) AL.EL;
+            }
+        }
+
+        int num = f.getNewIndex();
+        ast.tempIndex = num;
+        emit("\t%" + num + " = call ");
+        Function functionRef = (Function) ast.I.decl;
+        functionRef.T.visit(this, o);
+        emit(" @" + ast.I.spelling);
+
+        emit("(");
+        if (!(ast.AL instanceof EmptyArgList)) {
+            Args AL = (Args) ast.AL;
+            while (true) {
+                Expr E = AL.E;
+                int index = E.tempIndex;
+                E.type.visit(this, o);
+                emit(" %" + index);
+                if (AL.EL instanceof EmptyArgList) {
+                    break;
+                } else {
+                    emit(", ");
+                }
+                AL = (Args) AL.EL;
+            }
+        }
+        emitN(")");
         return null;
     }
 
     public Object visitEmptyArgList(EmptyArgList ast, Object o) {
+        emit("()");
         return null;
     }
 
@@ -460,6 +510,7 @@ public class Emitter implements Visitor {
     }
 
     public Object visitCallStmt(CallStmt ast, Object o) {
+        ast.E.visit(this, o);
         return null;
     }
 

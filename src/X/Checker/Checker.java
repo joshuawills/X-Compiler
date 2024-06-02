@@ -616,6 +616,7 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
         ast.AL.visit(this, function.PL);
+        ast.type = type.T;
         return type.T;
     }
 
