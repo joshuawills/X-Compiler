@@ -85,12 +85,12 @@ public class Checker implements Visitor {
         Environment.strType = new StringType(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
         Environment.errorType = new ErrorType(dummyPos);
-        Environment.in = stdFunction(Environment.voidType, "in", new ParaList(
+        Environment.inInt = stdFunction(Environment.voidType, "inInt", new ParaList(
             new ParaDecl(Environment.strType, i, dummyPos, false),
             new EmptyParaList(dummyPos), dummyPos
         ));
-        Environment.out = stdFunction(Environment.voidType, "out", new ParaList(
-                new ParaDecl(Environment.voidType, i, dummyPos, false),
+        Environment.outInt = stdFunction(Environment.voidType, "outInt", new ParaList(
+                new ParaDecl(Environment.intType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
     }
@@ -510,9 +510,7 @@ public class Checker implements Visitor {
         }
 
         Type expectedType = ((ParaList) PL).P.T;
-        if (((Function) PL.parent).I.spelling.equals("out")) {
-
-        } else if (expectedType.isVoid() || !expectedType.assignable(realType)) {
+        if (expectedType.isVoid() || !expectedType.assignable(realType)) {
             handler.reportError(errors[18], "", ast.E.pos);
         }
 

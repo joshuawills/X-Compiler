@@ -11,6 +11,8 @@ public class Emitter implements Visitor {
     }
 
     public final void gen(AST ast) {
+        emitN("declare i32 @printf(i8*, ...)");
+        emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
         ast.visit(this, null);
         LLVM.dump(outputName);
     }
@@ -457,7 +459,22 @@ public class Emitter implements Visitor {
         return null;
    }
 
+    public void handleOutInt(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+        ((Args) ast.AL).E.visit(this, o);
+        int index = ((Args) ast.AL).E.tempIndex;
+        int newIndex = f.getNewIndex();
+        emitN("\t%.formatStr = getelementptr [4 x i8], [4 x i8]* @.Istr, i32 0, i32 0");
+        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %.formatStr, i32 %" + index + ")");
+
+    }
     public Object visitCallExpr(CallExpr ast, Object o) {
+
+        if (ast.I.spelling.equals("outInt")) {
+            handleOutInt(ast, o);
+            return null;
+        }
+
         Frame f = (Frame) o;
 
         // Evaluate all the expressions
