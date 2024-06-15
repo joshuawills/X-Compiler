@@ -10,7 +10,12 @@
 - Set up testing env - IN PROGRESS
 - Begin code gen with LLVM IR
 
-# TODO
+*15.06.2024*
 
 - Minor error checks for unused variables/functions
-- Minor error checks for unecessary mutable declarations
+- Minor error checks for unnecessary mutable declarations
+
+# TODO
+
+- More advanced language features
+    - %, +=, -=, /=, *=, loop

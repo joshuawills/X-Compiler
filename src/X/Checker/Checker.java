@@ -79,7 +79,7 @@ public class Checker implements Visitor {
 
         L = (DeclList) ((Program) ast).PL;
         while (true) {
-            if (L.D instanceof GlobalVar V ) {
+            if (L.D instanceof GlobalVar V) {
                 if (!V.isUsed) {
                     String message = "'" + V.I.spelling + "'";
                     handler.reportMinorError(errors[24] + ": %", message, V.pos);
@@ -204,6 +204,28 @@ public class Checker implements Visitor {
 
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {
         ast.SL.visit(this, o);
+
+        List S = ast.SL;
+        while (true) {
+           if (S instanceof EmptyStmtList) {
+                break;
+           }
+           StmtList SL = (StmtList) S;
+           if (SL.S instanceof LocalVarStmt) {
+               LocalVar V = ((LocalVarStmt) SL.S).V;
+               if (!V.isUsed) {
+                   String message = "'" + V.I.spelling + "'";
+                   handler.reportMinorError(errors[24] + ": %", message, V.pos);
+               }
+               if (V.isMut && !V.isReassigned) {
+                   String message = "'" + V.I.spelling + "'";
+                   handler.reportMinorError(errors[25] + ": %", message, V.pos);
+               }
+           }
+
+           S = SL.SL;
+        }
+
         ast.containsExit = ast.SL.containsExit;
         return null;
     }
@@ -619,8 +641,8 @@ public class Checker implements Visitor {
         if (decl instanceof Function) {
             handler.reportError(errors[9], "", ast.I.pos);
             return Environment.errorType;
-        } else if (decl instanceof GlobalVar) {
-            System.out.println(ast.parent);
+        } else if (decl instanceof GlobalVar || decl instanceof LocalVar) {
+            decl.isUsed = true;
         }
 
         ast.I.decl = decl;
