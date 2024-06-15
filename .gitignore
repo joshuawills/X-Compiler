@@ -10,3 +10,4 @@ bin/
 gradlew
 gradlew.bat
 test.x
+.tree

@@ -205,6 +205,10 @@ public class Emitter implements Visitor {
 
     public Object visitReturnStmt(ReturnStmt ast, Object o) {
         Frame f = (Frame) o;
+        if (ast.E.type.isVoid()) {
+            emitN("    ret void");
+            return null;
+        }
         ast.E.visit(this, o);
         emit("\tret ");
         int index = f.localVarIndex - 1;
@@ -463,9 +467,10 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         ((Args) ast.AL).E.visit(this, o);
         int index = ((Args) ast.AL).E.tempIndex;
+        int indexStr = f.getNewIndex();
         int newIndex = f.getNewIndex();
-        emitN("\t%.formatStr = getelementptr [4 x i8], [4 x i8]* @.Istr, i32 0, i32 0");
-        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %.formatStr, i32 %" + index + ")");
+        emitN("\t%" + indexStr + " = getelementptr [4 x i8], [4 x i8]* @.Istr, i32 0, i32 0");
+        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i32 %" + index + ")");
 
     }
     public Object visitCallExpr(CallExpr ast, Object o) {
@@ -489,10 +494,14 @@ public class Emitter implements Visitor {
             }
         }
 
-        int num = f.getNewIndex();
-        ast.tempIndex = num;
-        emit("\t%" + num + " = call ");
         Function functionRef = (Function) ast.I.decl;
+        if (functionRef.T.isVoid()) {
+            emit("\tcall ");
+        } else {
+            int num = f.getNewIndex();
+            ast.tempIndex = num;
+            emit("\t%" + num + " = call ");
+        }
         functionRef.T.visit(this, o);
         emit(" @" + ast.I.spelling);
 

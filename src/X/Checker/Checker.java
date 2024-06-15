@@ -31,7 +31,10 @@ public class Checker implements Visitor {
         "*20: main function may not call itself",
         "*21: statement(s) not reached",
         "*22: missing return statement",
-        "*23: attempting to redeclare a constant"
+        "*23: attempting to redeclare a constant",
+        "*24: variable declared but never used",
+        "*25: variable declared mutable but never reassigned",
+        "*26: function declared but never used",
     };
 
     private final SymbolTable idTable;
@@ -65,7 +68,7 @@ public class Checker implements Visitor {
                             e.pos.lineStart);
                     handler.reportError(errors[2] + ": %", message, F.I.pos);
                 }
-                stdFunction(F.T, F.I.spelling, F.PL);
+                stdFunction(F);
             }
             if (L.DL instanceof EmptyDeclList) {
                 break;
@@ -73,6 +76,30 @@ public class Checker implements Visitor {
             L = (DeclList) L.DL;
         }
         ast.visit(this, null);
+
+        L = (DeclList) ((Program) ast).PL;
+        while (true) {
+            if (L.D instanceof GlobalVar V ) {
+                if (!V.isUsed) {
+                    String message = "'" + V.I.spelling + "'";
+                    handler.reportMinorError(errors[24] + ": %", message, V.pos);
+                }
+                if (V.isMut && !V.isReassigned) {
+                    String message = "'" + V.I.spelling + "'";
+                    handler.reportMinorError(errors[25] + ": %", message, V.pos);
+                }
+            } else if (L.D instanceof Function F) {
+                if (!F.isUsed && !F.I.spelling.equals("main")) {
+                    String message = "'" + F.I.spelling + "'";
+                    handler.reportMinorError(errors[26] + ": %", message, F.pos);
+                }
+            }
+            if (L.DL instanceof EmptyDeclList) {
+                break;
+            }
+            L = (DeclList) L.DL;
+        }
+
         if (!hasMain) {
             handler.reportError(errors[0], "", ast.pos);
         }
@@ -102,6 +129,9 @@ public class Checker implements Visitor {
         return binding;
     }
 
+    private void stdFunction(Function funct) {
+        idTable.insert(funct.I.spelling, funct.isMut, funct);
+    }
 
     public Object visitProgram(Program ast, Object o) {
         ast.PL.visit(this, null);
@@ -290,9 +320,15 @@ public class Checker implements Visitor {
             String message = "expected " + this.currentFunctionType.toString() + ", received void";
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
         }
-
-        Type conditionType = (Type) ast.E.visit(this, ast);
+        Type conditionType;
+        if (ast.E instanceof EmptyExpr) {
+            conditionType = new VoidType(new Position());
+            ast.E.type = Environment.voidType;
+        } else {
+            conditionType = (Type) ast.E.visit(this, ast);
+        }
         if (!this.currentFunctionType.assignable(conditionType)) {
+            System.out.println("OHOH");
             String message = "expected " + this.currentFunctionType.toString() +
                 ", received " + conditionType.toString();
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
@@ -583,6 +619,8 @@ public class Checker implements Visitor {
         if (decl instanceof Function) {
             handler.reportError(errors[9], "", ast.I.pos);
             return Environment.errorType;
+        } else if (decl instanceof GlobalVar) {
+            System.out.println(ast.parent);
         }
 
         ast.I.decl = decl;
@@ -612,6 +650,9 @@ public class Checker implements Visitor {
         if (!(type instanceof Function function)) {
             handler.reportError(errors[10], "", ast.I.pos);
             return Environment.errorType;
+        } else {
+            Decl x = idTable.retrieve(ast.I.spelling);
+            ((Function) x).setUsed();
         }
         ast.AL.visit(this, function.PL);
         ast.type = type.T;

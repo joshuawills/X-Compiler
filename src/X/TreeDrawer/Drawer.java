@@ -3,8 +3,6 @@ package X.TreeDrawer;
 import X.Nodes.AST;
 
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
 
 public class Drawer {
 

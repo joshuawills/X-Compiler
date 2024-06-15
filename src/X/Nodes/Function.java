@@ -16,6 +16,10 @@ public class Function extends Decl {
         T.parent = I.parent = PL.parent = S.parent = this;
     }
 
+    public void setUsed() {
+        this.isUsed = true;
+    }
+
     public Object visit(Visitor v, Object o) {
         return v.visitFunction(this, o);
     }

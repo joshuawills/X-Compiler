@@ -110,37 +110,39 @@ public class X {
         if (handler.numErrors == 0 && clARGS.containsKey("parse")) {
             Drawer drawer = new Drawer();
             drawer.draw(ast);
+        }
+
+        Checker checker = new Checker(handler);
+        try {
+            checker.check(ast);
+        } catch (Exception s) {
+            System.out.println(s);
+            System.exit(1);
+        }
+
+        System.out.println("EXITING EARLY");
+        System.exit(0);
+
+        String file_name_format = "out.ll";
+        if (clARGS.containsKey("asm")) {
+            file_name_format = clARGS.getOrDefault("exe", "out.ll");
+        }
+
+        if (handler.numErrors == 0) {
+            if (!file_name_format.endsWith(".ll")) {
+                System.out.println("IR file must end with '.ll' file suffix");
+            }
+            Emitter emitter = new Emitter(file_name_format);
+            emitter.gen(ast);
+        }
+        if (clARGS.containsKey("asm")) {
+            System.out.println("IR file '" + file_name_format + "' has been generated. Exiting compiler");
+            System.exit(0);
         } else {
-            Checker checker = new Checker(handler);
-            try {
-                checker.check(ast);
-            } catch (Exception s) {
-                System.out.println(s);
-                System.exit(1);
-            }
-
-            String file_name_format = "out.ll";
-            if (clARGS.containsKey("asm")) {
-                file_name_format = clARGS.getOrDefault("exe", "out.ll");
-            }
-            if (handler.numErrors == 0) {
-                if (!file_name_format.endsWith(".ll")) {
-                    System.out.println("IR file must end with '.ll' file suffix");
-                }
-                Emitter emitter = new Emitter(file_name_format);
-                emitter.gen(ast);
-            }
-
-            if (clARGS.containsKey("asm")) {
-                System.out.println("IR file '" + file_name_format + "' has been generated. Exiting compiler");
-                System.exit(0);
-            } else {
-                shellCommand("clang -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format);
-                shellCommand("rm -f " +file_name_format);
-                System.out.println("Executable file has been generated with the name: " + clARGS.getOrDefault("exe", "a.out"));
-                System.exit(0);
-            }
-
+            shellCommand("clang -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format);
+            shellCommand("rm -f " + file_name_format);
+            System.out.println("Executable file has been generated with the name: " + clARGS.getOrDefault("exe", "a.out"));
+            System.exit(0);
         }
     }
 }
