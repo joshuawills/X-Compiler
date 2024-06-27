@@ -118,7 +118,11 @@ public class Checker implements Visitor {
         Environment.errorType = new ErrorType(dummyPos);
         Environment.inInt = stdFunction(Environment.voidType, "inInt", new ParaList(
             new ParaDecl(Environment.strType, i, dummyPos, false),
-            new EmptyParaList(dummyPos), dummyPos
+            new ParaList(
+                    new ParaDecl(Environment.intType, i, dummyPos, false),
+                    new EmptyParaList(dummyPos), dummyPos
+            ),
+            dummyPos
         ));
         Environment.outInt = stdFunction(Environment.voidType, "outInt", new ParaList(
                 new ParaDecl(Environment.intType, i, dummyPos, false),
@@ -750,6 +754,21 @@ public class Checker implements Visitor {
         if (inMain && ast.I.spelling.equals("main")) {
             handler.reportError(errors[20], "", ast.I.pos);
             return Environment.errorType;
+        }
+
+        if (ast.I.spelling.equals("inInt")) {
+            Args A= (Args) ast.AL;
+            Expr secondArg = ((Args) A.EL).E;
+            if (!(secondArg instanceof VarExpr)) {
+                handler.reportError(errors[18] + ": %", "Second arg for 'inInt' must be a declared int variable", ast.I.pos);
+                return Environment.errorType;
+            }
+            VarExpr VE = (VarExpr) secondArg;
+            Decl x = idTable.retrieve(((SimpleVar) VE.V).I.spelling);
+            if (!x.isMut) {
+                handler.reportError(errors[23] + ": %", ((SimpleVar) VE.V).I.spelling, ast.I.pos);
+                return null;
+            }
         }
 
         // Check function exists

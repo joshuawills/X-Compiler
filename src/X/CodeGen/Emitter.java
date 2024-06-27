@@ -7,6 +7,7 @@ public class Emitter implements Visitor {
 
     private final String outputName;
     private int loopDepth = 0;
+    private int numConstStrings = 0;
 
     public Emitter(String outputName) {
         this.outputName = outputName;
@@ -14,7 +15,9 @@ public class Emitter implements Visitor {
 
     public final void gen(AST ast) {
         emitN("declare i32 @printf(i8*, ...)");
+        emitN("declare i32 @scanf(i8*, ...)");
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
+        emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");
         ast.visit(this, null);
         LLVM.dump(outputName);
     }
@@ -527,10 +530,49 @@ public class Emitter implements Visitor {
         emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i32 %" + index + ")");
 
     }
+
+    public void handleInInt(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+        Args A= (Args) ast.AL;
+
+        StringExpr SE = (StringExpr) A.E;
+        String val = SE.SL.spelling;
+        System.out.println(val);
+        int l = val.length() + 1; // +1 for null termination
+        emitN("\t%.str" + numConstStrings + " = alloca [" + l + " x i8], align 1");
+        int XnewIndex = f.getNewIndex();
+        emitN("\t%" + XnewIndex + " = getelementptr [" + l + " x i8], [" + l + " x i8]* %.str" + numConstStrings + ", i32 0, i32 0");
+        emitN("\tstore [" + l + " x i8] c\"" + val + "\\00\", ["+ l +" x i8]* %.str" + numConstStrings);
+        emitN("\tcall i32 (i8*, ...) @printf(i8* %" + XnewIndex + ")");
+        f.getNewIndex(); // balance out temp variables
+        numConstStrings += 1;
+
+        Expr secondArg = ((Args) A.EL).E;
+        VarExpr VE = (VarExpr) secondArg;
+        String repetition = "";
+        if (((SimpleVar) VE.V).I.decl instanceof LocalVar X) {
+            repetition = String.valueOf(X.index);
+        }
+        String varName = ((SimpleVar) VE.V).I.spelling;
+        int indexStr = f.getNewIndex();
+        int newIndex = f.getNewIndex();
+        emitN("\t%" + indexStr + " = getelementptr inbounds [3 x i8], [3 x i8]* @.IIstr, i32 0, i32 0");
+        AST X = ((SimpleVar) VE.V).I.decl;
+        if (X instanceof LocalVar || X instanceof ParaDecl) {
+            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* %" + varName + repetition + ")");
+        } else if (X instanceof GlobalVar) {
+            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* %" + varName + repetition + ")");
+        }
+    }
+
     public Object visitCallExpr(CallExpr ast, Object o) {
 
         if (ast.I.spelling.equals("outInt")) {
             handleOutInt(ast, o);
+            return null;
+        }
+        if (ast.I.spelling.equals("inInt")) {
+            handleInInt(ast, o);
             return null;
         }
 
