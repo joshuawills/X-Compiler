@@ -44,7 +44,7 @@ public enum TokenType {
     FN,
     ARROW,
     COMMA,
-    PERCENT,
+    MOD,
     BITWISE_OR,
     BITWISE_AND,
     BITWISE_XOR,

@@ -459,7 +459,7 @@ public class Checker implements Visitor {
                 }
                 ast.type = Environment.booleanType;
             }
-            case "+", "-", "/", "*" -> {
+            case "+", "-", "/", "*", "%" -> {
                 if (!t1.isInt() || !t2.isInt()) {
                     handler.reportError(errors[7], "", t1.pos);
                     ast.type = Environment.errorType;

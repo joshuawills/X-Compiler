@@ -40,7 +40,7 @@ stmt})? \\
 \textit{relational-expr} &\to \textit{additive-expr } ((\text{"<" } | \text{ "<=" } | \text{ ">" } | \text{ ">=" })
 \textit{ additive-expr})^* \\
 \textit{additive-expr} &\to \textit{mult-expr } ((\text{"-" } | \text{ "+" }) \textit{ mult-expr})^* \\
-\textit{mult-expr} &\to \textit{unary-expr } ((\text{"*" } | \text{ "/" }) \textit{ unary-expr})^* \\
+\textit{mult-expr} &\to \textit{unary-expr } ((\text{"\%" } | \text{"*" } | \text{ "/" }) \textit{ unary-expr})^* \\
 \textit{unary-expr} &\to
 \begin{cases}
 \textbf{INTLITERAL} \\

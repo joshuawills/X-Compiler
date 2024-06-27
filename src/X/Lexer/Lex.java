@@ -132,6 +132,10 @@ public class Lex {
                 acceptWithSpelling();
                 yield TokenType.COMMA;
             }
+            case '%' -> {
+                acceptWithSpelling();
+                yield TokenType.MOD;
+            }
             case '&' -> {
                 acceptWithSpelling();
                 if (currChar == '&') {

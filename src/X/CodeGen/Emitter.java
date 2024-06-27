@@ -293,7 +293,7 @@ public class Emitter implements Visitor {
                     emitN("\t%" + newNum + " = " +  "xor i1 1, " + " %" + numOne);
                 }
             }
-            case "+", "*", "/", "==", "!=", "<", "<=", ">", ">=", "&&", "||" -> {
+            case "+", "*", "%", "/", "==", "!=", "<", "<=", ">", ">=", "&&", "||" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
@@ -315,6 +315,7 @@ public class Emitter implements Visitor {
         return switch (input)  {
             case "+" -> "add i32";
             case "*" -> "mul i32";
+            case "%" -> "srem i32";
             case "/" -> "udiv i32";
             case "==" -> "icmp eq i32";
             case "!=" -> "icmp ne i32";

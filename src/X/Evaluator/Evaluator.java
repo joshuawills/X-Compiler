@@ -102,6 +102,7 @@ public class Evaluator implements Visitor {
             case "-" -> (int) ast.E1.visit(this, o) - (int) ast.E2.visit(this, o);
             case "/" -> (int) ast.E1.visit(this, o) / (int) ast.E2.visit(this, o);
             case "*" -> (int) ast.E1.visit(this, o) * (int) ast.E2.visit(this, o);
+            case "%" -> (int) ast.E1.visit(this, o) % (int) ast.E2.visit(this, o);
             default -> {
                 System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
                 yield null;

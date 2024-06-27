@@ -544,7 +544,7 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         Expr e1AST = parseUnaryExpr();
-        while (currentToken.kind == TokenType.STAR || currentToken.kind == TokenType.F_SLASH) {
+        while (currentToken.kind == TokenType.MOD || currentToken.kind == TokenType.STAR || currentToken.kind == TokenType.F_SLASH) {
             Operator opAST = acceptOperator();
             Expr e2AST = parseUnaryExpr();
             finish(pos);
