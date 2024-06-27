@@ -7,6 +7,7 @@ import X.Lexer.TokenType;
 import X.Nodes.*;
 
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.Optional;
 
 public class Parser {
@@ -212,7 +213,6 @@ public class Parser {
             CallExpr E = new CallExpr(iAST, aLIST, pos);
             return new CallStmt(E, pos);
         }
-
         return parseDeclStmt(iAST);
     }
 
@@ -221,18 +221,35 @@ public class Parser {
         return new LocalVarStmt(vAST, vAST.pos);
     }
 
-    private DeclStmt parseDeclStmt(Ident iAST) throws SyntaxError {
+    private Stmt parseDeclStmt(Ident iAST) throws SyntaxError {
         Position pos = new Position();
         start(pos);
         Expr eAST = new EmptyExpr(pos);
-        if (tryConsume(TokenType.ASSIGN)) {
+        Operator O = null;
+        boolean isMath = false;
+        if (currentToken.kind == TokenType.PLUS_EQUAL || currentToken.kind == TokenType.F_SLASH_EQUAL
+            || currentToken.kind == TokenType.STAR_EQUAL || currentToken.kind == TokenType.DASH_EQUAL) {
+            isMath = true;
+            String s = currentToken.lexeme;
+            accept();
+            finish(pos);
+            O = new Operator(s, pos);
             eAST = parseExpr();
+        } else {
+            if (tryConsume(TokenType.ASSIGN)) {
+                eAST = parseExpr();
+            }
         }
+
         if (!inFor) {
             match(TokenType.SEMI);
         }
         finish(pos);
-        return new DeclStmt(iAST, eAST, pos);
+        if (isMath) {
+            return new MathDeclStmt(iAST, eAST, O, pos);
+        } else {
+            return new DeclStmt(iAST, eAST, pos);
+        }
     }
 
     private IfStmt parseIfStmt() throws SyntaxError {

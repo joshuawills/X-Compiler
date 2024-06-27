@@ -91,6 +91,7 @@ public class Emitter implements Visitor {
             // TODO: assign default values
             return null;
         }
+        ast.E.visit(this, o);
 
 
         emit("\tstore ");
@@ -682,6 +683,48 @@ public class Emitter implements Visitor {
         f.conStack.pop();
         f.brkStack.pop();
         f.setDollarDepth(f.getDollarDepth() - 1);
+        return null;
+    }
+
+    public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
+
+        String repetitions = "";
+        if (ast.I.decl instanceof LocalVar) {
+            repetitions = String.valueOf(((LocalVar) ast.I.decl).index);
+        }
+
+        Frame f = (Frame) o;
+        ast.E.visit(this, o);
+        int index = ast.E.tempIndex;
+        int aIndex = f.getNewIndex();
+        if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
+            emitN("\t%" + aIndex + " = load i32, i32* %" + ast.I.spelling + repetitions);
+        } else if (ast.I.decl instanceof GlobalVar) {
+            emitN("\t%" + aIndex + " = load i32, i32* @" + ast.I.spelling + repetitions);
+        }
+        int nIndex = f.getNewIndex();
+        switch (ast.O.spelling) {
+            case "+=" -> {
+                emitN("\t%" + nIndex + " = add i32 %" + index + ", %" + aIndex);
+            }
+            case "-=" -> {
+                emitN("\t%" + nIndex + " = sub i32 %" + index + ", %" + aIndex);
+            }
+            case "*=" -> {
+                emitN("\t%" + nIndex + " = mul i32 %" + index + ", %" + aIndex);
+            }
+            case "/=" -> {
+                emitN("\t%" + nIndex + " = udiv i32 %" + index + ", %" + aIndex);
+            }
+            default -> {
+                System.out.println("UNREACHABLE MATHDECL");
+            }
+        }
+        if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
+            emitN("\tstore i32 %" + nIndex + ", i32* %" + ast.I.spelling + repetitions);
+        } else if (ast.I.decl instanceof GlobalVar) {
+            emitN("\tstore i32 %" + nIndex + ", i32* @" + ast.I.spelling + repetitions);
+        }
         return null;
     }
 

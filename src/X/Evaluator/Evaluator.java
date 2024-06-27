@@ -239,4 +239,8 @@ public class Evaluator implements Visitor {
     public Object visitLoopStmt(LoopStmt ast, Object o) {
         return null;
     }
+
+    public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
+        return null;
+    }
 }

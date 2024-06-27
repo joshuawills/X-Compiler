@@ -94,4 +94,6 @@ public interface Visitor {
     Object visitCallStmt(CallStmt ast, Object o);
 
     Object visitLoopStmt(LoopStmt ast, Object o);
+
+    Object visitMathDeclStmt(MathDeclStmt ast, Object o);
 }

@@ -19,6 +19,7 @@ $$
 \textit{continue-stmt} \\
 \textit{return-stmt} \\
 \textit{decl-stmt} \\
+\textit{math-decl-stmt} \\
 \textit{func-call-stmt} \\
 \textit{loop-stmt} \\
 \end{cases} \\
@@ -29,6 +30,7 @@ stmt})? \\
 \textit{break-stmt} &\to \textbf{break} \text{ ";"} \\
 \textit{continue-stmt} &\to \textbf{continue } \text{ ";"} \\
 \textit{return-stmt} &\to \textbf{return} \textit{ expr}? \text{ ";"} \\
+\textit{math-decl-stmt} &\to \textit{ident} (\text{ "+="} | \text{ "-="} | \text{ "/="} | \text{ "*="}) \textit{expr} \text{ ";"} \\
 \textit{decl-stmt} &\to \textit{ident} \text{ "="} \textit{expr} \text{ ";"} \\
 \textit{func-call-stmt} &\to \textit{func-call} \text{ ";"} \\
 \textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\ \\

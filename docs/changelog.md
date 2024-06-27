@@ -21,11 +21,11 @@
 - fixing variable shadowing
 - Set up unique var support for loop stmts
   - Includes fixing grammar
+- More advanced language features
+  - %, +=, -=, /=, *=,
+- Set up global vars properly
 
 # TODO
 
-- More advanced language features
-    - %, +=, -=, /=, *=, 
 - In int
-- Set up global vars properly
 - Float support

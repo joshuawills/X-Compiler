@@ -707,6 +707,45 @@ public class Checker implements Visitor {
         return null;
     }
 
+    public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
+        Decl decl = idTable.retrieve(ast.I.spelling);
+        if (decl == null) {
+            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
+            return null;
+        }
+
+        if (!decl.T.isInt()) {
+            handler.reportError(errors[5] + ": %", ast.I.spelling + ", must be an int", ast.E.pos);
+            return null;
+        }
+
+        if (decl instanceof LocalVar) {
+            decl.isReassigned = true;
+        } else if (decl instanceof GlobalVar) {
+            decl.isReassigned = true;
+        }
+
+        ast.I.decl = decl;
+
+        if (decl instanceof Function) {
+            handler.reportError(errors[9], "", ast.E.pos);
+            return null;
+        }
+
+        if (!decl.isMut) {
+            handler.reportError(errors[23], "", ast.E.pos);
+            return null;
+        }
+
+        Type t = (Type) ast.E.visit(this, o);
+        if (!decl.T.assignable(t)) {
+            String message = "expected " + decl.T.toString() + ", received " + t.toString();
+            handler.reportError(errors[5] + ": %", message, ast.E.pos);
+        }
+
+        return null;
+    }
+
     public Object visitCallExpr(CallExpr ast, Object o) {
         if (inMain && ast.I.spelling.equals("main")) {
             handler.reportError(errors[20], "", ast.I.pos);

@@ -427,4 +427,12 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
+        print(indentString() + "DeclStmt");
+        ast.I.visit(this, o);
+        ast.O.visit(this, o);
+        ast.E.visit(this, o);
+        return null;
+    }
+
 }
