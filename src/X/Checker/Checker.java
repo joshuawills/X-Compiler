@@ -356,7 +356,6 @@ public class Checker implements Visitor {
             conditionType = (Type) ast.E.visit(this, ast);
         }
         if (!this.currentFunctionType.assignable(conditionType)) {
-            System.out.println("OHOH");
             String message = "expected " + this.currentFunctionType.toString() +
                 ", received " + conditionType.toString();
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
@@ -381,6 +380,13 @@ public class Checker implements Visitor {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
             return null;
         }
+
+        if (decl instanceof LocalVar) {
+            decl.isReassigned = true;
+        } else if (decl instanceof GlobalVar) {
+            decl.isReassigned = true;
+        }
+
         ast.I.decl = decl;
 
         if (decl instanceof Function) {
@@ -397,7 +403,6 @@ public class Checker implements Visitor {
         if (!decl.T.assignable(t)) {
             String message = "expected " + decl.T.toString() + ", received " + t.toString();
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
-            return null;
         }
 
         return null;

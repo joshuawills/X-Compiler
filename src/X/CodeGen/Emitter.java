@@ -1,5 +1,6 @@
 package X.CodeGen;
 
+import X.Evaluator.Evaluator;
 import X.Nodes.*;
 
 public class Emitter implements Visitor {
@@ -58,11 +59,10 @@ public class Emitter implements Visitor {
     }
 
     public Object visitGlobalVar(GlobalVar ast, Object o) {
-        emit("@" + ast.I.spelling + "= external global ");
+        Object result = Evaluator.evalExpression(ast.E);
+        emit("@" + ast.I.spelling + " = global ");
         ast.T.visit(this, o);
-        // This won't work, need to reconsider - o needs to be a frame
-        ast.E.visit(this, o);
-        emitN("");
+        emitN(" " + result.toString());
         return null;
     }
 
@@ -86,7 +86,12 @@ public class Emitter implements Visitor {
         emit("\t%" + ast.I.spelling + loopDepth + " = alloca ");
         ast.T.visit(this, o);
         emitN("");
-        ast.E.visit(this, f);
+
+        if (ast.E instanceof EmptyExpr) {
+            // TODO: assign default values
+            return null;
+        }
+
 
         emit("\tstore ");
         ast.T.visit(this, o);
@@ -257,7 +262,7 @@ public class Emitter implements Visitor {
         if (ast.I.decl instanceof LocalVar) {
             emitN("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
         } else if (ast.I.decl instanceof GlobalVar) {
-            emitN("* %" + ast.I.spelling + ((GlobalVar) ast.I.decl).index);
+            emitN("* @" + ast.I.spelling);
         }
         return null;
     }
@@ -499,6 +504,13 @@ public class Emitter implements Visitor {
                 emit(" 0, ");
             }
             emitN(" %" + ast.I.spelling + "0");
+        } else if (d instanceof GlobalVar) {
+            int newIndex = f.getNewIndex();
+            emit("\t%" + newIndex + " = load ");
+            ((GlobalVar) d).T.visit(this, o);
+            emit(", ");
+            ((GlobalVar) d).T.visit(this, o);
+            emitN("* @" + ast.I.spelling);
         }
         return null;
    }
