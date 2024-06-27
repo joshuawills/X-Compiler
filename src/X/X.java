@@ -11,13 +11,16 @@ import X.Parser.SyntaxError;
 import X.TreeDrawer.Drawer;
 import X.TreePrinter.Printer;
 
+import java.text.DecimalFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class X {
 
     private static AST ast;
-
+    private static final DecimalFormat df = new DecimalFormat("0.00");
     private static void help() {
         System.out.println("XY Compiler Options:");
         System.out.println("\t-h  | --help => Provides summary of CL arguments and use of program");
@@ -28,6 +31,7 @@ public class X {
         System.out.println("\t-pr | --parser_raw => Generates a deconstructed parse tree");
         System.out.println("\t-a  | --assembly => Generates a .s file instead of an executable");
         System.out.println("\t-q  | --quiet  => Silence any non-crucial warnings");
+        System.out.println("\t-s | --stat => Log statistics about the compilation times");
         System.out.println("\nDeveloped by Joshua Wills 2024");
         System.exit(0);
     }
@@ -43,6 +47,7 @@ public class X {
                 case "-p", "--parser" -> CLArgs.put("parse", "true");
                 case "-a", "--assembly" -> CLArgs.put("asm", "true");
                 case "-q", "--quiet" -> CLArgs.put("quiet", "true");
+                case "-s", "--stat" -> CLArgs.put("stat", "true");
                 case "-o", "--out" -> {
                     if (i + 1 == args.length)
                         break;
@@ -67,12 +72,12 @@ public class X {
         }
     }
     public static void main(String[] args) {
+        Instant start = Instant.now();
         if (args.length == 0) {
             System.out.println("Usage: ./executable <options> <filename.x>");
             X.help();
             System.exit(1);
         }
-
 
         HashMap<String, String> clARGS = X.handleArgs(args);
         if (clARGS.containsKey("help")) {
@@ -84,8 +89,10 @@ public class X {
         ErrorHandler handler = new ErrorHandler(file_name, clARGS.containsKey("quiet"));
         File file = new File(file_name);
 
+        Instant lStart = Instant.now();
         Lex lexer = new Lex(file);
         ArrayList<Token> tokens = lexer.getTokens();
+        Instant lEnd = Instant.now();
 
         if (clARGS.containsKey("tokens")) {
             for (Token token: tokens) {
@@ -94,13 +101,14 @@ public class X {
             System.exit(0);
         }
 
+        Instant pStart = Instant.now();
         Parser parser = new Parser(tokens, handler);
-
         try {
             ast = parser.parseProgram();
         } catch (SyntaxError s) {
             System.exit(1);
         }
+        Instant pEnd = Instant.now();
 
         if (handler.numErrors == 0 && clARGS.containsKey("parser_raw")) {
             Printer printer = new Printer("tests/.tree");
@@ -111,6 +119,7 @@ public class X {
             Drawer drawer = new Drawer();
             drawer.draw(ast);
         } else {
+            Instant cStart = Instant.now();
             Checker checker = new Checker(handler);
             try {
                 checker.check(ast);
@@ -118,6 +127,7 @@ public class X {
                 System.out.println(s);
                 System.exit(1);
             }
+            Instant cEnd = Instant.now();
 
             if (handler.numErrors != 0) {
                 System.exit(1);
@@ -128,6 +138,7 @@ public class X {
                 file_name_format = clARGS.getOrDefault("exe", "out.ll");
             }
 
+            Instant eStart = Instant.now();
             if (handler.numErrors == 0) {
                 if (!file_name_format.endsWith(".ll")) {
                     System.out.println("IR file must end with '.ll' file suffix");
@@ -135,16 +146,42 @@ public class X {
                 Emitter emitter = new Emitter(file_name_format);
                 emitter.gen(ast);
             }
+            Instant eEnd = Instant.now();
+
+            Instant clangStart = Instant.now();
             if (clARGS.containsKey("asm")) {
                 System.out.println("IR file '" + file_name_format + "' has been generated. Exiting compiler");
-                System.exit(0);
             } else {
                 shellCommand("clang -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format);
                 shellCommand("rm -f " + file_name_format);
                 System.out.println("Executable file has been generated with the name: " + clARGS.getOrDefault("exe", "a.out"));
-                System.exit(0);
+            }
+            Instant clangEnd = Instant.now();
+
+            if (clARGS.containsKey("stat")) {
+                Instant end = Instant.now();
+                System.out.println("Compiler data");
+                long timeMS = Duration.between(start, end).toMillis();
+                long timeS= Duration.between(start, end).toSeconds();
+                System.out.println("\tTotal time elapsed: " + timeMS + "ms/" + df.format(timeS) + "s\n");
+                long lTimeMS = Duration.between(lStart, lEnd).toMillis();
+                long lTimeS= Duration.between(lStart, lEnd).toSeconds();
+                System.out.println("\tLexing time:        " + lTimeMS + "ms/" + df.format(lTimeS) + "s " + (100 * lTimeMS / timeMS) + "%");
+                long pTimeMS = Duration.between(pStart, pEnd).toMillis();
+                long pTimeS= Duration.between(pStart, pEnd).toSeconds();
+                System.out.println("\tParsing time:       " + pTimeMS + "ms/" + df.format(pTimeS) + "s " + (100 * pTimeMS / timeMS) + "%");
+                long cTimeMS = Duration.between(cStart, cEnd).toMillis();
+                long cTimeS= Duration.between(cStart, cEnd).toSeconds();
+                System.out.println("\tChecking time:      " + cTimeMS + "ms/" + df.format(cTimeS) + "s " + (100 * cTimeMS / timeMS) + "%");
+                long eTimeMS = Duration.between(eStart, eEnd).toMillis();
+                long eTimeS= Duration.between(eStart, eEnd).toSeconds();
+                System.out.println("\tEmitting time:      " + eTimeMS + "ms/" + df.format(eTimeS) + "s " + (100 * eTimeMS / timeMS) + "%");
+                if (!clARGS.containsKey("asm")) {
+                    long clangTimeMS = Duration.between(clangStart, clangEnd).toMillis();
+                    long clangTimeS= Duration.between(clangStart, clangEnd).toSeconds();
+                    System.out.println("\tClang time:         " + clangTimeMS + "ms/" + df.format(clangTimeS) + "s " + (100 * clangTimeMS / timeMS) + "%");
+                }
             }
         }
-
     }
 }
