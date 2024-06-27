@@ -11,6 +11,8 @@ import X.Parser.SyntaxError;
 import X.TreeDrawer.Drawer;
 import X.TreePrinter.Printer;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -60,15 +62,29 @@ public class X {
         return CLArgs;
     }
 
-    private static void shellCommand(String command) {
+    private static void shellCommand(String command, boolean printOutput) {
         try {
             Process process = Runtime.getRuntime().exec(command);
+
+            if (printOutput) {
+                BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+                String s;
+                while ((s = stdInput.readLine()) != null) {
+                    System.out.println(s);
+                }
+                while ((s = stdError.readLine()) != null) {
+                    System.err.println(s);
+                }
+            }
+
             int exitCode = process.waitFor();
             if (exitCode != 0) {
                 System.out.println("Failed to execute shell command with code 0: " + command);
             }
         } catch (Exception e) {
-            System.out.println("'clang' command failed. Is this program installed on your system?");
+            System.out.println("'" + command + "' command failed. Is this program installed on your system?");
         }
     }
     public static void main(String[] args) {
@@ -152,11 +168,17 @@ public class X {
             if (clARGS.containsKey("asm")) {
                 System.out.println("IR file '" + file_name_format + "' has been generated. Exiting compiler");
             } else {
-                shellCommand("clang -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format);
-                shellCommand("rm -f " + file_name_format);
+                shellCommand("clang -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format, false);
+                shellCommand("rm -f " + file_name_format, false);
                 System.out.println("Executable file has been generated with the name: " + clARGS.getOrDefault("exe", "a.out"));
             }
             Instant clangEnd = Instant.now();
+
+            Instant runStart = Instant.now();
+            if (clARGS.containsKey("run")) {
+                shellCommand("./" + clARGS.getOrDefault("exe", "a.out"), true);
+            }
+            Instant runEnd = Instant.now();
 
             if (clARGS.containsKey("stat")) {
                 Instant end = Instant.now();
@@ -180,6 +202,11 @@ public class X {
                     long clangTimeMS = Duration.between(clangStart, clangEnd).toMillis();
                     long clangTimeS= Duration.between(clangStart, clangEnd).toSeconds();
                     System.out.println("\tClang time:         " + clangTimeMS + "ms/" + df.format(clangTimeS) + "s " + (100 * clangTimeMS / timeMS) + "%");
+                }
+                if (clARGS.containsKey("run")) {
+                    long runTimeMS = Duration.between(runStart, runEnd).toMillis();
+                    long runTimeS= Duration.between(runStart, runEnd).toSeconds();
+                    System.out.println("\tRun time:           " + runTimeMS + "ms/" + df.format(runTimeS) + "s " + (100 * runTimeMS / timeMS) + "%");
                 }
             }
         }

@@ -26,4 +26,6 @@
 
 - More advanced language features
     - %, +=, -=, /=, *=, 
+- In int
 - Set up global vars properly
+- Float support
