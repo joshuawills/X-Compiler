@@ -119,8 +119,9 @@ public class X {
                 System.exit(1);
             }
 
-            System.out.println("EXITING EARLY");
-            System.exit(0);
+            if (handler.numErrors != 0) {
+                System.exit(1);
+            }
 
             String file_name_format = "out.ll";
             if (clARGS.containsKey("asm")) {

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 public class Lex {
 
     private final File file;
-
     private int line = 1;
     private int col = 1;
     private char currChar;
@@ -226,6 +225,10 @@ public class Lex {
                     yield TokenType.DASH;
                 }
             }
+            case '$' -> {
+                acceptWithSpelling();
+                yield TokenType.DOLLAR;
+            }
             case '\u0000' -> TokenType.EOF;
             default -> handleOther();
         };
@@ -265,6 +268,8 @@ public class Lex {
             }
             handleElseIf();
             return switch (spelling.toString()) {
+                case "loop" -> TokenType.LOOP;
+                case "in" -> TokenType.IN;
                 case "return" -> TokenType.RETURN;
                 case "fn" -> TokenType.FN;
                 case "int", "bool", "str", "void" -> TokenType.TYPE;

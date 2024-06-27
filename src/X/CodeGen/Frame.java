@@ -14,6 +14,16 @@ public class Frame {
     public Stack<String> scopeStart;
     public Stack<String> scopeEnd;
 
+    private int dollarDepth = 0;
+
+    public void setDollarDepth(int val) {
+        dollarDepth = val;
+    }
+
+    public int getDollarDepth() {
+        return dollarDepth;
+    }
+
     public Frame(boolean isMain) {
         this.isMain = isMain;
         label = currentStack = maxStack = 0;

@@ -415,4 +415,16 @@ public class Printer implements Visitor {
         --indent;
         return null;
     }
+
+    public Object visitLoopStmt(LoopStmt ast, Object o) {
+        print(indentString() + "LoopStmt");
+        ast.varName.ifPresent(var -> var.visit(this, o));
+        ast.I1.ifPresent(intExpr -> intExpr.visit(this, o));
+        ast.I2.ifPresent(intExpr -> intExpr.visit(this, o));
+        ++indent;
+        ast.S.visit(this, o);
+        --indent;
+        return null;
+    }
+
 }

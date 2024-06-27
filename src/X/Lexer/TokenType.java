@@ -55,5 +55,6 @@ public enum TokenType {
     LEFT_SQUARE,
     RIGHT_SQUARE,
     DOLLAR,
-    BOOL_LIT
+    BOOL_LIT,
+    IN
 }

@@ -20,6 +20,7 @@ $$
 \textit{return-stmt} \\
 \textit{decl-stmt} \\
 \textit{func-call-stmt} \\
+\textit{loop-stmt} \\
 \end{cases} \\
 \textit{if-stmt} &\to \textbf{if} \textit{ expr stmt } (\textbf{else if } \textit{expr stmt})^* (\textbf{else} \textit{
 stmt})? \\
@@ -29,7 +30,8 @@ stmt})? \\
 \textit{continue-stmt} &\to \textbf{continue } \text{ ";"} \\
 \textit{return-stmt} &\to \textbf{return} \textit{ expr}? \text{ ";"} \\
 \textit{decl-stmt} &\to \textit{ident} \text{ "="} \textit{expr} \text{ ";"} \\
-\textit{func-call-stmt} &\to \textit{func-call} \text{ ";"} \\ \\
+\textit{func-call-stmt} &\to \textit{func-call} \text{ ";"} \\
+\textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\ \\
 
 \textit{expr} &\to \textit{or-expr}\\
 \textit{or-expr} &\to \textit{and-expr } (\text{"||" } \textit{and-expr})^* \\
@@ -57,7 +59,7 @@ stmt})? \\
 \textit{para-list} &\to \textit{decl } (\textit{"," decl})^*  \text{ | } \epsilon \\ \\
 \textit{decl} &\to \textbf{mut}? \textit{ type ident} \\
 
-\textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* \\
+\textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
 \textit{type} &\to \textbf{int | str | void | bool } \\
 
 \end{align}

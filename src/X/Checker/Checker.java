@@ -35,6 +35,8 @@ public class Checker implements Visitor {
         "*24: variable declared but never used",
         "*25: variable declared mutable but never reassigned",
         "*26: function declared but never used",
+        "*27: inappropriate use of '$' operator",
+        "*28: loop iterators must be integers",
     };
 
     private final SymbolTable idTable;
@@ -44,6 +46,8 @@ public class Checker implements Visitor {
     private boolean hasReturn = false;
     private boolean inMain = false;
     private int loopDepth = 0;
+    private int loopKDepth = 0;
+    private boolean validDollar = false;
     private Type currentFunctionType = null;
 
     private final Position dummyPos = new Position();
@@ -158,6 +162,8 @@ public class Checker implements Visitor {
             if (!(ast.PL instanceof EmptyParaList)) {
                handler.reportError(errors[19], "", ast.I.pos);
             }
+        } else if (ast.I.spelling.equals("$")) {
+            handler.reportError(errors[27] + ": %", "can't be used as function name", ast.I.pos);
         }
         idTable.openScope();
         ast.PL.visit(this, null);
@@ -274,6 +280,7 @@ public class Checker implements Visitor {
     }
 
     public Object visitForStmt(ForStmt ast, Object o) {
+        idTable.openScope();
         if (!(ast.S1 instanceof EmptyStmt)) {
             ast.S1.visit(this, ast);
         }
@@ -288,7 +295,6 @@ public class Checker implements Visitor {
             ast.S3.visit(this, ast);
         }
         this.loopDepth++;
-        idTable.openScope();
         ast.S.visit(this, ast);
         idTable.closeScope();
         this.loopDepth--;
@@ -375,6 +381,7 @@ public class Checker implements Visitor {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
             return null;
         }
+        ast.I.decl = decl;
 
         if (decl instanceof Function) {
             handler.reportError(errors[9], "", ast.E.pos);
@@ -608,6 +615,9 @@ public class Checker implements Visitor {
     }
 
     private void declareVariable(Ident ident, Decl decl) {
+        if (ident.spelling.equals("$")) {
+            handler.reportError(errors[27] +  ": %", "Can't use '$' operator as variable", ident.pos);
+        }
         IdEntry entry = idTable.retrieveOneLevel(ident.spelling);
         if (entry != null) {
             String message = String.format("'%s'. Previously declared at line %d", ident.spelling,
@@ -632,6 +642,14 @@ public class Checker implements Visitor {
     }
 
     public Object visitSimpleVar(SimpleVar ast, Object o) {
+
+        if (ast.I.spelling.equals("$") && !validDollar) {
+            handler.reportError(errors[27] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        } else if (ast.I.spelling.equals("$")) {
+            return Environment.intType;
+        }
+
         Decl decl = idTable.retrieve(ast.I.spelling);
         if (decl == null) {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
@@ -652,6 +670,35 @@ public class Checker implements Visitor {
 
     public Object visitCallStmt(CallStmt ast, Object o) {
         ast.E.visit(this, o);
+        return null;
+    }
+
+    public Object visitLoopStmt(LoopStmt ast, Object o) {
+        Type T1, T2;
+
+        idTable.openScope();
+        ast.varName.ifPresent(localVar -> declareVariable(localVar.I, localVar));
+        validDollar = !ast.varName.isPresent();
+        if (ast.I1.isPresent()) {
+            T1 = (Type) ast.I1.get().visit(this, o);
+            if (!T1.isInt()) {
+                handler.reportError(errors[28], "", ast.pos);
+            }
+        }
+        if (ast.I2.isPresent()) {
+            T2 = (Type) ast.I2.get().visit(this, o);
+            if (!T2.isInt()) {
+                handler.reportError(errors[28], "", ast.pos);
+            }
+        }
+
+        loopKDepth += 1;
+        loopDepth++;
+        ast.S.visit(this, o);
+        loopKDepth -= 1;
+        loopDepth--;
+        idTable.closeScope();
+        validDollar = false;
         return null;
     }
 

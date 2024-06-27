@@ -92,4 +92,6 @@ public interface Visitor {
     Object visitLocalVarStmt(LocalVarStmt ast, Object o);
 
     Object visitCallStmt(CallStmt ast, Object o);
+
+    Object visitLoopStmt(LoopStmt ast, Object o);
 }

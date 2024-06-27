@@ -7,6 +7,7 @@ import X.Lexer.TokenType;
 import X.Nodes.*;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class Parser {
 
@@ -148,7 +149,6 @@ public class Parser {
         boolean isMut = tryConsume(TokenType.MUT);
         Type tAST = parseType();
         Ident iAST = parseIdent();
-
         Expr eAST;
         if (tryConsume(TokenType.ASSIGN)) {
             eAST = parseExpr();
@@ -182,10 +182,11 @@ public class Parser {
             case IF -> parseIfStmt();
             case FOR -> parseForStmt();
             case WHILE -> parseWhileStmt();
+            case LOOP -> parseLoopStmt();
             case BREAK -> parseBreakStmt();
             case CONTINUE -> parseContinueStmt();
             case RETURN -> parseReturnStmt();
-            case IDENT -> parseDeclOrFuncCallStmt(); // this could also be a func call
+            case IDENT, DOLLAR -> parseDeclOrFuncCallStmt(); // this could also be a func call
             default -> parseLocalVarStmt();
         };
     }
@@ -275,6 +276,37 @@ public class Parser {
     }
 
     private boolean inFor = false;
+
+
+    private LoopStmt parseLoopStmt() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        match(TokenType.LOOP);
+        Optional<Expr> I1 = Optional.empty();
+        Optional<Expr> I2 = Optional.empty();
+        Optional<LocalVar> V = Optional.empty();
+
+        if (currentToken.kind == TokenType.IDENT) {
+            Ident I = parseIdent();
+            LocalVar LV = new LocalVar(new IntType(pos), I, new EmptyExpr(pos), pos, true);
+            V = Optional.of(LV);
+            match(TokenType.IN);
+        }
+
+        if (currentToken.kind != TokenType.OPEN_CURLY) {
+            Expr L1 = parseExpr();
+            finish(pos);
+            I1 = Optional.of(L1);
+            if (currentToken.kind != TokenType.OPEN_CURLY) {
+                Expr L2 = parseExpr();
+                finish(pos);
+                I2 = Optional.of(L2);
+            }
+        }
+        Stmt S = parseCompoundStmt();
+        finish(pos);
+        return new LoopStmt(S, I1, I2, V, pos);
+    }
 
     private ForStmt parseForStmt() throws SyntaxError {
         inFor = true;
@@ -426,7 +458,7 @@ public class Parser {
 
 
     Ident parseIdent() throws SyntaxError {
-        if (currentToken.kind == TokenType.IDENT) {
+        if (currentToken.kind == TokenType.IDENT || currentToken.kind == TokenType.DOLLAR) {
             previousPosition = currentToken.pos;
             String spelling = currentToken.lexeme;
             Ident I = new Ident(spelling, previousPosition);
@@ -437,7 +469,6 @@ public class Parser {
             return null;
         }
     }
-
 
     private Expr parseExpr() throws SyntaxError {
         return parseOrExpr();
@@ -532,7 +563,7 @@ public class Parser {
                 finish(pos);
                 yield new UnaryExpr(opAST, eAST, pos);
             }
-            case IDENT -> {
+            case IDENT, DOLLAR -> {
                 Ident iAST = parseIdent();
                 if (tryConsume(TokenType.OPEN_PAREN)) {
                     // Function call

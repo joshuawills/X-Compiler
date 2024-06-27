@@ -129,6 +129,19 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("CallStmt", ast.E);
     }
 
+    public Object visitLoopStmt(LoopStmt ast, Object o) {
+        String varName = "($)";
+        if (ast.varName.isPresent()) {
+            varName = "(" + ast.varName.get().I.spelling + ")";
+        }
+        if (ast.I1.isPresent() && ast.I2.isPresent()) {
+            return layoutTernary("LoopStmt " + varName, ast.I1.get(), ast.I2.get(), ast.S);
+        } else if (ast.I1.isPresent()){
+            return layoutBinary("LoopStmt " + varName, ast.I1.get(), ast.S);
+        }
+        return layoutUnary("LoopStmt", ast.S);
+    }
+
     public Object visitBinaryExpr(BinaryExpr ast, Object obj) {
         return layoutTernary("BinExp", ast.E1, ast.O, ast.E2);
     }
