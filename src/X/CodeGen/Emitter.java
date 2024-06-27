@@ -537,7 +537,6 @@ public class Emitter implements Visitor {
 
         StringExpr SE = (StringExpr) A.E;
         String val = SE.SL.spelling;
-        System.out.println(val);
         int l = val.length() + 1; // +1 for null termination
         emitN("\t%.str" + numConstStrings + " = alloca [" + l + " x i8], align 1");
         int XnewIndex = f.getNewIndex();

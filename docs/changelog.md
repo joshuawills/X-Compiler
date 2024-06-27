@@ -24,8 +24,9 @@
 - More advanced language features
   - %, +=, -=, /=, *=,
 - Set up global vars properly
+- In int
 
 # TODO
 
-- In int
 - Float support
+- Comma separated variable declarations

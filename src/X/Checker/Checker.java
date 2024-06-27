@@ -174,9 +174,7 @@ public class Checker implements Visitor {
         ast.S.visit(this, ast);
         idTable.closeScope();
         if (!hasReturn && !ast.T.isVoid()) {
-            if (ast.I.spelling.equals("main")) {
-                handler.reportMinorError(errors[22], "", ast.I.pos);
-            } else {
+            if (!ast.I.spelling.equals("main")) {
                 handler.reportError(errors[22], "", ast.I.pos);
             }
         }
@@ -765,6 +763,7 @@ public class Checker implements Visitor {
             }
             VarExpr VE = (VarExpr) secondArg;
             Decl x = idTable.retrieve(((SimpleVar) VE.V).I.spelling);
+            x.isReassigned = true;
             if (!x.isMut) {
                 handler.reportError(errors[23] + ": %", ((SimpleVar) VE.V).I.spelling, ast.I.pos);
                 return null;

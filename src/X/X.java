@@ -129,6 +129,7 @@ public class X {
         if (handler.numErrors == 0 && clARGS.containsKey("parser_raw")) {
             Printer printer = new Printer("tests/.tree");
             printer.print(ast);
+            System.exit(0);
         }
 
         if (handler.numErrors == 0 && clARGS.containsKey("parse")) {
@@ -165,12 +166,9 @@ public class X {
             Instant eEnd = Instant.now();
 
             Instant clangStart = Instant.now();
-            if (clARGS.containsKey("asm")) {
-                System.out.println("IR file '" + file_name_format + "' has been generated. Exiting compiler");
-            } else {
+            if (!clARGS.containsKey("asm")) {
                 shellCommand("clang -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format, false);
                 shellCommand("rm -f " + file_name_format, false);
-                System.out.println("Executable file has been generated with the name: " + clARGS.getOrDefault("exe", "a.out"));
             }
             Instant clangEnd = Instant.now();
 

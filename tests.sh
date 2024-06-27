@@ -49,7 +49,7 @@ do
     continue
   fi
 
-  java -jar "$EXE" "$file" -t > "$TEMP"
+  java -jar "$EXE" "$file" -t -q > "$TEMP"
   real_file=$(echo "$file" | sed -E 's/x$/txt/g')
 
   if ! [ -f "$real_file" ]
@@ -77,7 +77,7 @@ do
     continue
   fi
 
-  java -jar "$EXE" "$file" -pr
+  java -jar "$EXE" "$file" -pr -q
   real_file=$(echo "$file" | sed -E 's/x$/txt/g')
 
   if ! diff -q ".tree" "$real_file" >> /dev/null 2>&1
