@@ -785,9 +785,11 @@ public class Emitter implements Visitor {
         ast.S.visit(this, o);
         loopDepth--;
 
-        ast.E.visit(this, o);
-        int index = ast.E.tempIndex;
-        emitN("\tbr i1 %" + index + ", label %" + top + ", label %" + bottom);
+        if (!ast.S.containsExit) {
+            ast.E.visit(this, o);
+            int index = ast.E.tempIndex;
+            emitN("\tbr i1 %" + index + ", label %" + top + ", label %" + bottom);
+        }
         emitN("\n" + bottom+ ":");
 
         f.brkStack.pop();

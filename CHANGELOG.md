@@ -26,9 +26,12 @@
 - Set up global vars properly
 - In int
 
-# TODO
+*28.06.2024*
 
 - Do while construct
+
+# TODO
+
 - outStr() implementation
 - Comma separated variable declarations
 - Allow for simple loop x {} case
