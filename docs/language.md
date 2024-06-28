@@ -194,3 +194,14 @@ precedence, check out the `grammar.md` file, but it can be summarised as below. 
 6.
     - and-logic *&&*
     - or-logic *||*
+
+## Standard Library
+
+Although quite primitive, we have some basic IO functions as a standard library.
+
+`outInt` takes in an integer and prints it to stdout.
+
+`inInt` takes in a string constant and an integer. It logs the string as a prompt, then reads an
+integer from stdin and writes to that mutable variable.
+
+`outStr` takes in a string constant and prints it to stdout.

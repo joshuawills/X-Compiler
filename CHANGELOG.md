@@ -29,6 +29,7 @@
 # TODO
 
 - Do while construct
+- outStr() implementation
 - Comma separated variable declarations
 - Allow for simple loop x {} case
 - Float support
