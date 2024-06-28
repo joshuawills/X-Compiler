@@ -28,5 +28,12 @@
 
 # TODO
 
-- Float support
+- Do while construct
 - Comma separated variable declarations
+- Allow for simple loop x {} case
+- Float support
+- In-compilation expression everywhere possible
+- Basic control flow logic evaluation
+  - if always false, don't generate logic
+  - Side effect detector
+- Write some more test cases 

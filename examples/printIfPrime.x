@@ -2,10 +2,11 @@ fn main() -> int {
     mut int x;
     loop {
         inInt("Enter a number: ", x);
-        if !is_prime(x) {
+        if is_prime(x) {
+            outInt(x);
+        } else {
             break;
         }
-        outInt(x);
     }
     return 0;
 }

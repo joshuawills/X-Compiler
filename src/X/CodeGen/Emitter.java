@@ -133,7 +133,9 @@ public class Emitter implements Visitor {
         loopDepth++;
         ast.S3.visit(this, o);
         loopDepth--;
-        emitN("\tbr label %" + bottom);
+        if (!ast.S3.containsExit) {
+            emitN("\tbr label %" + bottom);
+        }
 
         emitN("\n" + bottom + ":");
         trueBottom = "";
