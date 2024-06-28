@@ -148,6 +148,16 @@ public class Printer implements Visitor {
     }
 
     @Override
+    public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
+        print(indentString() + "DoWhileStmt");
+        ++indent;
+        ast.S.visit(this, o);
+        ast.E.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    @Override
     public Object visitBreakStmt(BreakStmt ast, Object o) {
         print(indentString() + "BreakStmt");
         return null;

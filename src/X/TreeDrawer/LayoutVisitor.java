@@ -93,6 +93,9 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("WhileStmt", ast.E, ast.S);
     }
 
+    public Object visitDoWhileStmt(DoWhileStmt ast, Object obj) {
+        return layoutBinary("DoWhileStmt", ast.S, ast.E);
+    }
     public Object visitForStmt(ForStmt ast, Object obj) {
         return layoutQuaternary("ForStmt", ast.S1, ast.E2, ast.S3, ast.S);
     }

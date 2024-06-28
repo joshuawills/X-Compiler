@@ -37,6 +37,7 @@ public class Checker implements Visitor {
         "*26: function declared but never used",
         "*27: inappropriate use of '$' operator",
         "*28: loop iterators must be integers",
+        "*29: do-while conditional is not boolean",
     };
 
     private final SymbolTable idTable;
@@ -745,6 +746,19 @@ public class Checker implements Visitor {
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
         }
 
+        return null;
+    }
+
+    public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
+        this.loopDepth++;
+        idTable.openScope();
+        ast.S.visit(this, ast);
+        idTable.closeScope();
+        this.loopDepth--;
+        Type conditionType = (Type) ast.E.visit(this, ast);
+        if (!conditionType.isBoolean()) {
+            handler.reportError(errors[29], "", ast.E.pos);
+        }
         return null;
     }
 

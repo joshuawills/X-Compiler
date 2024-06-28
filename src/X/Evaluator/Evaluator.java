@@ -243,4 +243,8 @@ public class Evaluator implements Visitor {
     public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
         return null;
     }
+
+    public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
+        return null;
+    }
 }

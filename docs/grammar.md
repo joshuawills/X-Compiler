@@ -15,6 +15,7 @@ $$
 \textit{if-stmt} \\
 \textit{for-stmt} \\
 \textit{while-stmt} \\
+\textit{do-while-stmt} \\
 \textit{break-stmt} \\
 \textit{continue-stmt} \\
 \textit{return-stmt} \\
@@ -27,6 +28,7 @@ $$
 stmt})? \\
 \textit{for-stmt} &\to \textbf{for} \textit{ expr?} \text{ ";"} \textit{ expr?} \text{ ";"} \textit{ expr? stmt} \\
 \textit{while-stmt} &\to \textbf{while} \textit{ expr stmt} \\
+\textit{do-while-stmt} &\to \textbf{do} \textit{ compound-stmt expr} \\
 \textit{break-stmt} &\to \textbf{break} \text{ ";"} \\
 \textit{continue-stmt} &\to \textbf{continue } \text{ ";"} \\
 \textit{return-stmt} &\to \textbf{return} \textit{ expr}? \text{ ";"} \\

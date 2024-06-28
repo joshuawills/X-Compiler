@@ -183,6 +183,7 @@ public class Parser {
             case IF -> parseIfStmt();
             case FOR -> parseForStmt();
             case WHILE -> parseWhileStmt();
+            case DO -> parseDoWhileStmt();
             case LOOP -> parseLoopStmt();
             case BREAK -> parseBreakStmt();
             case CONTINUE -> parseContinueStmt();
@@ -359,6 +360,18 @@ public class Parser {
         Stmt sAST = parseStmt();
         finish(pos);
         return new ForStmt(s1AST, e2AST, s3AST, sAST, pos);
+    }
+
+    private DoWhileStmt parseDoWhileStmt() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        match(TokenType.DO);
+        Stmt sAST = parseCompoundStmt();
+        match(TokenType.WHILE);
+        Expr eAST = parseExpr();
+        match(TokenType.SEMI);
+        finish(pos);
+        return new DoWhileStmt(eAST, sAST, pos);
     }
 
     private WhileStmt parseWhileStmt() throws SyntaxError {

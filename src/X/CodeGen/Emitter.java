@@ -771,6 +771,31 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
+        Frame f = (Frame) o;
+        String top = f.getNewLabel();
+        String bottom = f.getNewLabel();
+
+        f.brkStack.push(bottom);
+        f.conStack.push(top);
+
+        emitN("\tbr label %" + top);
+        emitN("\n" + top + ":");
+        loopDepth++;
+        ast.S.visit(this, o);
+        loopDepth--;
+
+        ast.E.visit(this, o);
+        int index = ast.E.tempIndex;
+        emitN("\tbr i1 %" + index + ", label %" + top + ", label %" + bottom);
+        emitN("\n" + bottom+ ":");
+
+        f.brkStack.pop();
+        f.conStack.pop();
+
+        return null;
+    }
+
     public void emit(String s) {
         LLVM.append(new Instruction(s));
     }
