@@ -303,15 +303,16 @@ public class Parser {
         Optional<Expr> I1 = Optional.empty();
         Optional<Expr> I2 = Optional.empty();
         Optional<LocalVar> V = Optional.empty();
+        boolean hasIn = false;
 
         if (currentToken.kind == TokenType.IDENT) {
             Ident I = parseIdent();
             LocalVar LV = new LocalVar(new IntType(pos), I, new EmptyExpr(pos), pos, true);
             V = Optional.of(LV);
-            match(TokenType.IN);
+            hasIn = tryConsume(TokenType.IN);
         }
 
-        if (currentToken.kind != TokenType.OPEN_CURLY) {
+        if (hasIn && currentToken.kind != TokenType.OPEN_CURLY) {
             Expr L1 = parseExpr();
             finish(pos);
             I1 = Optional.of(L1);

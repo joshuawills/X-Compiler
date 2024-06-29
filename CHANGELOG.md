@@ -30,14 +30,21 @@
 
 - Do while construct
 
+*29.06.2024*
+
+- outStr() implementation and basic string declarations
+- Allow for simple loop x {} case
+ 
 # TODO
 
-- outStr() implementation
 - Comma separated variable declarations
-- Allow for simple loop x {} case
 - Float support
 - In-compilation expression everywhere possible
 - Basic control flow logic evaluation
   - if always false, don't generate logic
   - Side effect detector
 - Write some more test cases 
+- Basic string operations
+  - Static reassignment
+    - mut str x = "a"; x = "b";
+  - '+' operator

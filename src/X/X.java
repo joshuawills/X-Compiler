@@ -33,7 +33,7 @@ public class X {
         System.out.println("\t-pr | --parser_raw => Generates a deconstructed parse tree");
         System.out.println("\t-a  | --assembly => Generates a .s file instead of an executable");
         System.out.println("\t-q  | --quiet  => Silence any non-crucial warnings");
-        System.out.println("\t-s | --stat => Log statistics about the compilation times");
+        System.out.println("\t-s  | --stat => Log statistics about the compilation times");
         System.out.println("\nDeveloped by Joshua Wills 2024");
         System.exit(0);
     }
