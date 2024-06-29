@@ -1,6 +1,7 @@
 package X.CodeGen;
 
 import X.Evaluator.Evaluator;
+import X.Lexer.Position;
 import X.Nodes.*;
 
 public class Emitter implements Visitor {
@@ -8,6 +9,7 @@ public class Emitter implements Visitor {
     private final String outputName;
     private int loopDepth = 0;
     private int numConstStrings = 0;
+    private final Position dummyPos = new Position();
 
     public Emitter(String outputName) {
         this.outputName = outputName;
@@ -48,6 +50,26 @@ public class Emitter implements Visitor {
         emit(" @" + ast.I.spelling);
         ast.PL.visit(this, f);
         emitN(" {");
+
+        // Bind mutable variables to a local variable
+        List PL = ast.PL;
+        while (true) {
+            if (PL instanceof EmptyParaList) {
+                break;
+            }
+            ParaDecl P = ((ParaList)PL).P;
+            if (P.isMut) {
+                emit("\t%" + P.I.spelling + "0 = alloca ");
+                P.T.visit(this, o);
+                emit("\n\tstore ");
+                P.T.visit(this, o);
+                emit(" %" + P.I.spelling + ", ");
+                P.T.visit(this, o);
+                emitN("* %" + P.I.spelling + "0");
+            }
+            PL = ((ParaList) PL).PL;
+        }
+
         ast.S.visit(this, f);
         if (ast.I.spelling.equals("main")) {
            emitN("\tret i32 0");
@@ -301,6 +323,8 @@ public class Emitter implements Visitor {
             emitN("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
         } else if (ast.I.decl instanceof GlobalVar) {
             emitN("* @" + ast.I.spelling);
+        } else if (ast.I.decl instanceof ParaDecl) {
+            emitN("* %" + ast.I.spelling + "0");
         }
         return null;
     }
@@ -510,7 +534,11 @@ public class Emitter implements Visitor {
 
     public Object visitParaDecl(ParaDecl ast, Object o) {
         ast.T.visit(this, o);
-        emit(" %" + ast.I.spelling + "0");
+        if (!ast.isMut) {
+            emit(" %" + ast.I.spelling + "0");
+        } else {
+            emit(" %" + ast.I.spelling);
+        }
         return null;
     }
 
@@ -555,10 +583,20 @@ public class Emitter implements Visitor {
             ((LocalVar) d).T.visit(this, o);
             emitN("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
         } else if (d instanceof ParaDecl) {
+
+            if (((ParaDecl) d).isMut) {
+                int newIndex = f.getNewIndex();
+                emit("\t%" + newIndex + " = load ");
+                ((ParaDecl) d).T.visit(this, o);
+                emit(", ");
+                ((ParaDecl) d).T.visit(this, o);
+                emitN("* %" + ast.I.spelling + ((ParaDecl) ast.I.decl).index);
+                return null;
+            }
+
             int newIndex = f.getNewIndex();
             if (((ParaDecl) d).T.isString()) {
-                System.out.println("TODO PARA DECL");
-                return null;
+                System.out.println("TODO PARADECL");
             }
             emit("\t%" + newIndex + " = ");
             Type T = ((ParaDecl) d).T;
@@ -808,6 +846,8 @@ public class Emitter implements Visitor {
         String repetitions = "";
         if (ast.I.decl instanceof LocalVar) {
             repetitions = String.valueOf(((LocalVar) ast.I.decl).index);
+        } else if (ast.I.decl instanceof ParaDecl) {
+            repetitions = "0";
         }
 
         Frame f = (Frame) o;

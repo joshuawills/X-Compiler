@@ -13,6 +13,7 @@ public class MathDeclStmt extends Stmt {
         I = iAST;
         E = eAST;
         O = oAST;
+        I.parent = E.parent = O.parent = this;
     }
 
     public Object visit(Visitor v, Object o) {

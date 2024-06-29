@@ -146,7 +146,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
-        return layoutTernary("DeclStmt", ast.I, ast.O, ast.E);
+        return layoutTernary("MathDeclStmt", ast.I, ast.O, ast.E);
     }
 
     public Object visitBinaryExpr(BinaryExpr ast, Object obj) {
