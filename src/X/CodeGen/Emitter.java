@@ -61,7 +61,25 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public void handleStringGlobal(GlobalVar ast, Object o) {
+       // @myString = global [14 x i8] c"Hello, LLVM!\00"
+       if (ast.E instanceof EmptyExpr) {
+            return;
+       }
+       String var = ast.I.spelling;
+       String contents = ((StringExpr) ast.E).SL.spelling;
+       int len = contents.length() + 1;
+       emitN("\t@" + var + " = global [" + len + " x i8] c\"" + contents + "\\00\"");
+    }
+
+    // TODO: make this handle empty expressions (should be easy)
     public Object visitGlobalVar(GlobalVar ast, Object o) {
+
+        if (ast.T.isString()) {
+            handleStringGlobal(ast, o);
+            return null;
+        }
+
         Object result = Evaluator.evalExpression(ast.E);
         emit("@" + ast.I.spelling + " = global ");
         ast.T.visit(this, o);
@@ -87,20 +105,34 @@ public class Emitter implements Visitor {
 
         Frame f = (Frame) o;
         emit("\t%" + ast.I.spelling + loopDepth + " = alloca ");
-        ast.T.visit(this, o);
+        int length = 0;
+        String strValue = "";
+        if (ast.T.isString()) {
+            strValue = ((StringExpr) ast.E).SL.spelling;
+            length = ((StringExpr) ast.E).SL.spelling.length() + 1;
+            o = length;
+            emit("[" + length + " x i8], align 1");
+        } else {
+            ast.T.visit(this, o);
+        }
         emitN("");
-
         if (ast.E instanceof EmptyExpr) {
             // TODO: assign default values
             return null;
         }
-        ast.E.visit(this, o);
 
+        if (!ast.T.isString()) {
+            ast.E.visit(this, o);
+        }
 
         emit("\tstore ");
         ast.T.visit(this, o);
-        int value = f.localVarIndex - 1;
-        emit(" %" + value + ", ");
+        if (!ast.T.isString()) {
+            int value = f.localVarIndex - 1;
+            emit(" %" + value + ", ");
+        } else {
+            emit("c\"" + strValue + "\\00\", ");
+        }
         ast.T.visit(this, o);
         emitN("* %" + ast.I.spelling + loopDepth);
         ast.index = loopDepth;
@@ -445,7 +477,19 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    // Assume this is ONLY for temp variables atm
+    // TODO: fix later
     public Object visitStringExpr(StringExpr ast, Object o) {
+        Frame f = (Frame) o;
+        int constIndex = numConstStrings;
+        numConstStrings += 1;
+        int index = f.getNewIndex();
+        ast.tempIndex = index;
+        String val = ast.SL.spelling;
+        int size = val.length() + 1;
+        emitN("\t%.str" + constIndex + " = alloca [" + size + " x i8], align 1");
+        emitN("\tstore [" + size + " x i8] c\"" + val + "\\00\", [" + size + "x i8]* %.str" + constIndex);
+        emitN("\t%" + index + " = getelementptr inbounds [" + size + " x i8], [" + size + " x i8]* %.str" + constIndex + ", i32 0, i32 0");
         return null;
     }
 
@@ -454,7 +498,8 @@ public class Emitter implements Visitor {
     }
 
     public Object visitStringType(StringType ast, Object o) {
-        emit("TODO");
+        int length = (int) o;
+        emit("[" + length + " x i8]");
         return null;
     }
 
@@ -483,7 +528,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    // TODO: Handle global vars
     public Object visitSimpleVar(SimpleVar ast, Object o) {
         Frame f = (Frame) o;
 
@@ -496,6 +540,15 @@ public class Emitter implements Visitor {
         AST d = ast.I.decl;
         if (d instanceof LocalVar) {
             int newIndex = f.getNewIndex();
+            if (((LocalVar) d).T.isString()) {
+                emit("\t%" + newIndex + " = getelementptr inbounds ");
+                int length = ((StringExpr )((LocalVar) d).E).SL.spelling.length() + 1;
+                ((LocalVar) d).T.visit(this, length);
+                emit(", ");
+                ((LocalVar) d).T.visit(this, length);
+                emitN("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index + ", i32 0, i32 0");
+                return null;
+            }
             emit("\t%" + newIndex + " = load ");
             ((LocalVar) d).T.visit(this, o);
             emit(", ");
@@ -503,6 +556,10 @@ public class Emitter implements Visitor {
             emitN("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
         } else if (d instanceof ParaDecl) {
             int newIndex = f.getNewIndex();
+            if (((ParaDecl) d).T.isString()) {
+                System.out.println("TODO PARA DECL");
+                return null;
+            }
             emit("\t%" + newIndex + " = ");
             Type T = ((ParaDecl) d).T;
             if (T.isInt() || T.isBoolean()) {
@@ -513,6 +570,15 @@ public class Emitter implements Visitor {
             emitN(" %" + ast.I.spelling + "0");
         } else if (d instanceof GlobalVar) {
             int newIndex = f.getNewIndex();
+            if (((GlobalVar) d).T.isString()) {
+                emit("\t%" + newIndex + " = getelementptr inbounds ");
+                int length = ((StringExpr )((GlobalVar) d).E).SL.spelling.length() + 1;
+                ((GlobalVar) d).T.visit(this, length);
+                emit(", ");
+                ((GlobalVar) d).T.visit(this, length);
+                emitN("* @" + ast.I.spelling + ", i32 0, i32 0");
+                return null;
+            }
             emit("\t%" + newIndex + " = load ");
             ((GlobalVar) d).T.visit(this, o);
             emit(", ");
@@ -533,20 +599,23 @@ public class Emitter implements Visitor {
 
     }
 
+    public void handleOutStr(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+        Expr arg = ((Args) ast.AL).E;
+        arg.visit(this, o);
+        int index = arg.tempIndex;
+        emitN("\tcall i32 (i8*, ...) @printf(i8* %" + index + ")");
+        f.getNewIndex(); // handle neglected return value from printf
+    }
+
     public void handleInInt(CallExpr ast, Object o) {
         Frame f = (Frame) o;
         Args A= (Args) ast.AL;
 
-        StringExpr SE = (StringExpr) A.E;
-        String val = SE.SL.spelling;
-        int l = val.length() + 1; // +1 for null termination
-        emitN("\t%.str" + numConstStrings + " = alloca [" + l + " x i8], align 1");
-        int XnewIndex = f.getNewIndex();
-        emitN("\t%" + XnewIndex + " = getelementptr [" + l + " x i8], [" + l + " x i8]* %.str" + numConstStrings + ", i32 0, i32 0");
-        emitN("\tstore [" + l + " x i8] c\"" + val + "\\00\", ["+ l +" x i8]* %.str" + numConstStrings);
-        emitN("\tcall i32 (i8*, ...) @printf(i8* %" + XnewIndex + ")");
-        f.getNewIndex(); // balance out temp variables
-        numConstStrings += 1;
+        A.E.visit(this, o);
+        int index = A.E.tempIndex;
+        emitN("\tcall i32 (i8*, ...) @printf(i8* %" + index + ")");
+        f.getNewIndex(); // handle neglected return value from printf
 
         Expr secondArg = ((Args) A.EL).E;
         VarExpr VE = (VarExpr) secondArg;
@@ -562,7 +631,7 @@ public class Emitter implements Visitor {
         if (X instanceof LocalVar || X instanceof ParaDecl) {
             emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* %" + varName + repetition + ")");
         } else if (X instanceof GlobalVar) {
-            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* %" + varName + repetition + ")");
+            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* @" + varName + repetition + ")");
         }
     }
 
@@ -574,6 +643,11 @@ public class Emitter implements Visitor {
         }
         if (ast.I.spelling.equals("inInt")) {
             handleInInt(ast, o);
+            return null;
+        }
+
+        if (ast.I.spelling.equals("outStr")) {
+            handleOutStr(ast, o);
             return null;
         }
 
@@ -747,21 +821,11 @@ public class Emitter implements Visitor {
         }
         int nIndex = f.getNewIndex();
         switch (ast.O.spelling) {
-            case "+=" -> {
-                emitN("\t%" + nIndex + " = add i32 %" + index + ", %" + aIndex);
-            }
-            case "-=" -> {
-                emitN("\t%" + nIndex + " = sub i32 %" + index + ", %" + aIndex);
-            }
-            case "*=" -> {
-                emitN("\t%" + nIndex + " = mul i32 %" + index + ", %" + aIndex);
-            }
-            case "/=" -> {
-                emitN("\t%" + nIndex + " = udiv i32 %" + index + ", %" + aIndex);
-            }
-            default -> {
-                System.out.println("UNREACHABLE MATHDECL");
-            }
+            case "+=" -> emitN("\t%" + nIndex + " = add i32 %" + index + ", %" + aIndex);
+            case "-=" -> emitN("\t%" + nIndex + " = sub i32 %" + index + ", %" + aIndex);
+            case "*=" -> emitN("\t%" + nIndex + " = mul i32 %" + index + ", %" + aIndex);
+            case "/=" -> emitN("\t%" + nIndex + " = udiv i32 %" + index + ", %" + aIndex);
+            default -> System.out.println("UNREACHABLE MATHDECL");
         }
         if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
             emitN("\tstore i32 %" + nIndex + ", i32* %" + ast.I.spelling + repetitions);

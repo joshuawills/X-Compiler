@@ -129,6 +129,10 @@ public class Checker implements Visitor {
                 new ParaDecl(Environment.intType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
+        Environment.outStr = stdFunction(Environment.voidType, "outStr", new ParaList(
+                new ParaDecl(Environment.strType, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
     }
 
     private Function stdFunction(Type resultType, String id, List pl) {
@@ -777,6 +781,10 @@ public class Checker implements Visitor {
             }
             VarExpr VE = (VarExpr) secondArg;
             Decl x = idTable.retrieve(((SimpleVar) VE.V).I.spelling);
+            if (x == null) {
+                handler.reportError(errors[4] + ": %", ((SimpleVar) VE.V).I.spelling, ast.I.pos);
+                return null;
+            }
             x.isReassigned = true;
             if (!x.isMut) {
                 handler.reportError(errors[23] + ": %", ((SimpleVar) VE.V).I.spelling, ast.I.pos);
