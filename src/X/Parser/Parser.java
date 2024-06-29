@@ -69,17 +69,13 @@ public class Parser {
         Program programAST;
         Position pos = new Position();
 
-        try {
-            List dlAST = parseDeclList();
-            finish(pos);
-            programAST = new Program(dlAST, pos);
-            if (currentToken.kind != TokenType.EOF) {
-                syntacticError("\"%\" unknown type", currentToken.lexeme);
-            }
-            return programAST;
-        } catch (SyntaxError s) {
-            return null;
+        List dlAST = parseDeclList();
+        finish(pos);
+        programAST = new Program(dlAST, pos);
+        if (currentToken.kind != TokenType.EOF) {
+            syntacticError("\"%\" unknown type", currentToken.lexeme);
         }
+        return programAST;
     }
 
     private List parseDeclList() throws SyntaxError {
@@ -258,7 +254,7 @@ public class Parser {
         start(pos);
         match(TokenType.IF);
         Expr eAST = parseExpr();
-        Stmt s1AST = parseStmt();
+        Stmt s1AST = parseCompoundStmt();
 
         finish(pos);
         Stmt s2AST = new EmptyStmt(pos);
@@ -269,7 +265,7 @@ public class Parser {
         finish(pos);
         Stmt s3AST = new EmptyStmt(pos);
         if (tryConsume(TokenType.ELSE)) {
-            s3AST = parseStmt();
+            s3AST = parseCompoundStmt();
         }
 
         finish(pos);
@@ -281,7 +277,7 @@ public class Parser {
         start(pos);
         match(TokenType.ELIF);
         Expr eAST = parseExpr();
-        Stmt s1AST = parseStmt();
+        Stmt s1AST = parseCompoundStmt();
 
         finish(pos);
         Stmt s2AST = new EmptyStmt(pos);
@@ -358,7 +354,7 @@ public class Parser {
         }
 
         inFor = false;
-        Stmt sAST = parseStmt();
+        Stmt sAST = parseCompoundStmt();
         finish(pos);
         return new ForStmt(s1AST, e2AST, s3AST, sAST, pos);
     }
@@ -380,7 +376,7 @@ public class Parser {
         start(pos);
         match(TokenType.WHILE);
         Expr eAST = parseExpr();
-        Stmt sAST = parseStmt();
+        Stmt sAST = parseCompoundStmt();
         finish(pos);
         return new WhileStmt(eAST, sAST, pos);
     }
