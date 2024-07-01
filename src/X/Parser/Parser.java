@@ -12,6 +12,9 @@ import java.util.Optional;
 
 public class Parser {
 
+    private boolean isPreviousVarMut = false;
+    private Type prevType = null;
+    private boolean isComma = false;
     private final ArrayList<Token> tokenStream;
     private int tokenIndex = 1;
     private final ErrorHandler handler;
@@ -78,6 +81,7 @@ public class Parser {
         return programAST;
     }
 
+
     private List parseDeclList() throws SyntaxError {
 
         List dlAST;
@@ -103,8 +107,17 @@ public class Parser {
             dlAST = new DeclList(function, dlAST2, pos);
         } else {
             // Global var
-            boolean isMut = tryConsume(TokenType.MUT);
-            Type tAST = parseType();
+
+            boolean isMut = false;
+            Type tAST;
+            if (isComma) {
+                isMut = isPreviousVarMut;
+                tAST = prevType;
+            } else {
+                isMut = tryConsume(TokenType.MUT);
+                tAST = parseType();
+            }
+
             Ident iAST = parseIdent();
             Expr eAST;
             if (tryConsume(TokenType.ASSIGN)) {
@@ -114,7 +127,15 @@ public class Parser {
                 eAST = new EmptyExpr(pos);
             }
             finish(pos);
-            match(TokenType.SEMI);
+            if (tryConsume((TokenType.COMMA))) {
+                isComma = true;
+                isPreviousVarMut = isMut;
+                prevType = tAST;
+            } else {
+                isComma = false;
+                match(TokenType.SEMI);
+            }
+
             GlobalVar globalVar = new GlobalVar(tAST, iAST, eAST, pos, isMut);
             List dlAST2 = parseDeclList();
             finish(pos);
@@ -143,8 +164,15 @@ public class Parser {
     private LocalVar parseLocalVar() throws SyntaxError {
         Position pos = new Position();
         start(pos);
-        boolean isMut = tryConsume(TokenType.MUT);
-        Type tAST = parseType();
+        boolean isMut = false;
+        Type tAST = null;
+        if (isComma) {
+            isMut = isPreviousVarMut;
+            tAST = prevType;
+        } else {
+            isMut = tryConsume(TokenType.MUT);
+            tAST = parseType();
+        }
         Ident iAST = parseIdent();
         Expr eAST;
         if (tryConsume(TokenType.ASSIGN)) {
@@ -155,13 +183,21 @@ public class Parser {
         }
 
         finish(pos);
-        match(TokenType.SEMI);
+        if (tryConsume(TokenType.COMMA)) {
+            isComma = true;
+            isPreviousVarMut = isMut;
+            prevType = tAST;
+        } else {
+            isComma = false;
+            match(TokenType.SEMI);
+        }
         return new LocalVar(tAST, iAST, eAST, pos, isMut);
     }
 
     private List parseStmtList() throws SyntaxError {
         Position pos = new Position();
         start(pos);
+
         Stmt S = parseStmt();
         if (currentToken.kind == TokenType.CLOSE_CURLY) {
             finish(pos);
@@ -174,6 +210,9 @@ public class Parser {
 
     // this will NOT be called for a local-var case
     private Stmt parseStmt() throws SyntaxError {
+        if (isComma) {
+            return parseLocalVarStmt();
+        }
         return switch (currentToken.kind) {
             case OPEN_CURLY -> parseCompoundStmt();
             case IF -> parseIfStmt();

@@ -26,6 +26,15 @@ bool isEven = x % 2 == 0; // cannot be modified, checked at compile time
 str myName = "What is your name? ";
 ```
 
+Variable declarations may also be comma-separated. All contiguous declarations inherit the mutability of the base
+variable.
+
+```Rust
+mut int x = 1, y = 2; // both x and y will be mutable variables
+mut bool z = false, a = z && true; // this is appropriate, as variables are evaluated left to right
+```
+
+
 Below is an example of a function declaration. The pattern is quite clear, and follows standard C/Rust
 like semantics. Note that function parameters are also delimited as being mutable or not.
 
@@ -199,7 +208,7 @@ precedence, check out the `grammar.md` file, but it can be summarised as below. 
 
 Although quite primitive, we have some basic IO functions as a standard library.
 
-`outInt` takes in an integer and prints it to stdout.
+`outInt` takes in an integer and prints it to stdout, followed by a newline.
 
 `inInt` takes in a string constant and an integer. It logs the string as a prompt, then reads an
 integer from stdin and writes to that mutable variable.

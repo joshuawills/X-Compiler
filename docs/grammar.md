@@ -3,8 +3,8 @@
 $$
 \begin{align}
 \textit{program} &\to (\textit{function }|\textit{ global-var})^*  \\ \\
-\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? \text{ ";"}\\
-\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? \text{ ";"}\\
+\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))* \text{ ";"}\\
+\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))* \text{ ";"}\\
 \textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"}
 \textit{type} \textit{ compound-stmt}\\ \\
 
@@ -35,7 +35,8 @@ stmt})? \\
 \textit{math-decl-stmt} &\to \textit{ident} (\text{ "+="} | \text{ "-="} | \text{ "/="} | \text{ "*="}) \textit{expr} \text{ ";"} \\
 \textit{decl-stmt} &\to \textit{ident} \text{ "="} \textit{expr} \text{ ";"} \\
 \textit{func-call-stmt} &\to \textit{func-call} \text{ ";"} \\
-\textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\ \\
+\textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\
+\textit{loop-stmt} &\to \textbf{ loop} \textit{ ident } \textit{ compound-stmt}\\ \\
 
 \textit{expr} &\to \textit{or-expr}\\
 \textit{or-expr} &\to \textit{and-expr } (\text{"||" } \textit{and-expr})^* \\
