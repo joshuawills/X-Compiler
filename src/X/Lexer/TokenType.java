@@ -5,6 +5,7 @@ public enum TokenType {
     ERROR,
     SEMI,
     INT_LIT,
+    FLOAT_LIT,
     STRING_LIT,
     CHAR_LIT,
     RETURN,

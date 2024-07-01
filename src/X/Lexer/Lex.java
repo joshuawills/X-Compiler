@@ -100,6 +100,16 @@ public class Lex {
 
     private TokenType nextToken() {
         return switch (currChar) {
+            case '.' -> {
+                acceptWithSpelling();
+                if (!isDigit()) {
+                    yield TokenType.ERROR;
+                }
+                while (isDigit()) {
+                    acceptWithSpelling();
+                }
+                yield TokenType.FLOAT_LIT;
+            }
             case '(' -> {
                 acceptWithSpelling();
                 yield TokenType.OPEN_PAREN;
@@ -276,7 +286,7 @@ public class Lex {
                 case "in" -> TokenType.IN;
                 case "return" -> TokenType.RETURN;
                 case "fn" -> TokenType.FN;
-                case "int", "bool", "str", "void" -> TokenType.TYPE;
+                case "int", "float", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
                 case "else" -> TokenType.ELSE;
                 case "else if" -> TokenType.ELIF;
@@ -290,11 +300,24 @@ public class Lex {
                 default -> TokenType.IDENT;
             };
         }
+
         if (isDigit()) {
+            boolean isFloat = false;
             while (isDigit()) {
                 acceptWithSpelling();
             }
-            return TokenType.INT_LIT;
+            if (currChar == '.') {
+                isFloat = true;
+                acceptWithSpelling();
+            }
+            while (isDigit()) {
+                acceptWithSpelling();
+            }
+            if (isFloat) {
+                return TokenType.FLOAT_LIT;
+            } else {
+                return TokenType.INT_LIT;
+            }
         }
         acceptWithSpelling();
         return TokenType.ERROR;

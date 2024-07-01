@@ -98,4 +98,10 @@ public interface Visitor {
     Object visitMathDeclStmt(MathDeclStmt ast, Object o);
 
     Object visitDoWhileStmt(DoWhileStmt ast, Object o);
+
+    Object visitFloatLiteral(FloatLiteral ast, Object o);
+
+    Object visitFloatType(FloatType ast, Object o);
+
+    Object visitFloatExpr(FloatExpr ast, Object o);
 }

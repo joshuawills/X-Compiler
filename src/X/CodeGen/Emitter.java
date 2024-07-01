@@ -902,6 +902,21 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+        System.out.println("visitFloatLiteral");
+        return null;
+    }
+
+    public Object visitFloatType(FloatType ast, Object o) {
+        System.out.println("visitFloatType");
+        return null;
+    }
+
+    public Object visitFloatExpr(FloatExpr ast, Object o) {
+        System.out.println("visitFloatExpr");
+        return null;
+    }
+
     public void emit(String s) {
         LLVM.append(new Instruction(s));
     }

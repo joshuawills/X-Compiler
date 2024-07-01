@@ -79,6 +79,8 @@ public class Evaluator implements Visitor {
             case "==" -> {
                 if (ast.E1.type.isInt()) {
                     yield (int) ast.E1.visit(this, o) == (int) ast.E1.visit(this, o);
+                } else if (ast.E1.type.isFloat()) {
+                    yield (float) ast.E1.visit(this, o) == (float) ast.E1.visit(this, o);
                 } else if (t.isBoolean()) {
                     yield (boolean) ast.E1.visit(this, o) == (boolean) ast.E1.visit(this, o);
                 } else {
@@ -88,20 +90,70 @@ public class Evaluator implements Visitor {
             case "!=" -> {
                 if (t.isInt()) {
                     yield (int) ast.E1.visit(this, o) != (int) ast.E1.visit(this, o);
+                }  else if (t.isFloat()) {
+                    yield (float) ast.E1.visit(this, o) != (float) ast.E1.visit(this, o);
                 } else if (t.isBoolean()) {
                     yield (boolean) ast.E1.visit(this, o) != (boolean) ast.E1.visit(this, o);
                 } else {
                     yield null;
                 }
             }
-            case "<=" -> (int) ast.E1.visit(this, o) <= (int) ast.E2.visit(this, o);
-            case "<" -> (int) ast.E1.visit(this, o) < (int) ast.E2.visit(this, o);
-            case ">" -> (int) ast.E1.visit(this, o) > (int) ast.E2.visit(this, o);
-            case ">=" -> (int) ast.E1.visit(this, o) >= (int) ast.E2.visit(this, o);
-            case "+" -> (int) ast.E1.visit(this, o) + (int) ast.E2.visit(this, o);
-            case "-" -> (int) ast.E1.visit(this, o) - (int) ast.E2.visit(this, o);
-            case "/" -> (int) ast.E1.visit(this, o) / (int) ast.E2.visit(this, o);
-            case "*" -> (int) ast.E1.visit(this, o) * (int) ast.E2.visit(this, o);
+            case "<=" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) <= (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) <= (float) ast.E2.visit(this, o);
+                }
+            }
+            case "<" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) < (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) < (float) ast.E2.visit(this, o);
+                }
+            }
+            case ">" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) > (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) > (float) ast.E2.visit(this, o);
+                }
+            }
+            case ">=" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) >= (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) >= (float) ast.E2.visit(this, o);
+                }
+            }
+            case "+" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) + (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) + (float) ast.E2.visit(this, o);
+                }
+            }
+            case "-" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) - (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) - (float) ast.E2.visit(this, o);
+                }
+            }
+            case "/" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) / (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) / (float) ast.E2.visit(this, o);
+                }
+            }
+            case "*" -> {
+                if (t.isInt()) {
+                    yield (int) ast.E1.visit(this, o) * (int) ast.E2.visit(this, o);
+                } else {
+                    yield (float) ast.E1.visit(this, o) * (float) ast.E2.visit(this, o);
+                }
+            }
             case "%" -> (int) ast.E1.visit(this, o) % (int) ast.E2.visit(this, o);
             default -> {
                 System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
@@ -114,7 +166,16 @@ public class Evaluator implements Visitor {
         Type t = (Type) o;
         return switch (ast.O.spelling) {
             case "+" -> ast.E.visit(this, o);
-            case "-" -> -(int) ast.E.visit(this, o);
+            case "-" -> {
+                if (t.isInt()) {
+                    yield -(int) ast.E.visit(this, o);
+                } else if (t.isFloat()) {
+                    yield -(float) ast.E.visit(this, o);
+                } else {
+                    System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
+                    yield null;
+                }
+            }
             case "!" -> !(boolean) ast.E.visit(this, o);
             default -> {
                 System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
@@ -246,5 +307,17 @@ public class Evaluator implements Visitor {
 
     public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
         return null;
+    }
+
+    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitFloatType(FloatType ast, Object o) {
+       return null;
+    }
+
+    public Object visitFloatExpr(FloatExpr ast, Object o) {
+        return Float.parseFloat(ast.FL.spelling);
     }
 }

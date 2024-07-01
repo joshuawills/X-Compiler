@@ -42,6 +42,11 @@
 # TODO
 
 - float support
+  - set up syntax -- DONE
+  - correctly lex them -- DONE
+  - parsing should be straightforward -- DONE
+  - set up type checking without type conversion first
+
 - in-compilation expression everywhere possible
 - write some more test cases 
 - basic string operations

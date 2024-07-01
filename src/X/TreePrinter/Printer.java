@@ -157,6 +157,24 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+        print(indentString() + ast.spelling);
+        return null;
+    }
+
+    public Object visitFloatType(FloatType ast, Object o) {
+        print(indentString() + "int");
+        return null;
+    }
+
+    public Object visitFloatExpr(FloatExpr ast, Object o) {
+        print(indentString() + "IntExpr");
+        ++indent;
+        ast.FL.visit(this, o);
+        --indent;
+        return null;
+    }
+
     @Override
     public Object visitBreakStmt(BreakStmt ast, Object o) {
         print(indentString() + "BreakStmt");

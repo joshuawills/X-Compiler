@@ -3,8 +3,8 @@
 $$
 \begin{align}
 \textit{program} &\to (\textit{function }|\textit{ global-var})^*  \\ \\
-\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))* \text{ ";"}\\
-\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))* \text{ ";"}\\
+\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
+\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
 \textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"}
 \textit{type} \textit{ compound-stmt}\\ \\
 
@@ -49,6 +49,7 @@ stmt})? \\
 \textit{unary-expr} &\to
 \begin{cases}
 \textbf{INTLITERAL} \\
+\textbf{FLOATLITERAL} \\
 \textbf{STRINGLITERAL} \\
 \textbf{BOOLLITERAL} \\
 "(" \textit{ expr } ")" \\
@@ -65,7 +66,12 @@ stmt})? \\
 \textit{decl} &\to \textbf{mut}? \textit{ type ident} \\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
-\textit{type} &\to \textbf{int | str | void | bool } \\
+\textit{type} &\to \textbf{int | str | void | bool | float } \\
+
+\textit{INTLITERAL} &\to [0-9]+ \\
+\textit{FLOATLITERAL} &\to [0-9]^+\textit{"."}[0-9]? \\
+\textit{STRINGLITERAL} &\to \textit{"} \textit{ident} \textit{"} \\
+\textit{BOOLLITERAL} &\to true | false
 
 \end{align}
 $$

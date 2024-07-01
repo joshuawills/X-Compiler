@@ -21,6 +21,9 @@ public abstract class Type extends AST {
         return (this instanceof IntType);
     }
 
+    public boolean isFloat() {
+        return (this instanceof FloatType);
+    }
     public boolean isString() {
         return (this instanceof StringType);
     }

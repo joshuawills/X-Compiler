@@ -766,6 +766,21 @@ public class Checker implements Visitor {
         return null;
     }
 
+    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+        System.out.println("visitFloatLiteral");
+        return null;
+    }
+
+    public Object visitFloatType(FloatType ast, Object o) {
+        System.out.println("visitFloatType");
+        return null;
+    }
+
+    public Object visitFloatExpr(FloatExpr ast, Object o) {
+        System.out.println("visitFloatExpr");
+        return null;
+    }
+
     public Object visitCallExpr(CallExpr ast, Object o) {
         if (inMain && ast.I.spelling.equals("main")) {
             handler.reportError(errors[20], "", ast.I.pos);

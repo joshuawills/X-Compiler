@@ -515,6 +515,10 @@ public class Parser {
                 accept();
                 yield new VoidType(pos);
             }
+            case "float" -> {
+                accept();
+                yield new FloatType(pos);
+            }
             default -> {
                 System.out.println("Should be unreachable");
                 yield null;
@@ -660,6 +664,11 @@ public class Parser {
                 finish(pos);
                 yield new IntExpr(ilAST, pos);
             }
+            case FLOAT_LIT -> {
+                FloatLiteral flAST = parseFloatLiteral();
+                finish(pos);
+                yield new FloatExpr(flAST, pos);
+            }
             case BOOL_LIT -> {
                 BooleanLiteral blAST = parseBooleanLiteral();
                 finish(pos);
@@ -674,7 +683,19 @@ public class Parser {
                 syntacticError("Illegal primary expression", "");
                 yield null;
             }
-        };
+       };
+    }
+
+    private FloatLiteral parseFloatLiteral() throws SyntaxError {
+        FloatLiteral FL = null;
+        if (currentToken.kind == TokenType.FLOAT_LIT) {
+            String spelling = currentToken.lexeme;
+            accept();
+            FL = new FloatLiteral(spelling, previousPosition);
+        } else {
+            syntacticError("integer literal expected here", "");
+        }
+        return FL;
     }
 
     private IntLiteral parseIntLiteral() throws SyntaxError {

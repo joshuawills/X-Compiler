@@ -96,6 +96,19 @@ public class LayoutVisitor implements Visitor {
     public Object visitDoWhileStmt(DoWhileStmt ast, Object obj) {
         return layoutBinary("DoWhileStmt", ast.S, ast.E);
     }
+
+    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+        return layoutNullary(ast.spelling);
+    }
+
+    public Object visitFloatType(FloatType ast, Object o) {
+        return layoutNullary("float");
+    }
+
+    public Object visitFloatExpr(FloatExpr ast, Object o) {
+        return layoutUnary("FloatExp", ast.FL);
+    }
+
     public Object visitForStmt(ForStmt ast, Object obj) {
         return layoutQuaternary("ForStmt", ast.S1, ast.E2, ast.S3, ast.S);
     }
