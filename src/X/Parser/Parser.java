@@ -41,6 +41,14 @@ public class Parser {
         tokenIndex += 1;
     }
 
+    private Token lookAhead() {
+        return lookAhead(1);
+    }
+
+    private Token lookAhead(int i) {
+        return tokenStream.get(tokenIndex + i - 1);
+    }
+
     void start(Position pos) {
         pos.lineStart = currentToken.pos.lineStart;
         pos.charStart = currentToken.pos.charStart;
@@ -338,16 +346,16 @@ public class Parser {
         Optional<Expr> I1 = Optional.empty();
         Optional<Expr> I2 = Optional.empty();
         Optional<LocalVar> V = Optional.empty();
-        boolean hasIn = false;
+        boolean hasVar = false;
 
-        if (currentToken.kind == TokenType.IDENT) {
+        if (currentToken.kind == TokenType.IDENT && lookAhead().kind == TokenType.IN) {
             Ident I = parseIdent();
             LocalVar LV = new LocalVar(new IntType(pos), I, new EmptyExpr(pos), pos, true);
             V = Optional.of(LV);
-            hasIn = tryConsume(TokenType.IN);
+            match(TokenType.IN);
         }
 
-        if (hasIn && currentToken.kind != TokenType.OPEN_CURLY) {
+        if (currentToken.kind != TokenType.OPEN_CURLY) {
             Expr L1 = parseExpr();
             finish(pos);
             I1 = Optional.of(L1);

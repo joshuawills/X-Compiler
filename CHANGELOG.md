@@ -56,3 +56,8 @@
 - basic control flow logic evaluation
   - if always false, don't generate logic
   - side effect detector
+
+- pointers and dynamic memory
+- structs
+- generics
+- classes
