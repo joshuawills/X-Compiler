@@ -114,6 +114,7 @@ public class Checker implements Visitor {
         Ident i = new Ident("x", dummyPos);
         Environment.booleanType = new BooleanType(dummyPos);
         Environment.intType = new IntType(dummyPos);
+        Environment.floatType = new FloatType(dummyPos);
         Environment.strType = new StringType(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
         Environment.errorType = new ErrorType(dummyPos);
@@ -127,6 +128,10 @@ public class Checker implements Visitor {
         ));
         Environment.outInt = stdFunction(Environment.voidType, "outInt", new ParaList(
                 new ParaDecl(Environment.intType, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.outFloat = stdFunction(Environment.voidType, "outFloat", new ParaList(
+                new ParaDecl(Environment.floatType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.outStr = stdFunction(Environment.voidType, "outStr", new ParaList(
@@ -212,6 +217,16 @@ public class Checker implements Visitor {
             handler.reportError(errors[5] + ": %", message, E.pos);
             T = Environment.errorType;
         }
+
+        if (returnType.isInt() && ast.T.isFloat()) {
+            Operator op = new Operator("i2f", E.pos);
+            if (ast instanceof LocalVar) {
+                ((LocalVar) ast).E = new UnaryExpr(op, E, E.pos);
+            } else if (ast instanceof GlobalVar) {
+                ((GlobalVar) ast).E = new UnaryExpr(op, E, E.pos);
+            }
+        }
+
         return T;
     }
 
@@ -412,6 +427,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
         }
 
+        if (t.isInt() && decl.T.isFloat()) {
+            Operator op = new Operator("i2f", ast.E.pos);
+            ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
+        }
         return null;
     }
 
@@ -426,11 +445,8 @@ public class Checker implements Visitor {
         Type t2 = (Type) ast.E2.visit(this, ast);
         switch (ast.O.spelling) {
             case "||", "&&" -> {
-                if (!t1.isBoolean() && !t1.isError()) {
+                if ((!t1.isBoolean() && !t1.isError()) || (!t2.isBoolean() && !t2.isError())) {
                     handler.reportError(errors[7], "", t1.pos);
-                    ast.type = Environment.errorType;
-                } else if (!t2.isBoolean() && !t2.isError()) {
-                    handler.reportError(errors[7], "", t2.pos);
                     ast.type = Environment.errorType;
                 } else {
                     ast.type = Environment.booleanType;
@@ -441,8 +457,8 @@ public class Checker implements Visitor {
                     ast.type = Environment.booleanType;
                     break;
                 }
-                boolean v1 = t1.isInt() || t1.isError();
-                boolean v2 = t2.isInt() || t2.isError();
+                boolean v1 = t1.isInt() || t1.isFloat() || t1.isError();
+                boolean v2 = t2.isInt() || t2.isFloat() || t2.isError();
                 if (!v1 || !v2) {
                     handler.reportError(errors[7], "", t2.pos);
                     ast.type = Environment.errorType;
@@ -454,8 +470,8 @@ public class Checker implements Visitor {
                 ast.type = Environment.booleanType;
             }
             case "<", "<=", ">", ">=" -> {
-                boolean v1 = t1.isInt() || t1.isError();
-                boolean v2 = t2.isInt() || t2.isError();
+                boolean v1 = t1.isInt() || t1.isFloat() || t1.isError();
+                boolean v2 = t2.isInt() || t2.isFloat() || t2.isError();
                 if (!v1 || !v2) {
                     handler.reportError(errors[7], "", t2.pos);
                     ast.type = Environment.errorType;
@@ -467,14 +483,35 @@ public class Checker implements Visitor {
                 ast.type = Environment.booleanType;
             }
             case "+", "-", "/", "*", "%" -> {
-                if (!t1.isInt() || !t2.isInt()) {
+                boolean v1 = t1.isInt() || t1.isFloat();
+                boolean v2 = t2.isInt() || t2.isFloat();
+                if (!v1|| !v2) {
                     handler.reportError(errors[7], "", t1.pos);
                     ast.type = Environment.errorType;
                     break;
                 }
-                ast.type = Environment.intType;
+                ast.type = t1;
             }
         }
+
+        if (t1.isInt() && t2.isInt()) {
+            ast.O.spelling = "i" + ast.O.spelling;
+            ast.type = Environment.intType;
+        } else if (t1.isInt() && t2.isFloat()) {
+            ast.O.spelling = "f" + ast.O.spelling;
+            ast.type = Environment.floatType;
+            Operator op = new Operator("i2f", ast.E1.pos);
+            ast.E1 = new UnaryExpr(op, ast.E1, ast.E1.pos);
+        } else if (t1.isFloat() && t2.isInt()) {
+            ast.O.spelling = "f" + ast.O.spelling;
+            ast.type = Environment.floatType;
+            Operator op = new Operator("i2f", ast.E2.pos);
+            ast.E2 = new UnaryExpr(op, ast.E2, ast.E2.pos);
+        } else if (t1.isFloat() && t2.isFloat()) {
+            ast.O.spelling = "f" + ast.O.spelling;
+            ast.type = Environment.floatType;
+        }
+
         return ast.type;
     }
 
@@ -486,7 +523,7 @@ public class Checker implements Visitor {
                 if (eT.isError()) {
                     break;
                 }
-                if (!eT.isInt()) {
+                if (!eT.isInt() && !eT.isFloat()) {
                     handler.reportError(errors[8], "", ast.O.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -750,6 +787,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
         }
 
+        if (t.isInt() && decl.T.isFloat()) {
+            Operator op = new Operator("i2f", ast.E.pos);
+            ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
+        }
         return null;
     }
 
@@ -767,18 +808,16 @@ public class Checker implements Visitor {
     }
 
     public Object visitFloatLiteral(FloatLiteral ast, Object o) {
-        System.out.println("visitFloatLiteral");
-        return null;
+        return Environment.floatType;
     }
 
     public Object visitFloatType(FloatType ast, Object o) {
-        System.out.println("visitFloatType");
-        return null;
+        return Environment.floatType;
     }
 
     public Object visitFloatExpr(FloatExpr ast, Object o) {
-        System.out.println("visitFloatExpr");
-        return null;
+        ast.type = Environment.floatType;
+        return ast.type;
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {

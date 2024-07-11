@@ -132,19 +132,20 @@ public class X {
             System.exit(0);
         }
 
+        Instant cStart = Instant.now();
+        Checker checker = new Checker(handler);
+        try {
+            checker.check(ast);
+        } catch (Exception s) {
+            System.out.println(s);
+            System.exit(1);
+        }
+        Instant cEnd = Instant.now();
+
         if (handler.numErrors == 0 && clARGS.containsKey("parse")) {
             Drawer drawer = new Drawer();
             drawer.draw(ast);
         } else {
-            Instant cStart = Instant.now();
-            Checker checker = new Checker(handler);
-            try {
-                checker.check(ast);
-            } catch (Exception s) {
-                System.out.println(s);
-                System.exit(1);
-            }
-            Instant cEnd = Instant.now();
 
             if (handler.numErrors != 0) {
                 System.exit(1);

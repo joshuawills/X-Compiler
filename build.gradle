@@ -18,7 +18,6 @@ sourceSets {
 }
 
 dependencies {
-    // Add any dependencies your project might have
 }
 
 jar {

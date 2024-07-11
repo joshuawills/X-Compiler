@@ -34,6 +34,7 @@ public class LLVM {
     }
 
     public static final String INT_TYPE = "i32";
+    public static final String FLOAT_TYPE = "float";
     public static final String BOOL_TYPE = "i1";
     public static final String VOID_TYPE = "void";
 

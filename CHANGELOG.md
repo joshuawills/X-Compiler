@@ -39,12 +39,14 @@
 
 - comma separated variable declarations
 
+*11.07.2024*
+
+- some float stuff done
+
 # TODO
 
 - float support
-  - set up syntax -- DONE
-  - correctly lex them -- DONE
-  - parsing should be straightforward -- DONE
+  - fix it so it works for them all! 
   - set up type checking without type conversion first
 
 - in-compilation expression everywhere possible

@@ -25,6 +25,9 @@ public class FloatType extends Type {
         return "float";
     }
     public boolean assignable(Object obj) {
-        return equals(obj);
+        if (obj instanceof ErrorType) {
+            return true;
+        }
+        return obj instanceof IntType || obj instanceof FloatType;
     }
 }
