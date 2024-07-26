@@ -152,7 +152,7 @@ public class Lex {
                     acceptWithSpelling();
                     yield TokenType.AND_LOGIC;
                 } else {
-                    yield TokenType.BITWISE_AND;
+                    yield TokenType.AMPERSAND;
                 }
             }
             case '|' -> {

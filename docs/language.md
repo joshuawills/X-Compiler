@@ -176,6 +176,24 @@ structs. There are boolean expressions, denoted with the `bool` keyword, integer
 and strings with the `str` keyword. All strings are constant at the moment, and can only be used in
 simple I/O operations. Typecasting is not valid between any of these types currently.
 
+Simple pointers are also currently supported. They are declared in a C like way, seen in a simple example below.
+
+```Rust
+fn swap(mut int *a, mut int *b) -> void {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+fn main() -> int {
+    mut int a = 2, b = 3;
+    swap(&a, &b);
+    outInt(a);
+    outInt(b);
+    return 0;
+}
+```
+
 ## Operators
 
 X supports all standard mathematical operators a language like C has. For a formal understanding of operator

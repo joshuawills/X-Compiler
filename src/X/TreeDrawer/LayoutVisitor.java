@@ -109,6 +109,10 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("FloatExp", ast.FL);
     }
 
+    public Object visitPointerType(PointerType ast, Object o) {
+        return layoutNullary(ast.t.toString() + " *");
+    }
+
     public Object visitForStmt(ForStmt ast, Object obj) {
         return layoutQuaternary("ForStmt", ast.S1, ast.E2, ast.S3, ast.S);
     }

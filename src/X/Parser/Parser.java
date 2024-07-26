@@ -231,7 +231,7 @@ public class Parser {
             case BREAK -> parseBreakStmt();
             case CONTINUE -> parseContinueStmt();
             case RETURN -> parseReturnStmt();
-            case IDENT, DOLLAR -> parseDeclOrFuncCallStmt(); // this could also be a func call
+            case IDENT, DOLLAR, STAR -> parseDeclOrFuncCallStmt(); // this could also be a func call
             default -> parseLocalVarStmt();
         };
     }
@@ -239,6 +239,7 @@ public class Parser {
     private Stmt parseDeclOrFuncCallStmt() throws SyntaxError {
         Position pos = new Position();
         start(pos);
+        boolean isDeref = tryConsume(TokenType.STAR);
         Ident iAST= parseIdent();
         if (tryConsume(TokenType.OPEN_PAREN)) {
             // Func call
@@ -257,7 +258,7 @@ public class Parser {
             CallExpr E = new CallExpr(iAST, aLIST, pos);
             return new CallStmt(E, pos);
         }
-        return parseDeclStmt(iAST);
+        return parseDeclStmt(iAST, isDeref);
     }
 
     private LocalVarStmt parseLocalVarStmt() throws SyntaxError {
@@ -265,7 +266,7 @@ public class Parser {
         return new LocalVarStmt(vAST, vAST.pos);
     }
 
-    private Stmt parseDeclStmt(Ident iAST) throws SyntaxError {
+    private Stmt parseDeclStmt(Ident iAST, boolean isDeref) throws SyntaxError {
         Position pos = new Position();
         start(pos);
         Expr eAST = new EmptyExpr(pos);
@@ -290,9 +291,9 @@ public class Parser {
         }
         finish(pos);
         if (isMath) {
-            return new MathDeclStmt(iAST, eAST, O, pos);
+            return new MathDeclStmt(iAST, eAST, O, pos, isDeref);
         } else {
-            return new DeclStmt(iAST, eAST, pos);
+            return new DeclStmt(iAST, eAST, pos, isDeref);
         }
     }
 
@@ -504,9 +505,8 @@ public class Parser {
             syntacticError("Expected a type, received \"%\"", currentToken.kind.toString().strip());
             return null;
         }
-
         Position pos = currentToken.pos;
-        return switch (currentToken.lexeme) {
+        Type t = switch (currentToken.lexeme) {
             case "int" -> {
                 accept();
                 yield new IntType(pos);
@@ -532,6 +532,11 @@ public class Parser {
                 yield null;
             }
         };
+        if (tryConsume(TokenType.STAR)) {
+            finish(pos);
+            t = new PointerType(pos, t);
+        }
+        return t;
     }
 
 
@@ -635,7 +640,7 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         return switch (currentToken.kind) {
-            case PLUS, DASH, NEGATE -> {
+            case PLUS, DASH, NEGATE, STAR, AMPERSAND -> {
                 Operator opAST = acceptOperator();
                 Expr eAST = parseUnaryExpr();
                 finish(pos);

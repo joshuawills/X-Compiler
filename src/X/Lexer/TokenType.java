@@ -47,7 +47,7 @@ public enum TokenType {
     COMMA,
     MOD,
     BITWISE_OR,
-    BITWISE_AND,
+    AMPERSAND,
     BITWISE_XOR,
     BITWISE_LEFT_SHIFT,
     BITWISE_RIGHT_SHIFT,

@@ -177,6 +177,14 @@ public class Evaluator implements Visitor {
                 }
             }
             case "!" -> !(boolean) ast.E.visit(this, o);
+            case "&" -> {
+                System.out.println("HANDLE ADDRESS-OF EVALUATOR");
+                yield null;
+            }
+            case "*" -> {
+                System.out.println("HANDLE DEREFERENCE EVALUATOR");
+                yield null;
+            }
             default -> {
                 System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
                 yield null;
@@ -319,5 +327,10 @@ public class Evaluator implements Visitor {
 
     public Object visitFloatExpr(FloatExpr ast, Object o) {
         return Float.parseFloat(ast.FL.spelling);
+    }
+
+    public Object visitPointerType(PointerType ast, Object o) {
+        System.out.println("TODO POINTER TYPE");
+        return null;
     }
 }

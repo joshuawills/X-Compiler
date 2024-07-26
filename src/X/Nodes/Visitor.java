@@ -104,4 +104,6 @@ public interface Visitor {
     Object visitFloatType(FloatType ast, Object o);
 
     Object visitFloatExpr(FloatExpr ast, Object o);
+
+    Object visitPointerType(PointerType ast, Object o);
 }

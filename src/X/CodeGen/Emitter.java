@@ -144,6 +144,19 @@ public class Emitter implements Visitor {
             return null;
         }
 
+        if (ast.T.isPointer()) {
+            PointerType pT = (PointerType) ast.T;
+            ast.E.visit(this, o);
+            int val = f.localVarIndex - 1;
+            emit("\tstore ");
+            pT.t.visit(this, o);
+            emit("* %" + val + ", ");
+            ast.T.visit(this, o);
+            emitN("* %" + ast.I.spelling + loopDepth);
+            ast.index = loopDepth;
+            return null;
+        }
+
         if (!ast.T.isString()) {
             ast.E.visit(this, o);
         }
@@ -316,6 +329,27 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         ast.E.visit(this, f);
         int value = f.localVarIndex - 1;
+        if (ast.isDeref) {
+            int v = f.getNewIndex();
+            emit("\t%" + v + " = load ");
+            ast.E.type.visit(this, o);
+            emit("*, ");
+            ast.E.type.visit(this, o);
+            if (ast.I.decl instanceof LocalVar) {
+                emitN("** %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
+            } else if (ast.I.decl instanceof GlobalVar) {
+                emitN("** @" + ast.I.spelling);
+            } else if (ast.I.decl instanceof ParaDecl) {
+                emitN("** %" + ast.I.spelling + "0");
+            }
+            emit("\tstore ");
+            ast.E.type.visit(this, o);
+            emit(" %" + value + ", ");
+            ast.E.type.visit(this, o);
+            emitN("* %" + v);
+            return null;
+        }
+
         emit("\tstore ");
         ast.E.type.visit(this, o);
         emit(" %" + value + ", ");
@@ -334,6 +368,9 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
 
         switch (ast.spelling) {
+            case "&", "*" -> {
+                // do nothing , handled elsewhere
+            }
             case "i2f" -> {
                 if (ast.parent instanceof UnaryExpr parent) {
                     int numOne = parent.E.tempIndex;
@@ -342,7 +379,7 @@ public class Emitter implements Visitor {
                     emitN("\t%" + newNum + " = sitofp i32 %" + numOne + " to float");
                 }
             }
-            case "-" -> {
+            case "i-", "f-" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
@@ -364,14 +401,14 @@ public class Emitter implements Visitor {
                     emitN("\t%" + newNum + " = " +  "xor i1 1, " + " %" + numOne);
                 }
             }
-            case "i+", "f+", "i*", "f*", "i%", "i/", "f/", "i==", "f==", "i!=", "f!=",
-                "i<", "f<", "i<=", "f<=", "i>", "f>", "i>=", "f>=", "&&", "||" -> {
+            case "i+", "f+", "i*", "f*", "i%", "i/", "f/", "i==", "f==", "b==", "i!=", "f!=", "b!=",
+                "i<", "f<", "i<=", "f<=", "i>", "f>", "i>=", "f>=", "b&&", "b||" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
                     int newNum = f.getNewIndex();
                     parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling, parent.type) +
+                    emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
                         " %" + numOne + ", %" + numTwo);
                 }
             }
@@ -383,7 +420,7 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public String opToCommand(String input, Type t) {
+    public String opToCommand(String input) {
         return switch (input)  {
             case "i+" ->  "add i32";
             case "f+" ->  "fadd float";
@@ -394,8 +431,10 @@ public class Emitter implements Visitor {
             case "f/" -> "fdiv float";
             case "i==" -> "icmp eq i32";
             case "f==" -> "fcmp eq float";
+            case "b==" -> "icmp eq i1";
             case "i!=" -> "icmp ne i32";
             case "f!=" -> "fcmp ne float";
+            case "b!=" -> "icmp ne i1";
             case "i<=" -> "icmp sle i32";
             case "f<=" -> "fcmp sle float";
             case "i<" -> "icmp slt i32";
@@ -404,9 +443,12 @@ public class Emitter implements Visitor {
             case "f>" -> "fcmp sgt float";
             case "i>=" -> "icmp sge i32";
             case "f>=" -> "fcmp sge float";
-            case "&&" -> "and";
-            case "||" -> "or";
-            default -> "";
+            case "b&&" -> "and i1";
+            case "b||" -> "or i1";
+            default -> {
+                System.out.println("opToCommand not implemented: " + input);
+                yield "";
+            }
         };
     }
 
@@ -418,6 +460,50 @@ public class Emitter implements Visitor {
     }
 
     public Object visitUnaryExpr(UnaryExpr ast, Object o) {
+        Frame f = (Frame) o;
+        if (ast.O.spelling.equals("*")) {
+
+            VarExpr VE = (VarExpr) ast.E;
+            SimpleVar SV = (SimpleVar) VE.V;
+            Decl d = (Decl) SV.I.decl;
+
+            Type t = ast.E.type;
+            Type tInner = ((PointerType) t).t;
+            // can assume the expression type is a pointer
+            int index = f.getNewIndex();
+            emit("\t%" + index + " = load ");
+            t.visit(this, o);
+            emit(", ");
+            t.visit(this, o);
+            if (d instanceof LocalVar) {
+                emitN("* %" + d.I.spelling + ((LocalVar) d).index);
+            } else if (d instanceof ParaDecl) {
+                emitN("* %" + d.I.spelling + "0");
+            }
+
+            int indexTwo = f.getNewIndex();
+            ast.tempIndex = indexTwo;
+            emit("\t%" + indexTwo + " = load ");
+            tInner.visit(this, o);
+            emit(", ");
+            tInner.visit(this, o);
+            emitN("* %" + index);
+
+            return null;
+        }
+        if (ast.O.spelling.equals("&")) {
+            VarExpr VE = (VarExpr) ast.E;
+            SimpleVar SV = (SimpleVar) VE.V;
+            Decl d = (Decl) SV.I.decl;
+            int index = f.getNewIndex();
+            ast.tempIndex = index;
+            emit("\t%" + index + " = bitcast ");
+            d.T.visit(this, o);
+            emit("* %" + SV.I.spelling + d.index + " to ");
+            d.T.visit(this, o);
+            emitN("*");
+            return null;
+        }
         ast.E.visit(this, o);
         ast.O.visit(this, o);
         return null;
@@ -673,6 +759,7 @@ public class Emitter implements Visitor {
         arg.visit(this, o);
         int index = arg.tempIndex;
         emitN("\tcall i32 (i8*, ...) @printf(i8* %" + index + ")");
+        f.getNewIndex();
         f.getNewIndex(); // handle neglected return value from printf
     }
 
@@ -878,7 +965,6 @@ public class Emitter implements Visitor {
     }
 
     public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
-
         String repetitions = "";
         if (ast.I.decl instanceof LocalVar) {
             repetitions = String.valueOf(((LocalVar) ast.I.decl).index);
@@ -889,51 +975,92 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         ast.E.visit(this, o);
         int index = ast.E.tempIndex;
+        int pointerIndex = -1;
         int aIndex = f.getNewIndex();
-        if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
+
+        if (ast.isDeref) {
             emit("\t%" + aIndex + " = load ");
             ((Decl) ast.I.decl).T.visit(this, o);
             emit(", ");
             ((Decl) ast.I.decl).T.visit(this, o);
-            emitN("* %" + ast.I.spelling + repetitions);
-        } else if (ast.I.decl instanceof GlobalVar) {
-            emit("\t%" + aIndex + " = load ");
-            ((Decl) ast.I.decl).T.visit(this, o);
+            if (ast.I.decl instanceof LocalVar) {
+                emitN("* %" + ast.I.spelling + repetitions);
+            } else if (ast.I.decl instanceof GlobalVar) {
+                emitN("* @" + ast.I.spelling);
+            } else if (ast.I.decl instanceof ParaDecl) {
+                emitN("* %" + ast.I.spelling + "0");
+            }
+            int newIndex = f.getNewIndex();
+            emit("\t%" + newIndex + " = load ");
+            Type innerT = ((PointerType) ((Decl) ast.I.decl).T).t;
+            innerT.visit(this, o);
             emit(", ");
             ((Decl) ast.I.decl).T.visit(this, o);
-            emitN("* @" + ast.I.spelling + repetitions);
+            emitN(" %" + aIndex);
+            pointerIndex = aIndex;
+            aIndex = newIndex;
+        } else {
+            if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
+                emit("\t%" + aIndex + " = load ");
+                ((Decl) ast.I.decl).T.visit(this, o);
+                emit(", ");
+                ((Decl) ast.I.decl).T.visit(this, o);
+                emitN("* %" + ast.I.spelling + repetitions);
+            } else if (ast.I.decl instanceof GlobalVar) {
+                emit("\t%" + aIndex + " = load ");
+                ((Decl) ast.I.decl).T.visit(this, o);
+                emit(", ");
+                ((Decl) ast.I.decl).T.visit(this, o);
+                emitN("* @" + ast.I.spelling + repetitions);
+            }
         }
+
+        Type t = ((Decl) ast.I.decl).T;
+        if (ast.isDeref) {
+            t = ((PointerType) ((Decl) ast.I.decl).T).t;
+        }
+
         int nIndex = f.getNewIndex();
         switch (ast.O.spelling) {
             case "+=" -> {
                 emit("\t%" + nIndex + " = add ");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emitN(" %" + index + ", %" + aIndex);
+                t.visit(this, o);
+                emitN(" %" + aIndex + ", %" + index);
             }
             case "-=" -> {
-                emit("\t%" + nIndex + " = sub");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emitN(" %" + index + ", %" + aIndex);
+                emit("\t%" + nIndex + " = sub ");
+                t.visit(this, o);
+                emitN(" %" + aIndex + ", %" + index);
             }
             case "*=" -> {
-                emit("\t%" + nIndex + " = mul");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emitN(" %" + index + ", %" + aIndex);
+                emit("\t%" + nIndex + " = mul ");
+                t.visit(this, o);
+                emitN(" %" + aIndex + ", %" + index);
             }
             case "/=" -> {
-                emit("\t%" + nIndex + " = udiv");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emitN(" %" + index + ", %" + aIndex);
+                emit("\t%" + nIndex + " = udiv ");
+                t.visit(this, o);
+                emitN(" %" + aIndex + ", %" + index);
             }
             default -> System.out.println("UNREACHABLE MATHDECL");
         }
-        if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
-            emitN("\tstore i32 %" + nIndex + ", i32* %" + ast.I.spelling + repetitions);
-        } else if (ast.I.decl instanceof GlobalVar) {
-            emitN("\tstore i32 %" + nIndex + ", i32* @" + ast.I.spelling + repetitions);
+
+        if (ast.isDeref) {
+            emit("\tstore ");
+            t.visit(this, o);
+            emit(" %" + nIndex + ", ");
+            t.visit(this, o);
+            emitN("* %" + pointerIndex);
+        } else {
+            if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
+                emitN("\tstore i32 %" + nIndex + ", i32* %" + ast.I.spelling + repetitions);
+            } else if (ast.I.decl instanceof GlobalVar) {
+                emitN("\tstore i32 %" + nIndex + ", i32* @" + ast.I.spelling + repetitions);
+            }
         }
         return null;
     }
+
 
     public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
         Frame f = (Frame) o;
@@ -980,6 +1107,12 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitPointerType(PointerType ast, Object o) {
+        ast.t.visit(this, o);
+        emit("*");
+        return null;
+    }
+
     public void emit(String s) {
         LLVM.append(new Instruction(s));
     }
@@ -988,4 +1121,3 @@ public class Emitter implements Visitor {
         LLVM.append(new Instruction(s + "\n"));
     }
 }
-

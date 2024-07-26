@@ -32,8 +32,8 @@ stmt})? \\
 \textit{break-stmt} &\to \textbf{break} \text{ ";"} \\
 \textit{continue-stmt} &\to \textbf{continue } \text{ ";"} \\
 \textit{return-stmt} &\to \textbf{return} \textit{ expr}? \text{ ";"} \\
-\textit{math-decl-stmt} &\to \textit{ident} (\text{ "+="} | \text{ "-="} | \text{ "/="} | \text{ "*="}) \textit{expr} \text{ ";"} \\
-\textit{decl-stmt} &\to \textit{ident} \text{ "="} \textit{expr} \text{ ";"} \\
+\textit{math-decl-stmt} &\to \textit(*)? \textit{ ident} (\text{ "+="} | \text{ "-="} | \text{ "/="} | \text{ "*="}) \textit{expr} \text{ ";"} \\
+\textit{decl-stmt} &\to \textit(*)? \textit{ ident} \text{ "="} \textit{expr} \text{ ";"} \\
 \textit{func-call-stmt} &\to \textit{func-call} \text{ ";"} \\
 \textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\
 \textit{loop-stmt} &\to \textbf{ loop} \textit{ ident } \textit{ compound-stmt}\\ \\
@@ -54,7 +54,7 @@ stmt})? \\
 \textbf{BOOLLITERAL} \\
 "(" \textit{ expr } ")" \\
 \textit{ident} \\
-\textit{(+ | - | !) unary-expr} \\
+\textit{(+ | - | ! | * | \&) unary-expr} \\
 \textit{func-call} \\
 \end{cases} \\
 
@@ -66,7 +66,7 @@ stmt})? \\
 \textit{decl} &\to \textbf{mut}? \textit{ type ident} \\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
-\textit{type} &\to \textbf{int | str | void | bool | float } \\
+\textit{type} &\to \textbf{int | str | void | bool | float | \textit{type}* } \\
 
 \textit{INTLITERAL} &\to [0-9]+ \\
 \textit{FLOATLITERAL} &\to [0-9]^+\textit{"."}[0-9]? \\

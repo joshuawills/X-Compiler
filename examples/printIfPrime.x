@@ -5,6 +5,7 @@ fn main() -> int {
         if is_prime(x) {
             outInt(x);
         } else {
+            outStr("That number was not prime\n");
             break;
         }
     }
@@ -15,7 +16,7 @@ fn is_prime(int x) -> bool {
     if x == 0 || x == 1 {
         return false;
     }
-    loop i in 2 (x / 2) {
+    loop i in 2 (1 + x / 2) {
         if x % i == 0 {
             return false;
         }

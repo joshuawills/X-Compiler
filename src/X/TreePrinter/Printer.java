@@ -163,15 +163,20 @@ public class Printer implements Visitor {
     }
 
     public Object visitFloatType(FloatType ast, Object o) {
-        print(indentString() + "int");
+        print(indentString() + "float");
         return null;
     }
 
     public Object visitFloatExpr(FloatExpr ast, Object o) {
-        print(indentString() + "IntExpr");
+        print(indentString() + "FloatExpr");
         ++indent;
         ast.FL.visit(this, o);
         --indent;
+        return null;
+    }
+
+    public Object visitPointerType(PointerType ast, Object o) {
+        print(indentString() + ast.t.toString() + " *");
         return null;
     }
 

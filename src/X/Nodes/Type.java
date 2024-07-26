@@ -35,4 +35,9 @@ public abstract class Type extends AST {
     public boolean isError() {
         return (this instanceof ErrorType);
     }
+
+    public boolean isPointer() {
+        return this instanceof PointerType;
+    }
+
 }

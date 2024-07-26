@@ -38,6 +38,9 @@ public class Checker implements Visitor {
         "*27: inappropriate use of '$' operator",
         "*28: loop iterators must be integers",
         "*29: do-while conditional is not boolean",
+        "*30: address-of operand only applicable to variables",
+        "*31: can't get address of a constant variable",
+        "*32: inappropriate deference of variable"
     };
 
     private final SymbolTable idTable;
@@ -403,14 +406,10 @@ public class Checker implements Visitor {
             return null;
         }
 
-        if (decl instanceof LocalVar) {
-            decl.isReassigned = true;
-        } else if (decl instanceof GlobalVar) {
+        if (decl instanceof LocalVar || decl instanceof GlobalVar) {
             decl.isReassigned = true;
         }
-
         ast.I.decl = decl;
-
         if (decl instanceof Function) {
             handler.reportError(errors[9], "", ast.E.pos);
             return null;
@@ -421,13 +420,22 @@ public class Checker implements Visitor {
             return null;
         }
 
+        Type existingType = decl.T;
+        if (ast.isDeref) {
+            if (!decl.T.isPointer()) {
+                handler.reportError(errors[32], "", ast.pos);
+                return null;
+            }
+            existingType = ((PointerType) decl.T).t;
+        }
+
         Type t = (Type) ast.E.visit(this, o);
-        if (!decl.T.assignable(t)) {
-            String message = "expected " + decl.T.toString() + ", received " + t.toString();
+        if (!existingType.assignable(t)) {
+            String message = "expected " + existingType + ", received " + t.toString();
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
         }
 
-        if (t.isInt() && decl.T.isFloat()) {
+        if (t.isInt() && existingType.isFloat()) {
             Operator op = new Operator("i2f", ast.E.pos);
             ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
         }
@@ -494,6 +502,25 @@ public class Checker implements Visitor {
             }
         }
 
+        if (ast.type.isBoolean()) {
+            if (t1.isInt() && t2.isInt()) {
+                ast.O.spelling = "i" + ast.O.spelling;
+            } else if (t1.isInt() && t2.isFloat()) {
+                ast.O.spelling = "f" + ast.O.spelling;
+                Operator op = new Operator("i2f", ast.E1.pos);
+                ast.E1 = new UnaryExpr(op, ast.E1, ast.E1.pos);
+            } else if (t1.isFloat() && t2.isInt()) {
+                ast.O.spelling = "f" + ast.O.spelling;
+                Operator op = new Operator("i2f", ast.E2.pos);
+                ast.E2 = new UnaryExpr(op, ast.E2, ast.E2.pos);
+            } else if (t1.isFloat() && t2.isFloat()) {
+                ast.O.spelling = "f" + ast.O.spelling;
+            } else {
+                ast.O.spelling = "b" + ast.O.spelling;
+            }
+            return ast.type;
+        }
+
         if (t1.isInt() && t2.isInt()) {
             ast.O.spelling = "i" + ast.O.spelling;
             ast.type = Environment.intType;
@@ -540,6 +567,39 @@ public class Checker implements Visitor {
                     break;
                 }
                 ast.type = eT;
+            }
+            case "*" -> { // de-reference operator
+                if (eT.isError()) {
+                    break;
+                }
+                if (!eT.isPointer()) {
+                    String message = "dereference operator may only be applied to pointer types";
+                    handler.reportError(errors[8] + ": %", message, ast.O.pos);
+                    ast.type = Environment.errorType;
+                    break;
+                }
+                if (!(ast.E instanceof VarExpr)) {
+                    handler.reportError(errors[30], "", ast.O.pos);
+                    break;
+                }
+                ast.type = ((PointerType) eT).t;
+            }
+            case "&" -> { // address of operator
+                if (eT.isError()) {
+                    break;
+                }
+                if (!(ast.E instanceof VarExpr)) {
+                    handler.reportError(errors[30], "", ast.O.pos);
+                    break;
+                }
+                VarExpr VE = (VarExpr) ast.E;
+                SimpleVar SV = (SimpleVar) VE.V;
+                Decl decl = idTable.retrieve(SV.I.spelling);
+                if (!decl.isMut) {
+                    handler.reportError(errors[31], "", ast.O.pos);
+                    break;
+                }
+                ast.type = new PointerType(decl.pos, decl.T);
             }
         }
         return ast.type;
@@ -758,7 +818,16 @@ public class Checker implements Visitor {
             return null;
         }
 
-        if (!decl.T.isInt()) {
+        Type existingType = decl.T;
+        if (ast.isDeref) {
+            if (!decl.T.isPointer()) {
+                handler.reportError(errors[32], "", ast.pos);
+                return null;
+            }
+            existingType = ((PointerType) decl.T).t;
+        }
+
+        if (!existingType.isInt()) {
             handler.reportError(errors[5] + ": %", ast.I.spelling + ", must be an int", ast.E.pos);
             return null;
         }
@@ -782,7 +851,7 @@ public class Checker implements Visitor {
         }
 
         Type t = (Type) ast.E.visit(this, o);
-        if (!decl.T.assignable(t)) {
+        if (!existingType.assignable(t)) {
             String message = "expected " + decl.T.toString() + ", received " + t.toString();
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
         }
@@ -818,6 +887,11 @@ public class Checker implements Visitor {
     public Object visitFloatExpr(FloatExpr ast, Object o) {
         ast.type = Environment.floatType;
         return ast.type;
+    }
+
+    public Object visitPointerType(PointerType ast, Object o) {
+        Type t = (Type) ast.t.visit(this, o);
+        return new PointerType(dummyPos, t);
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {
