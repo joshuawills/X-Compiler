@@ -804,20 +804,29 @@ public class Emitter implements Visitor {
         f.getNewIndex(); // handle neglected return value from printf
 
         Expr secondArg = ((Args) A.EL).E;
-        VarExpr VE = (VarExpr) secondArg;
-        String repetition = "";
-        if (((SimpleVar) VE.V).I.decl instanceof LocalVar X) {
-            repetition = String.valueOf(X.index);
+        String val = "";
+        AST X = null;
+        if (secondArg instanceof ArrayIndexExpr) {
+            secondArg.visit(this, o);
+            val = String.valueOf(f.localVarIndex - 2);
+            X = ((ArrayIndexExpr) secondArg).I.decl;
+        } else {
+            VarExpr VE = (VarExpr) secondArg;
+            String repetition = "";
+            if (((SimpleVar) VE.V).I.decl instanceof LocalVar XY) {
+                repetition = String.valueOf(XY.index);
+            }
+            String varName = ((SimpleVar) VE.V).I.spelling;
+            val = varName + repetition;
+            X = ((SimpleVar) VE.V).I.decl;
         }
-        String varName = ((SimpleVar) VE.V).I.spelling;
         int indexStr = f.getNewIndex();
         int newIndex = f.getNewIndex();
         emitN("\t%" + indexStr + " = getelementptr inbounds [3 x i8], [3 x i8]* @.IIstr, i32 0, i32 0");
-        AST X = ((SimpleVar) VE.V).I.decl;
         if (X instanceof LocalVar || X instanceof ParaDecl) {
-            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* %" + varName + repetition + ")");
+            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* %" + val + ")");
         } else if (X instanceof GlobalVar) {
-            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* @" + varName + repetition + ")");
+            emitN("\t%" + newIndex + " = call i32 (i8*, ...) @scanf(i8* %" + indexStr + ", i32* @" + val  + ")");
         }
     }
 

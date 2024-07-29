@@ -1067,19 +1067,27 @@ public class Checker implements Visitor {
         if (ast.I.spelling.equals("inInt")) {
             Args A= (Args) ast.AL;
             Expr secondArg = ((Args) A.EL).E;
-            if (!(secondArg instanceof VarExpr)) {
+            if (!(secondArg instanceof VarExpr || secondArg instanceof ArrayIndexExpr)) {
                 handler.reportError(errors[18] + ": %", "Second arg for 'inInt' must be a declared int variable", ast.I.pos);
                 return Environment.errorType;
             }
-            VarExpr VE = (VarExpr) secondArg;
-            Decl x = idTable.retrieve(((SimpleVar) VE.V).I.spelling);
+            Decl x = null;
+            String spelling = null;
+            if (secondArg instanceof VarExpr) {
+                VarExpr VE = (VarExpr) secondArg;
+                spelling = ((SimpleVar) VE.V).I.spelling;
+                x = idTable.retrieve(spelling);
+            } else {
+                spelling = ((ArrayIndexExpr) secondArg).I.spelling;
+                x =  idTable.retrieve(spelling);
+            }
             if (x == null) {
-                handler.reportError(errors[4] + ": %", ((SimpleVar) VE.V).I.spelling, ast.I.pos);
+                handler.reportError(errors[4] + ": %", spelling, ast.I.pos);
                 return null;
             }
             x.isReassigned = true;
             if (!x.isMut) {
-                handler.reportError(errors[23] + ": %", ((SimpleVar) VE.V).I.spelling, ast.I.pos);
+                handler.reportError(errors[23] + ": %", spelling, ast.I.pos);
                 return null;
             }
         }
