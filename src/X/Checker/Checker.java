@@ -40,7 +40,14 @@ public class Checker implements Visitor {
         "*29: do-while conditional is not boolean",
         "*30: address-of operand only applicable to variables",
         "*31: can't get address of a constant variable",
-        "*32: inappropriate deference of variable"
+        "*32: inappropriate deference of variable",
+        "*33: identifier declared void[]",
+        "*34: attempt to use an array as a scalar",
+        "*35: attempt to use a scalar/function as an array",
+        "*36: wrong type for element in array initializer",
+        "*37: unknown array size at compile time",
+        "*38: excess elements in array initializer",
+        "*39: attempted reassignment of array"
     };
 
     private final SymbolTable idTable;
@@ -208,9 +215,22 @@ public class Checker implements Visitor {
             T = Environment.errorType;
             return T;
         }
-        I.visit(this, ast);
 
+        if (T.isArray()) {
+            Type iT = ((ArrayType) T).t;
+            if (iT instanceof VoidType) {
+                handler.reportError(errors[33] + ": %", ast.I.spelling, ast.T.pos);
+                T = Environment.errorType;
+                return T;
+            }
+        }
+
+        I.visit(this, ast);
         if (E instanceof EmptyExpr) {
+            if (T.isArray() && ((ArrayType) T).length == -1) {
+                handler.reportError(errors[37] + ": %", ast.I.spelling, ast.T.pos);
+                T = Environment.errorType;
+            }
             return T;
         }
 
@@ -421,6 +441,12 @@ public class Checker implements Visitor {
         }
 
         Type existingType = decl.T;
+
+        if (existingType.isArray()) {
+            handler.reportError(errors[39] + ": %", ast.I.spelling, ast.E.pos);
+            return null;
+        }
+
         if (ast.isDeref) {
             if (!decl.T.isPointer()) {
                 handler.reportError(errors[32], "", ast.pos);
@@ -720,6 +746,13 @@ public class Checker implements Visitor {
         if (ast.T.isVoid()) {
             handler.reportError(errors[3] + ": %", ast.I.spelling, ast.I.pos);
         }
+
+        if (ast.T.isArray()) {
+            Type iT = ((ArrayType) ast.T).t;
+            if (iT instanceof VoidType) {
+                handler.reportError(errors[33] + ": %", ast.I.spelling, ast.T.pos);
+            }
+        }
         return null;
     }
 
@@ -762,6 +795,11 @@ public class Checker implements Visitor {
         Decl decl = idTable.retrieve(ast.I.spelling);
         if (decl == null) {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        }
+
+        if (decl.T.isArray()) {
+            handler.reportError(errors[34] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
 
@@ -892,6 +930,67 @@ public class Checker implements Visitor {
     public Object visitPointerType(PointerType ast, Object o) {
         Type t = (Type) ast.t.visit(this, o);
         return new PointerType(dummyPos, t);
+    }
+
+    public Object visitArrayType(ArrayType ast, Object o) {
+        Type t = (Type) ast.t.visit(this, o);
+        return new ArrayType(dummyPos, t, ast.length);
+    }
+
+    public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
+        Type expectedT = ((Decl) o).T;
+        if (!expectedT.isArray()) {
+            String message = "attempting to assign array to scalar";
+            handler.reportError(errors[5] + ": %", message, ast.pos);
+            return Environment.errorType;
+        }
+        ArrayType aT = (ArrayType) expectedT;
+        Type iT = aT.t;
+        int length = aT.length;
+
+        if (ast.AL instanceof EmptyArgList) {
+            if (length == -1) {
+                aT.length = 0;
+            }
+            return aT;
+        }
+
+        Args args = (Args) ast.AL;
+        int iterator = 1;
+
+        boolean isError = false;
+        boolean seenExcess = false;
+        while (true) {
+            Type t = (Type) args.E.visit(this, o);
+            if (!iT.assignable(t)) {
+                String message = "expected " + iT + ", received " + t + " at position " + (iterator - 1);
+                handler.reportError(errors[36] + ": %", message, ast.pos);
+                isError = true;
+            }
+
+            if (iterator > length && length != -1 && !seenExcess) {
+                handler.reportError(errors[38] + ": %", ((Decl) o).I.spelling, ast.pos);
+                isError = true;
+                seenExcess = true;
+            }
+
+            if (args.EL instanceof EmptyArgList) {
+                break;
+            }
+
+            iterator += 1;
+            args = (Args) args.EL;
+        }
+
+        if (isError) {
+            return Environment.errorType;
+        }
+
+        if (length == -1) {
+            aT.length = iterator;
+        }
+
+        return aT;
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {

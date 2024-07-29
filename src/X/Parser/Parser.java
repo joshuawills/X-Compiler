@@ -7,7 +7,6 @@ import X.Lexer.TokenType;
 import X.Nodes.*;
 
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.Optional;
 
 public class Parser {
@@ -127,6 +126,17 @@ public class Parser {
             }
 
             Ident iAST = parseIdent();
+
+            if (tryConsume(TokenType.LEFT_SQUARE)) {
+                int length = -1;
+                if (currentToken.kind == TokenType.INT_LIT) {
+                    length = Integer.parseInt(currentToken.lexeme);
+                    match(TokenType.INT_LIT);
+                }
+                match(TokenType.RIGHT_SQUARE);
+                tAST = new ArrayType(pos, tAST, length);
+            }
+
             Expr eAST;
             if (tryConsume(TokenType.ASSIGN)) {
                 eAST = parseExpr();
@@ -182,6 +192,17 @@ public class Parser {
             tAST = parseType();
         }
         Ident iAST = parseIdent();
+
+        if (tryConsume(TokenType.LEFT_SQUARE)) {
+            int length = -1;
+            if (currentToken.kind == TokenType.INT_LIT) {
+                length = Integer.parseInt(currentToken.lexeme);
+                match(TokenType.INT_LIT);
+            }
+            match(TokenType.RIGHT_SQUARE);
+            tAST = new ArrayType(pos, tAST, length);
+        }
+
         Expr eAST;
         if (tryConsume(TokenType.ASSIGN)) {
             eAST = parseExpr();
@@ -646,6 +667,19 @@ public class Parser {
                 finish(pos);
                 yield new UnaryExpr(opAST, eAST, pos);
             }
+            case LEFT_SQUARE -> {
+                match(TokenType.LEFT_SQUARE);
+                List aList;
+                if (tryConsume(TokenType.RIGHT_SQUARE)) {
+                    finish(pos);
+                    aList = new EmptyArgList(pos);
+                } else {
+                    aList = parseArrayInitList();
+                    match(TokenType.RIGHT_SQUARE);
+                }
+                finish(pos);
+                yield new ArrayInitExpr(aList, pos);
+            }
             case IDENT, DOLLAR -> {
                 Ident iAST = parseIdent();
                 if (tryConsume(TokenType.OPEN_PAREN)) {
@@ -746,6 +780,20 @@ public class Parser {
             syntacticError("integer literal expected here", "");
         }
         return SL;
+    }
+
+    private List parseArrayInitList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Expr e1AST = parseExpr();
+        finish(pos);
+        if (currentToken.kind == TokenType.RIGHT_SQUARE) {
+            return new Args(e1AST, new EmptyArgList(pos), pos);
+        }
+        match(TokenType.COMMA);
+        List alAST = parseArrayInitList();
+        finish(pos);
+        return new Args(e1AST, alAST, pos);
     }
 
     private List parseArgList() throws SyntaxError {

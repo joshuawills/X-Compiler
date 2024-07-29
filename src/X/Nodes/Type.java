@@ -40,4 +40,7 @@ public abstract class Type extends AST {
         return this instanceof PointerType;
     }
 
+    public boolean isArray() {
+        return this instanceof ArrayType;
+    }
 }

@@ -330,7 +330,16 @@ public class Evaluator implements Visitor {
     }
 
     public Object visitPointerType(PointerType ast, Object o) {
+        // TODO
         System.out.println("TODO POINTER TYPE");
+        return null;
+    }
+
+    public Object visitArrayType(ArrayType ast, Object o) {
+        return null;
+    }
+
+    public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
         return null;
     }
 }

@@ -113,6 +113,14 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary(ast.t.toString() + " *");
     }
 
+    public Object visitArrayType(ArrayType ast, Object o) {
+        return layoutNullary(ast.t.toString() + "[" + ast.length +"]");
+    }
+
+    public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
+        return layoutUnary("ArrayInitExpr", ast.AL);
+    }
+
     public Object visitForStmt(ForStmt ast, Object obj) {
         return layoutQuaternary("ForStmt", ast.S1, ast.E2, ast.S3, ast.S);
     }

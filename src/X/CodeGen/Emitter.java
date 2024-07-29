@@ -1113,6 +1113,16 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitArrayType(ArrayType ast, Object o) {
+        System.out.println("EMITTER ARRAY TYPE");
+        return null;
+    }
+
+    public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
+        System.out.println("EMITTER ARRAY INIT EXPR");
+        return null;
+    }
+
     public void emit(String s) {
         LLVM.append(new Instruction(s));
     }

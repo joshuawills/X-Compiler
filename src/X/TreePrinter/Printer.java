@@ -180,6 +180,19 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitArrayType(ArrayType ast, Object o) {
+        print(indentString() + ast.t.toString() + "[]");
+        return null;
+    }
+
+    public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
+        print(indentString() + "ArrayInitExpr");
+        ++indent;
+        ast.AL.visit(this, o);
+        --indent;
+        return null;
+    }
+
     @Override
     public Object visitBreakStmt(BreakStmt ast, Object o) {
         print(indentString() + "BreakStmt");

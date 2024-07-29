@@ -43,6 +43,17 @@
 
 - some float stuff done
 
+*26.07.2024*
+
+- basic pointer support
+- * types
+- dereference and addr-of operands
+
+*29.07.2024*
+
+- basic array initialisation
+  - no emission yet
+
 # TODO
 
 - float support
@@ -58,6 +69,7 @@
 - basic control flow logic evaluation
   - if always false, don't generate logic
   - side effect detector
+- errors messages regarding mutability/reassignment w/ pointers
 
 - pointers and dynamic memory
 - structs

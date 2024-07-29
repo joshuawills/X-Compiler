@@ -3,8 +3,8 @@
 $$
 \begin{align}
 \textit{program} &\to (\textit{function }|\textit{ global-var})^*  \\ \\
-\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
-\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
+\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\textit{[]})?  (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
+\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\textit{[]})? (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
 \textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"}
 \textit{type} \textit{ compound-stmt}\\ \\
 
@@ -56,14 +56,16 @@ stmt})? \\
 \textit{ident} \\
 \textit{(+ | - | ! | * | \&) unary-expr} \\
 \textit{func-call} \\
+\textit{array-init-expr} \\
 \end{cases} \\
 
 \\
 
 \textit{func-call} &\to \textit{ident } "(" \textit{args} ")" \\
+\textit{array-init-expr} &\to \textit{"["} (\textit{expr } (\text{","} \textit{ expr})^*)? \textit{"]"} \\
 \textit{args} &\to \textit{expr } (\text{","} \textit{ expr})^* \text{ | } \epsilon\\
 \textit{para-list} &\to \textit{decl } (\textit{"," decl})^*  \text{ | } \epsilon \\ \\
-\textit{decl} &\to \textbf{mut}? \textit{ type ident} \\
+\textit{decl} &\to \textbf{mut}? \textit{ type ident}  (\textit{[]})?\\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
 \textit{type} &\to \textbf{int | str | void | bool | float | \textit{type}* } \\

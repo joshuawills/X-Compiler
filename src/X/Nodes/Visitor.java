@@ -106,4 +106,8 @@ public interface Visitor {
     Object visitFloatExpr(FloatExpr ast, Object o);
 
     Object visitPointerType(PointerType ast, Object o);
+
+    Object visitArrayType(ArrayType ast, Object o);
+
+    Object visitArrayInitExpr(ArrayInitExpr ast, Object o);
 }
