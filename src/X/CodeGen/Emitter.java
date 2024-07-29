@@ -1193,6 +1193,34 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
+        Type t = ast.type;
+        Frame f = (Frame) o;
+        ast.index.visit(this, o);
+        int index = f.localVarIndex - 1;
+        int newIndex = f.getNewIndex();
+        emit("\t%" + newIndex + " = getelementptr inbounds");
+        t.visit(this, o);
+        emit(", ");
+        t.visit(this, o);
+        if (ast.I.decl instanceof LocalVar) {
+            emit("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
+        } else if (ast.I.decl instanceof GlobalVar) {
+            emit("* @" + ast.I.spelling);
+        } else if (ast.I.decl instanceof ParaDecl) {
+            emit("* %" + ast.I.spelling + "0");
+        }
+        emit(" , i32 0, i32 %" + index);
+        int finalIndex = f.getNewIndex();
+        ast.tempIndex = finalIndex;
+        emit("\t%" + finalIndex + " = load ");
+        ((ArrayType) t).t.visit(this, o);
+        emit(", ");
+        ((ArrayType) t).t.visit(this, o);
+        emitN("* %" + newIndex);
+        return null;
+    }
+
     public void emitBase(Type t, Object o) {
         // TODO: handle other cases
         Frame f = (Frame) o;

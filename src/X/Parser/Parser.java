@@ -694,6 +694,11 @@ public class Parser {
                     }
                     finish(pos);
                     yield new CallExpr(iAST, aLIST, pos);
+                } else if (tryConsume(TokenType.LEFT_SQUARE)) {
+                    Expr eAST = parseExpr();
+                    match(TokenType.RIGHT_SQUARE);
+                    finish(pos);
+                    yield new ArrayIndexExpr(iAST, eAST, pos);
                 } else {
                     finish(pos);
                     Var simVAST = new SimpleVar(iAST, pos);

@@ -342,4 +342,9 @@ public class Evaluator implements Visitor {
     public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
         return null;
     }
+
+    public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
+        // TODO
+        return null;
+    }
 }

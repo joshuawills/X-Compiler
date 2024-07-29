@@ -57,10 +57,12 @@ stmt})? \\
 \textit{(+ | - | ! | * | \&) unary-expr} \\
 \textit{func-call} \\
 \textit{array-init-expr} \\
+\textit{array-index} \\
 \end{cases} \\
 
 \\
 
+\textit{array-index} &\to \textit{ident } "[" \textit{expr} "]" \\
 \textit{func-call} &\to \textit{ident } "(" \textit{args} ")" \\
 \textit{array-init-expr} &\to \textit{"["} (\textit{expr } (\text{","} \textit{ expr})^*)? \textit{"]"} \\
 \textit{args} &\to \textit{expr } (\text{","} \textit{ expr})^* \text{ | } \epsilon\\

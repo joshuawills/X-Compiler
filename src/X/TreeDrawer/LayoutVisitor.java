@@ -121,6 +121,10 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("ArrayInitExpr", ast.AL);
     }
 
+    public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
+        return layoutBinary("ArrayIndexExpr", ast.I, ast.index);
+    }
+
     public Object visitForStmt(ForStmt ast, Object obj) {
         return layoutQuaternary("ForStmt", ast.S1, ast.E2, ast.S3, ast.S);
     }

@@ -47,7 +47,8 @@ public class Checker implements Visitor {
         "*36: wrong type for element in array initializer",
         "*37: unknown array size at compile time",
         "*38: excess elements in array initializer",
-        "*39: attempted reassignment of array"
+        "*39: attempted reassignment of array",
+        "*40: array index is not an integer"
     };
 
     private final SymbolTable idTable;
@@ -991,6 +992,21 @@ public class Checker implements Visitor {
         }
 
         return aT;
+    }
+
+    public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
+        Decl binding = (Decl) ast.I.visit(this, o);
+        if (binding == null) {
+            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        }
+        Type T = (Type) ast.index.visit(this, o);
+        if (!T.isInt()) {
+            handler.reportError(errors[40] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        }
+        ast.type = binding.T;
+        return ((ArrayType) binding.T).t;
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {

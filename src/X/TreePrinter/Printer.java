@@ -193,6 +193,13 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
+        print(indentString() + ast.I.spelling + "[");
+        ast.index.visit(this, o);
+        print("]");
+        return null;
+    }
+
     @Override
     public Object visitBreakStmt(BreakStmt ast, Object o) {
         print(indentString() + "BreakStmt");
