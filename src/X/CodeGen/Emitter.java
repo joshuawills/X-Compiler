@@ -9,6 +9,8 @@ public class Emitter implements Visitor {
     private final String outputName;
     private int loopDepth = 0;
     private int numConstStrings = 0;
+    private ArrayType arrayDetails;
+    private String arrName = "";
     private final Position dummyPos = new Position();
 
     public Emitter(String outputName) {
@@ -139,6 +141,18 @@ public class Emitter implements Visitor {
             ast.T.visit(this, o);
         }
         emitN("");
+
+        if (ast.T.isArray()) {
+            arrayDetails = (ArrayType) ast.T;
+            arrName = ast.I.spelling + loopDepth;
+            Expr E = ast.E;
+            if (E instanceof EmptyExpr) {
+                E = new ArrayInitExpr(new EmptyArgList(dummyPos), dummyPos);
+            }
+            E.visit(this, o);
+            return null;
+        }
+
         if (ast.E instanceof EmptyExpr) {
             // TODO: assign default values
             return null;
@@ -1114,13 +1128,85 @@ public class Emitter implements Visitor {
     }
 
     public Object visitArrayType(ArrayType ast, Object o) {
-        System.out.println("EMITTER ARRAY TYPE");
+        emit("[" + ast.length + " x ");
+        ast.t.visit(this, o);
+        emit("]");
         return null;
     }
 
     public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
-        System.out.println("EMITTER ARRAY INIT EXPR");
+        Frame f = (Frame) o;
+        int eLength = arrayDetails.length;
+        Type innerType = arrayDetails.t;
+        int index = 0;
+
+        if (ast.AL instanceof EmptyArgList) {
+            while (index < eLength) {
+                emitBase(innerType, o);
+                int lastIndex = f.localVarIndex - 1;
+                int tempIndex = f.getNewIndex();
+                emit("\t%" + tempIndex + " = getelementptr inbounds ");
+                arrayDetails.visit(this, o);
+                emit(", ");
+                arrayDetails.visit(this, o);
+                emitN("* %" + arrName + ", i32 0, i32 " + index);
+                emit("\tstore ");
+                innerType.visit(this, o);
+                emit(" %" + lastIndex + ", ");
+                innerType.visit(this, o);
+                emitN("* %" + tempIndex);
+                index += 1;
+            }
+            return null;
+        }
+
+        boolean isEmpty = false;
+        Args args = (Args) ast.AL;
+        Expr finalArg = null;
+        while (index < eLength) {
+            if (isEmpty) {
+                finalArg.visit(this, o);
+            } else {
+                args.E.visit(this, o);
+            }
+            int lastIndex = f.localVarIndex - 1;
+            int tempIndex = f.getNewIndex();
+            emit("\t%" + tempIndex + " = getelementptr inbounds ");
+            arrayDetails.visit(this, o);
+            emit(", ");
+            arrayDetails.visit(this, o);
+            emitN("* %" + arrName + ", i32 0, i32 " + index);
+            emit("\tstore ");
+            innerType.visit(this, o);
+            emit(" %" + lastIndex + ", ");
+            innerType.visit(this, o);
+            emitN("* %" + tempIndex);
+            index += 1;
+
+            if (args.EL instanceof EmptyArgList) {
+                isEmpty = true;
+                finalArg = args.E;
+            } else {
+                args = (Args) args.EL;
+            }
+        }
         return null;
+    }
+
+    public void emitBase(Type t, Object o) {
+        // TODO: handle other cases
+        Frame f = (Frame) o;
+        Expr I = null;
+        if (t.isInt()) {
+            I = new IntExpr(new IntLiteral("0", dummyPos), dummyPos);
+        } else if (t.isBoolean()) {
+            I = new BooleanExpr(new BooleanLiteral("false", dummyPos), dummyPos);
+        } else if (t.isFloat()) {
+            I = new FloatExpr(new FloatLiteral("1.0", dummyPos), dummyPos);
+        } else {
+            return;
+        }
+        I.visit(this, o);
     }
 
     public void emit(String s) {
