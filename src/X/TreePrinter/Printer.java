@@ -200,6 +200,14 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
+        print(indentString() + "ArrDeclStmt");
+        ast.I.visit(this, o);
+        ast.aeAST.get().visit(this, o);
+        ast.E.visit(this, o);
+        return null;
+    }
+
     @Override
     public Object visitBreakStmt(BreakStmt ast, Object o) {
         print(indentString() + "BreakStmt");

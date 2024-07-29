@@ -1221,6 +1221,41 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
+        Type t = ast.E.type;
+        Frame f = (Frame) o;
+        ast.aeAST.get().visit(this, o);
+        int value = f.localVarIndex - 1;
+        // newIndex stores the pointer to the array index
+        int newIndex = f.getNewIndex();
+        System.out.println("newIndex: " + newIndex);
+        emit("\t%" + newIndex + " = getelementptr inbounds ");
+        ((Decl) ast.I.decl).T.visit(this, o);
+        emit(", ");
+        ((Decl) ast.I.decl).T.visit(this, o);
+        if (ast.I.decl instanceof LocalVar) {
+            emit("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
+        } else if (ast.I.decl instanceof GlobalVar) {
+            emit("* @" + ast.I.spelling);
+        } else if (ast.I.decl instanceof ParaDecl) {
+            emit("* %" + ast.I.spelling + "0");
+        }
+        emitN(" , i32 0, i32 %" + value);
+
+        ast.E.visit(this, o);
+        // assignIndex stores the value of the RHS
+        int assignIndex = f.localVarIndex - 1;
+        System.out.println("assignIndex: " + assignIndex);
+
+        emit("\tstore ");
+        ast.E.type.visit(this, o);
+        emit(" %" + assignIndex + ", ");
+        ast.E.type.visit(this, o);
+        emitN("* %" + newIndex);
+
+        return null;
+    }
+
     public void emitBase(Type t, Object o) {
         // TODO: handle other cases
         Frame f = (Frame) o;

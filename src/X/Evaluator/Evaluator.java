@@ -347,4 +347,8 @@ public class Evaluator implements Visitor {
         // TODO
         return null;
     }
+
+    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
+        return null;
+    }
 }

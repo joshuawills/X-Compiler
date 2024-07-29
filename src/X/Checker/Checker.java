@@ -420,7 +420,6 @@ public class Checker implements Visitor {
     }
 
     public Object visitDeclStmt(DeclStmt ast, Object o) {
-
         Decl decl = idTable.retrieve(ast.I.spelling);
         if (decl == null) {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
@@ -1007,6 +1006,55 @@ public class Checker implements Visitor {
         }
         ast.type = binding.T;
         return ((ArrayType) binding.T).t;
+    }
+
+    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
+        Decl decl = idTable.retrieve(ast.I.spelling);
+        if (decl == null) {
+            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
+            return null;
+        }
+        if (decl instanceof LocalVar || decl instanceof GlobalVar) {
+            decl.isReassigned = true;
+        }
+        ast.I.decl = decl;
+        if (decl instanceof Function) {
+            handler.reportError(errors[9], "", ast.E.pos);
+            return null;
+        }
+
+        if (!decl.isMut) {
+            handler.reportError(errors[23], "", ast.E.pos);
+            return null;
+        }
+
+        Type t1 = (Type) ast.aeAST.get().visit(this, o);
+        if (!t1.isInt()) {
+            handler.reportError(errors[40] + ": %", ast.I.spelling, ast.E.pos);
+            return null;
+        }
+
+        Type existingType = decl.T;
+        Type innerType = ((ArrayType) existingType).t;
+        if (ast.isDeref) {
+            if (!innerType.isPointer()) {
+                handler.reportError(errors[32], "", ast.pos);
+                return null;
+            }
+            innerType = ((PointerType) innerType).t;
+        }
+
+        Type t = (Type) ast.E.visit(this, o);
+        if (!innerType.assignable(t)) {
+            String message = "expected " + existingType + ", received " + t.toString();
+            handler.reportError(errors[5] + ": %", message, ast.E.pos);
+        }
+
+        if (t.isInt() && innerType.isFloat()) {
+            Operator op = new Operator("i2f", ast.E.pos);
+            ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
+        }
+        return null;
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {

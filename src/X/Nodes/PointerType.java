@@ -21,7 +21,7 @@ public class PointerType extends Type {
     }
 
     public boolean equals (Object obj) {
-        if (obj instanceof  ErrorType) {
+        if (obj instanceof ErrorType) {
             return true;
         }
         if (obj instanceof PointerType) {

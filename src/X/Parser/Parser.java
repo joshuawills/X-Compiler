@@ -293,6 +293,15 @@ public class Parser {
         Expr eAST = new EmptyExpr(pos);
         Operator O = null;
         boolean isMath = false;
+        boolean isArrayAcc = false;
+        Expr aeAST = null;
+
+        if (tryConsume(TokenType.LEFT_SQUARE)) {
+            isArrayAcc = true;
+            aeAST = parseExpr();
+            match(TokenType.RIGHT_SQUARE);
+        }
+
         if (currentToken.kind == TokenType.PLUS_EQUAL || currentToken.kind == TokenType.F_SLASH_EQUAL
             || currentToken.kind == TokenType.STAR_EQUAL || currentToken.kind == TokenType.DASH_EQUAL) {
             isMath = true;
@@ -314,7 +323,11 @@ public class Parser {
         if (isMath) {
             return new MathDeclStmt(iAST, eAST, O, pos, isDeref);
         } else {
-            return new DeclStmt(iAST, eAST, pos, isDeref);
+            if (isArrayAcc) {
+                return new DeclStmt(iAST, eAST, pos, isDeref, aeAST);
+            } else {
+                return new DeclStmt(iAST, eAST, pos, isDeref);
+            }
         }
     }
 
