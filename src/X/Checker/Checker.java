@@ -798,7 +798,8 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
-        if (decl.T.isArray()) {
+        boolean isFnCall = ((VarExpr) ast.parent).parent instanceof Args;
+        if (decl.T.isArray() && !isFnCall) {
             handler.reportError(errors[34] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }

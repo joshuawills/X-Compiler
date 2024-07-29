@@ -529,6 +529,10 @@ public class Parser {
         boolean isMut = tryConsume(TokenType.MUT);
         Type tAST = parseType();
         Ident idAST = parseIdent();
+        if (tryConsume(TokenType.LEFT_SQUARE)) {
+            tAST = new ArrayType(pos, tAST, -1);
+            match(TokenType.RIGHT_SQUARE);
+        }
         finish(pos);
         return new ParaDecl(tAST, idAST, pos, isMut);
     }

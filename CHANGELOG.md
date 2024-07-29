@@ -52,7 +52,6 @@
 *29.07.2024*
 
 - basic array initialisation
-  - no emission yet
 
 # TODO
 
@@ -75,3 +74,7 @@
 - structs
 - generics
 - classes
+
+- remove math decl stmt
+- clean up all the todos
+- set default values for uninitialised
