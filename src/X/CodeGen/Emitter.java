@@ -56,11 +56,8 @@ public class Emitter implements Visitor {
 
         // Bind mutable variables to a local variable
         List PL = ast.PL;
-        while (true) {
-            if (PL instanceof EmptyParaList) {
-                break;
-            }
-            ParaDecl P = ((ParaList)PL).P;
+        while (!(PL instanceof EmptyParaList)) {
+            ParaDecl P = ((ParaList) PL).P;
             Type t = P.T;
             if (P.isMut && !t.isArray()) {
                 emit("\t%" + P.I.spelling + "0 = alloca ");
@@ -87,8 +84,7 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public void handleStringGlobal(GlobalVar ast, Object o) {
-       // @myString = global [14 x i8] c"Hello, LLVM!\00"
+    public void handleStringGlobal(GlobalVar ast) {
        if (ast.E instanceof EmptyExpr) {
             return;
        }
@@ -102,7 +98,7 @@ public class Emitter implements Visitor {
     public Object visitGlobalVar(GlobalVar ast, Object o) {
 
         if (ast.T.isString()) {
-            handleStringGlobal(ast, o);
+            handleStringGlobal(ast);
             return null;
         }
 
@@ -131,7 +127,7 @@ public class Emitter implements Visitor {
 
         Frame f = (Frame) o;
         emit("\t%" + ast.I.spelling + loopDepth + " = alloca ");
-        int length = 0;
+        int length;
         String strValue = "";
         if (ast.T.isString()) {
             strValue = ((StringExpr) ast.E).SL.spelling;
@@ -491,7 +487,7 @@ public class Emitter implements Visitor {
             emit(", ");
             t.visit(this, o);
             if (d instanceof LocalVar) {
-                emitN("* %" + d.I.spelling + ((LocalVar) d).index);
+                emitN("* %" + d.I.spelling + d.index);
             } else if (d instanceof ParaDecl) {
                 emitN("* %" + d.I.spelling + "0");
             }
@@ -804,8 +800,8 @@ public class Emitter implements Visitor {
         f.getNewIndex(); // handle neglected return value from printf
 
         Expr secondArg = ((Args) A.EL).E;
-        String val = "";
-        AST X = null;
+        String val;
+        AST X;
         if (secondArg instanceof ArrayIndexExpr) {
             secondArg.visit(this, o);
             val = String.valueOf(f.localVarIndex - 2);
@@ -1271,7 +1267,6 @@ public class Emitter implements Visitor {
     }
 
     public Object visitArrDeclStmt(DeclStmt ast, Object o) {
-        Type t = ast.E.type;
         Frame f = (Frame) o;
         ast.aeAST.get().visit(this, o);
         int value = f.localVarIndex - 1;
@@ -1315,8 +1310,7 @@ public class Emitter implements Visitor {
 
     public void emitBase(Type t, Object o) {
         // TODO: handle other cases
-        Frame f = (Frame) o;
-        Expr I = null;
+        Expr I;
         if (t.isInt()) {
             I = new IntExpr(new IntLiteral("0", dummyPos), dummyPos);
         } else if (t.isBoolean()) {

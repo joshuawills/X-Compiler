@@ -8,7 +8,7 @@ public class DeclStmt extends Stmt {
 
     public Ident I;
     public Expr E;
-    public boolean isDeref = false;
+    public boolean isDeref;
     public DeclOptions opt;
     public Optional<Expr> aeAST = Optional.empty();
 

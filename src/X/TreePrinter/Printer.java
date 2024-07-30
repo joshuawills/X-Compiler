@@ -3,13 +3,11 @@ package X.TreePrinter;
 import X.Nodes.*;
 
 import java.io.FileWriter;
-import java.io.IOError;
 import java.io.PrintWriter;
 
 public class Printer implements Visitor {
 
     private int indent;
-    private boolean firstFunction;
     private PrintWriter textOut;
 
     public Printer(String filename) {
@@ -17,16 +15,12 @@ public class Printer implements Visitor {
         try {
             textOut = new PrintWriter(new FileWriter(filename));
         } catch (Exception e) {
-            System.out.println(e.toString());
+            System.out.println("Unable to create PrintWriter");
         }
     }
 
     private String indentString() {
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < indent; ++i) {
-            sb.append("  ");
-        }
-        return sb.toString();
+        return "  ".repeat(Math.max(0, indent));
     }
 
     void print(String s) {
@@ -399,7 +393,7 @@ public class Printer implements Visitor {
 
     @Override
     public Object visitEmptyParaList(EmptyParaList ast, Object o) {
-        print(indentString() + "EmpyParaList");
+        print(indentString() + "EmptyParaList");
         return null;
     }
 

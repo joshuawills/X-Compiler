@@ -115,7 +115,7 @@ public class Parser {
         } else {
             // Global var
 
-            boolean isMut = false;
+            boolean isMut;
             Type tAST;
             if (isComma) {
                 isMut = isPreviousVarMut;
@@ -182,8 +182,8 @@ public class Parser {
     private LocalVar parseLocalVar() throws SyntaxError {
         Position pos = new Position();
         start(pos);
-        boolean isMut = false;
-        Type tAST = null;
+        boolean isMut;
+        Type tAST;
         if (isComma) {
             isMut = isPreviousVarMut;
             tAST = prevType;
@@ -843,5 +843,4 @@ public class Parser {
         accept();
         return O;
     }
-
 }

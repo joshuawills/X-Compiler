@@ -6,18 +6,15 @@ import java.awt.*;
 
 public class Drawer {
 
-    private DrawerFrame frame;
     private DrawerPanel panel;
 
-    private AST ast;
     private DrawingTree theDrawing;
 
     public void draw(AST A) {
-        ast = A;
         panel = new DrawerPanel(this);
         panel.setBackground(Color.white);
 
-        frame = new DrawerFrame(panel);
+        DrawerFrame frame = new DrawerFrame(panel);
 
         Font font = new Font("Lucida Bright", Font.BOLD, 20);
         frame.setFont(font);
@@ -27,7 +24,7 @@ public class Drawer {
         LayoutVisitor layout = new LayoutVisitor(fontMetrics);
         layout.enableDebugging();
 
-        theDrawing = (DrawingTree) ast.visit(layout, null);
+        theDrawing = (DrawingTree) A.visit(layout, null);
         theDrawing.position(new Point(500, 10));
         frame.setVisible(true);
     }

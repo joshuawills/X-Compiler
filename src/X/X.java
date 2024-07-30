@@ -137,7 +137,6 @@ public class X {
         try {
             checker.check(ast);
         } catch (Exception s) {
-            System.out.println(s);
             System.exit(1);
         }
         Instant cEnd = Instant.now();

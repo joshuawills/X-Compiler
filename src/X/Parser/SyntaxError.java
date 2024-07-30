@@ -6,7 +6,4 @@ public class SyntaxError extends Exception {
         super();
     }
 
-    SyntaxError(String s) {
-        super(s);
-    }
 }

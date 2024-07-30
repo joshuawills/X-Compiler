@@ -2,13 +2,12 @@ package X;
 
 import X.Lexer.Position;
 
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ErrorHandler {
 
-    public boolean isQuiet = false;
+    public boolean isQuiet;
     public int numErrors = 0;
     public String fileName;
     public int numLines;
@@ -25,7 +24,7 @@ public class ErrorHandler {
         try {
             fileContents = Files.readString(Path.of(fileName));
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Unable to read file: " + fileName);
             System.exit(1);
         }
         numLines = fileContents.split("\n").length;

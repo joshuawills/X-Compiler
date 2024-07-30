@@ -2,8 +2,6 @@ package X.TreeDrawer;
 
 import java.awt.Point;
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
 
 public class DrawingTree {
 
@@ -31,12 +29,9 @@ public class DrawingTree {
 
     public void setChildren(DrawingTree[] children) {
         this.children = children;
-        for (int i = 0; i < children.length; i++)
-            children[i].parent = this;
+        for (DrawingTree child : children) child.parent = this;
     }
 
-    private final int FIXED_FONT_HEIGHT = 10;
-    private final int FIXED_FONT_ASCENT = 3;
     private final Color nodeColor = new Color(255, 255, 255);
 
     public void paint(Graphics graphics) {
@@ -45,12 +40,13 @@ public class DrawingTree {
         graphics.fillRect(pos.x, pos.y, width, height);
         graphics.setColor(Color.black);
         graphics.drawRect(pos.x, pos.y, width - 1, height - 1);
+        int FIXED_FONT_HEIGHT = 10;
         graphics.drawString(caption, pos.x + 2,
                 pos.y + (height + FIXED_FONT_HEIGHT) / 2);
 
         if (children != null) {
-            for (int i = 0; i < children.length; i++) {
-                children[i].paint(graphics);
+            for (DrawingTree child : children) {
+                child.paint(graphics);
             }
         }
 
@@ -69,9 +65,9 @@ public class DrawingTree {
         Point temp = new Point(this.pos.x, this.pos.y);
 
         if (children != null) {
-            for (int i = 0; i < children.length; i++) {
-                children[i].position(temp);
-                temp.x += children[i].offset.x;
+            for (DrawingTree child : children) {
+                child.position(temp);
+                temp.x += child.offset.x;
                 temp.y = this.pos.y + children[0].offset.y;
             }
         }

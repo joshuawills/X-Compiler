@@ -2,8 +2,6 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-import java.lang.reflect.Array;
-
 public class ArrayType extends Type {
 
     public Type t;
