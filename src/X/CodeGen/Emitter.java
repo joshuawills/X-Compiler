@@ -1189,6 +1189,7 @@ public class Emitter implements Visitor {
         }
         if (!(ast.I.decl instanceof ParaDecl)) {
             emit(", i32 0");
+            bT = ((ArrayType) bT).t;
         }
         emitN(", i32 %" + value);
 
