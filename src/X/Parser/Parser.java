@@ -305,10 +305,10 @@ public class Parser {
         if (currentToken.kind == TokenType.PLUS_EQUAL || currentToken.kind == TokenType.F_SLASH_EQUAL
             || currentToken.kind == TokenType.STAR_EQUAL || currentToken.kind == TokenType.DASH_EQUAL) {
             isMath = true;
-            String s = currentToken.lexeme;
+            String s = currentToken.lexeme.substring(0, 1);
             accept();
             finish(pos);
-            O = new Operator(s, pos);
+            O = new Operator(s, currentToken.pos);
             eAST = parseExpr();
         } else {
             if (tryConsume(TokenType.ASSIGN)) {
@@ -321,10 +321,17 @@ public class Parser {
         }
         finish(pos);
         if (isMath) {
-            return new MathDeclStmt(iAST, eAST, O, pos, isDeref);
+            SimpleVar SV = new SimpleVar(iAST, iAST.pos);
+            Expr e2AST = new VarExpr(SV, SV.pos);
+            if (isDeref) {
+                Operator starO = new Operator("*", iAST.pos);
+                e2AST = new UnaryExpr(starO, e2AST, iAST.pos);
+            }
+            eAST = new BinaryExpr(e2AST, eAST, O, iAST.pos);
+            return new DeclStmt(iAST, eAST, iAST.pos, isDeref);
         } else {
             if (isArrayAcc) {
-                return new DeclStmt(iAST, eAST, pos, isDeref, aeAST);
+                return new DeclStmt(iAST,eAST, pos, isDeref, aeAST);
             } else {
                 return new DeclStmt(iAST, eAST, pos, isDeref);
             }

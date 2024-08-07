@@ -1006,128 +1006,25 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
-        String repetitions = "";
-        if (ast.I.decl instanceof LocalVar) {
-            repetitions = String.valueOf(((LocalVar) ast.I.decl).index);
-        } else if (ast.I.decl instanceof ParaDecl) {
-            repetitions = "0";
-        }
-
-        Frame f = (Frame) o;
-        ast.E.visit(this, o);
-        int index = ast.E.tempIndex;
-        int pointerIndex = -1;
-        int aIndex = f.getNewIndex();
-
-        if (ast.isDeref) {
-            emit("\t%" + aIndex + " = load ");
-            ((Decl) ast.I.decl).T.visit(this, o);
-            emit(", ");
-            ((Decl) ast.I.decl).T.visit(this, o);
-            if (ast.I.decl instanceof LocalVar) {
-                emitN("* %" + ast.I.spelling + repetitions);
-            } else if (ast.I.decl instanceof GlobalVar) {
-                emitN("* @" + ast.I.spelling);
-            } else if (ast.I.decl instanceof ParaDecl) {
-                emitN("* %" + ast.I.spelling + "0");
-            }
-            int newIndex = f.getNewIndex();
-            emit("\t%" + newIndex + " = load ");
-            Type innerT = ((PointerType) ((Decl) ast.I.decl).T).t;
-            innerT.visit(this, o);
-            emit(", ");
-            ((Decl) ast.I.decl).T.visit(this, o);
-            emitN(" %" + aIndex);
-            pointerIndex = aIndex;
-            aIndex = newIndex;
-        } else {
-            if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
-                emit("\t%" + aIndex + " = load ");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emit(", ");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emitN("* %" + ast.I.spelling + repetitions);
-            } else if (ast.I.decl instanceof GlobalVar) {
-                emit("\t%" + aIndex + " = load ");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emit(", ");
-                ((Decl) ast.I.decl).T.visit(this, o);
-                emitN("* @" + ast.I.spelling + repetitions);
-            }
-        }
-
-        Type t = ((Decl) ast.I.decl).T;
-        if (ast.isDeref) {
-            t = ((PointerType) ((Decl) ast.I.decl).T).t;
-        }
-
-        int nIndex = f.getNewIndex();
-        switch (ast.O.spelling) {
-            case "+=" -> {
-                emit("\t%" + nIndex + " = add ");
-                t.visit(this, o);
-                emitN(" %" + aIndex + ", %" + index);
-            }
-            case "-=" -> {
-                emit("\t%" + nIndex + " = sub ");
-                t.visit(this, o);
-                emitN(" %" + aIndex + ", %" + index);
-            }
-            case "*=" -> {
-                emit("\t%" + nIndex + " = mul ");
-                t.visit(this, o);
-                emitN(" %" + aIndex + ", %" + index);
-            }
-            case "/=" -> {
-                emit("\t%" + nIndex + " = udiv ");
-                t.visit(this, o);
-                emitN(" %" + aIndex + ", %" + index);
-            }
-            default -> System.out.println("UNREACHABLE MATHDECL");
-        }
-
-        if (ast.isDeref) {
-            emit("\tstore ");
-            t.visit(this, o);
-            emit(" %" + nIndex + ", ");
-            t.visit(this, o);
-            emitN("* %" + pointerIndex);
-        } else {
-            if (ast.I.decl instanceof LocalVar || ast.I.decl instanceof ParaDecl) {
-                emitN("\tstore i32 %" + nIndex + ", i32* %" + ast.I.spelling + repetitions);
-            } else if (ast.I.decl instanceof GlobalVar) {
-                emitN("\tstore i32 %" + nIndex + ", i32* @" + ast.I.spelling + repetitions);
-            }
-        }
-        return null;
-    }
-
-
     public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
         Frame f = (Frame) o;
         String top = f.getNewLabel();
         String bottom = f.getNewLabel();
-
         f.brkStack.push(bottom);
         f.conStack.push(top);
-
         emitN("\tbr label %" + top);
         emitN("\n" + top + ":");
         loopDepth++;
         ast.S.visit(this, o);
         loopDepth--;
-
         if (!ast.S.containsExit) {
             ast.E.visit(this, o);
             int index = ast.E.tempIndex;
             emitN("\tbr i1 %" + index + ", label %" + top + ", label %" + bottom);
         }
         emitN("\n" + bottom+ ":");
-
         f.brkStack.pop();
         f.conStack.pop();
-
         return null;
     }
 

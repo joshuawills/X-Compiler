@@ -78,3 +78,5 @@
 - remove math decl stmt
 - clean up all the todos
 - set default values for uninitialised
+- change strs to native char *
+- underline relevant part in error messages

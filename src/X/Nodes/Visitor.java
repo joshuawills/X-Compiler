@@ -95,8 +95,6 @@ public interface Visitor {
 
     Object visitLoopStmt(LoopStmt ast, Object o);
 
-    Object visitMathDeclStmt(MathDeclStmt ast, Object o);
-
     Object visitDoWhileStmt(DoWhileStmt ast, Object o);
 
     Object visitFloatLiteral(FloatLiteral ast, Object o);

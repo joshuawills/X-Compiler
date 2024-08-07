@@ -507,7 +507,7 @@ public class Checker implements Visitor {
                 boolean v1 = t1.isInt() || t1.isFloat() || t1.isError();
                 boolean v2 = t2.isInt() || t2.isFloat() || t2.isError();
                 if (!v1 || !v2) {
-                    handler.reportError(errors[7], "", t2.pos);
+                    handler.reportError(errors[7], "", ast.pos);
                     ast.type = Environment.errorType;
                     break;
                 }
@@ -520,14 +520,13 @@ public class Checker implements Visitor {
                 boolean v1 = t1.isInt() || t1.isFloat();
                 boolean v2 = t2.isInt() || t2.isFloat();
                 if (!v1|| !v2) {
-                    handler.reportError(errors[7], "", t1.pos);
+                    handler.reportError(errors[7], "", ast.pos);
                     ast.type = Environment.errorType;
                     break;
                 }
                 ast.type = t1;
             }
         }
-
         if (ast.type.isBoolean()) {
             if (t1.isInt() && t2.isInt()) {
                 ast.O.spelling = "i" + ast.O.spelling;
@@ -847,58 +846,6 @@ public class Checker implements Visitor {
         loopDepth--;
         idTable.closeScope();
         validDollar = false;
-        return null;
-    }
-
-    public Object visitMathDeclStmt(MathDeclStmt ast, Object o) {
-        Decl decl = idTable.retrieve(ast.I.spelling);
-        if (decl == null) {
-            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
-            return null;
-        }
-
-        Type existingType = decl.T;
-        if (ast.isDeref) {
-            if (!decl.T.isPointer()) {
-                handler.reportError(errors[32], "", ast.pos);
-                return null;
-            }
-            existingType = ((PointerType) decl.T).t;
-        }
-
-        if (!existingType.isInt()) {
-            handler.reportError(errors[5] + ": %", ast.I.spelling + ", must be an int", ast.E.pos);
-            return null;
-        }
-
-        if (decl instanceof LocalVar) {
-            decl.isReassigned = true;
-        } else if (decl instanceof GlobalVar) {
-            decl.isReassigned = true;
-        }
-
-        ast.I.decl = decl;
-
-        if (decl instanceof Function) {
-            handler.reportError(errors[9], "", ast.E.pos);
-            return null;
-        }
-
-        if (!decl.isMut) {
-            handler.reportError(errors[23], "", ast.E.pos);
-            return null;
-        }
-
-        Type t = (Type) ast.E.visit(this, o);
-        if (!existingType.assignable(t)) {
-            String message = "expected " + decl.T.toString() + ", received " + t.toString();
-            handler.reportError(errors[5] + ": %", message, ast.E.pos);
-        }
-
-        if (t.isInt() && decl.T.isFloat()) {
-            Operator op = new Operator("i2f", ast.E.pos);
-            ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
-        }
         return null;
     }
 
