@@ -172,9 +172,8 @@ loop x in 1 10 {
 ## Types
 
 At the moment, the language has a small number of primitive types, and no capacity for complicated
-structs. There are boolean expressions, denoted with the `bool` keyword, integers (32-bit signed) with the `int` keyword
-and strings with the `str` keyword. All strings are constant at the moment, and can only be used in
-simple I/O operations. Typecasting is not valid between any of these types currently.
+structs. There are boolean expressions, denoted with the `bool` keyword, integers (32-bit signed) with the `int` keyword, 8-bit signed `char`'s and `floats`. Explicit Typecasting is not valid between any of these types currently,
+although it is done implicitlty between chars and ints as well as ints to floats.
 
 Simple pointers are also currently supported. They are declared in a C like way, seen in a simple example below.
 
@@ -227,6 +226,8 @@ precedence, check out the `grammar.md` file, but it can be summarised as below. 
 Although quite primitive, we have some basic IO functions as a standard library.
 
 `outInt` takes in an integer and prints it to stdout, followed by a newline.
+
+`outChar` takes in a character and prints it to stdout, followed by a newline.
 
 `outFloat` takes in a float and prints it to stdout, followed by a newline.
 

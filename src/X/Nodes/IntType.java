@@ -25,7 +25,7 @@ public class IntType extends Type {
         return "int";
     }
     public boolean assignable(Object obj) {
-        return equals(obj);
+        return equals(obj) || obj instanceof CharType;
     }
 
 }

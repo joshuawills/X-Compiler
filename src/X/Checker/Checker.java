@@ -48,7 +48,8 @@ public class Checker implements Visitor {
         "*37: unknown array size at compile time",
         "*38: excess elements in array initializer",
         "*39: attempted reassignment of array",
-        "*40: array index is not an integer"
+        "*40: array index is not an integer",
+        "*41: char expr greater than one character"
     };
 
     private final SymbolTable idTable;
@@ -124,6 +125,7 @@ public class Checker implements Visitor {
     private void establishEnv() {
         Ident i = new Ident("x", dummyPos);
         Environment.booleanType = new BooleanType(dummyPos);
+        Environment.charType= new CharType(dummyPos);
         Environment.intType = new IntType(dummyPos);
         Environment.floatType = new FloatType(dummyPos);
         Environment.strType = new StringType(dummyPos);
@@ -139,6 +141,10 @@ public class Checker implements Visitor {
         ));
         Environment.outInt = stdFunction(Environment.voidType, "outInt", new ParaList(
                 new ParaDecl(Environment.intType, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.outChar = stdFunction(Environment.voidType, "outChar", new ParaList(
+                new ParaDecl(Environment.charType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.outFloat = stdFunction(Environment.voidType, "outFloat", new ParaList(
@@ -240,18 +246,40 @@ public class Checker implements Visitor {
             String message = "expected " + T + ", received " + returnType;
             handler.reportError(errors[5] + ": %", message, E.pos);
             T = Environment.errorType;
+            return T;
         }
 
-        if (returnType.isInt() && ast.T.isFloat()) {
+        Expr e2AST = checkCast(ast.T, E, null);
+        if (ast instanceof LocalVar) {
+            ((LocalVar) ast).E = e2AST;
+        } else if (ast instanceof GlobalVar) {
+            ((GlobalVar) ast).E = e2AST;
+        }
+
+        /* if (returnType.isInt() && ast.T.isFloat()) {
             Operator op = new Operator("i2f", E.pos);
             if (ast instanceof LocalVar) {
                 ((LocalVar) ast).E = new UnaryExpr(op, E, E.pos);
             } else if (ast instanceof GlobalVar) {
                 ((GlobalVar) ast).E = new UnaryExpr(op, E, E.pos);
             }
-        }
+        } */
 
         return T;
+    }
+
+    private Expr checkCast(Type expectedT, Expr expr, AST parent) {
+        if (!expectedT.assignable(expr.type) || expr.type.isError() || expectedT.equals(expr.type)) {
+            return expr;
+        }
+
+        Type tFromAST = expr.type;
+        Type tToAST = expectedT;
+        if (parent != null) {
+            return new CastExpr(expr, tFromAST, tToAST, expr.pos, parent);
+        } else {
+            return new CastExpr(expr, tFromAST, tToAST, expr.pos);
+        }
     }
 
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {
@@ -461,10 +489,8 @@ public class Checker implements Visitor {
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
         }
 
-        if (t.isInt() && existingType.isFloat()) {
-            Operator op = new Operator("i2f", ast.E.pos);
-            ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
-        }
+        Expr e2AST = checkCast(existingType, ast.E, null);
+        ast.E = e2AST;
         return null;
     }
 
@@ -477,6 +503,8 @@ public class Checker implements Visitor {
         ast.O.visit(this, ast);
         Type t1 = (Type) ast.E1.visit(this, ast);
         Type t2 = (Type) ast.E2.visit(this, ast);
+        boolean v1Numeric = t1.isChar() || t1.isInt() || t1.isFloat() || t1.isError();
+        boolean v2Numeric = t2.isChar() || t2.isInt() || t2.isFloat() || t2.isError();
         switch (ast.O.spelling) {
             case "||", "&&" -> {
                 if ((!t1.isBoolean() && !t1.isError()) || (!t2.isBoolean() && !t2.isError())) {
@@ -491,9 +519,7 @@ public class Checker implements Visitor {
                     ast.type = Environment.booleanType;
                     break;
                 }
-                boolean v1 = t1.isInt() || t1.isFloat() || t1.isError();
-                boolean v2 = t2.isInt() || t2.isFloat() || t2.isError();
-                if (!v1 || !v2) {
+                if (!v1Numeric || !v2Numeric) {
                     handler.reportError(errors[7], "", t2.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -504,9 +530,7 @@ public class Checker implements Visitor {
                 ast.type = Environment.booleanType;
             }
             case "<", "<=", ">", ">=" -> {
-                boolean v1 = t1.isInt() || t1.isFloat() || t1.isError();
-                boolean v2 = t2.isInt() || t2.isFloat() || t2.isError();
-                if (!v1 || !v2) {
+                if (!v1Numeric || !v2Numeric) {
                     handler.reportError(errors[7], "", ast.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -517,9 +541,7 @@ public class Checker implements Visitor {
                 ast.type = Environment.booleanType;
             }
             case "+", "-", "/", "*", "%" -> {
-                boolean v1 = t1.isInt() || t1.isFloat();
-                boolean v2 = t2.isInt() || t2.isFloat();
-                if (!v1|| !v2) {
+                if (!v1Numeric || !v2Numeric) {
                     handler.reportError(errors[7], "", ast.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -546,19 +568,34 @@ public class Checker implements Visitor {
             return ast.type;
         }
 
+        if (t1.isChar() && t2.isChar()) {
+            ast.O.spelling = "c" + ast.O.spelling;
+            ast.type = Environment.charType;
+            return ast.type;
+        } else if (t1.isChar() && t2.isInt()) {
+            ast.O.spelling = "i" + ast.O.spelling;
+            ast.E1 = new CastExpr(ast.E1, t1, t2, ast.E1.pos, ast);
+            ast.type = Environment.intType;
+            return ast.type;
+        } else if (t1.isInt() && t2.isChar()) {
+            ast.O.spelling = "i" + ast.O.spelling;
+            ast.E2= new CastExpr(ast.E2, t2, t1, ast.E2.pos, ast);
+            ast.type = Environment.intType;
+            return ast.type;
+        }
+
+
         if (t1.isInt() && t2.isInt()) {
             ast.O.spelling = "i" + ast.O.spelling;
             ast.type = Environment.intType;
         } else if (t1.isInt() && t2.isFloat()) {
             ast.O.spelling = "f" + ast.O.spelling;
             ast.type = Environment.floatType;
-            Operator op = new Operator("i2f", ast.E1.pos);
-            ast.E1 = new UnaryExpr(op, ast.E1, ast.E1.pos);
+            ast.E1= new CastExpr(ast.E1, t1, t2, ast.E1.pos, ast);
         } else if (t1.isFloat() && t2.isInt()) {
             ast.O.spelling = "f" + ast.O.spelling;
             ast.type = Environment.floatType;
-            Operator op = new Operator("i2f", ast.E2.pos);
-            ast.E2 = new UnaryExpr(op, ast.E2, ast.E2.pos);
+            ast.E2= new CastExpr(ast.E2, t2, t1, ast.E2.pos, ast);
         } else if (t1.isFloat() && t2.isFloat()) {
             ast.O.spelling = "f" + ast.O.spelling;
             ast.type = Environment.floatType;
@@ -570,11 +607,13 @@ public class Checker implements Visitor {
     public Object visitUnaryExpr(UnaryExpr ast, Object o) {
         ast.O.visit(this, ast);
         Type eT = (Type) ast.E.visit(this, ast);
+
+        if (eT.isError()) {
+            return ast.type;
+        }
+
         switch (ast.O.spelling) {
             case "+", "-" -> {
-                if (eT.isError()) {
-                    break;
-                }
                 if (!eT.isInt() && !eT.isFloat()) {
                     handler.reportError(errors[8], "", ast.O.pos);
                     ast.type = Environment.errorType;
@@ -583,9 +622,6 @@ public class Checker implements Visitor {
                 ast.type = eT;
             }
             case "!" -> {
-                if (eT.isError()) {
-                    break;
-                }
                 if (!eT.isBoolean()) {
                     handler.reportError(errors[8], "", ast.O.pos);
                     ast.type = Environment.errorType;
@@ -594,9 +630,6 @@ public class Checker implements Visitor {
                 ast.type = eT;
             }
             case "*" -> { // de-reference operator
-                if (eT.isError()) {
-                    break;
-                }
                 if (!eT.isPointer()) {
                     String message = "dereference operator may only be applied to pointer types";
                     handler.reportError(errors[8] + ": %", message, ast.O.pos);
@@ -610,9 +643,6 @@ public class Checker implements Visitor {
                 ast.type = ((PointerType) eT).t;
             }
             case "&" -> { // address of operator
-                if (eT.isError()) {
-                    break;
-                }
                 if (!(ast.E instanceof VarExpr)) {
                     handler.reportError(errors[30], "", ast.O.pos);
                     break;
@@ -713,6 +743,7 @@ public class Checker implements Visitor {
             handler.reportError(errors[18], "", ast.E.pos);
         }
 
+        ast.E = checkCast(expectedType, ast.E, ast);
         ast.EL.visit(this, ((ParaList) PL).PL);
         return null;
     }
@@ -1002,6 +1033,30 @@ public class Checker implements Visitor {
             Operator op = new Operator("i2f", ast.E.pos);
             ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
         }
+        return null;
+    }
+
+    public Object visitCharType(CharType ast, Object o) {
+        return Environment.charType;
+    }
+
+    public Object visitCharLiteral(CharLiteral ast, Object o) {
+        return Environment.charType;
+    }
+
+    public Object visitCharExpr(CharExpr ast, Object o) {
+        int l = ast.CL.spelling.length();
+        if (l != 1) {
+            String m = "received '" + ast.CL.spelling + "'";
+            handler.reportMinorError(errors[41] + ": %", m, ast.CL.pos);
+            return Environment.errorType;
+        }
+        ast.type = Environment.charType;
+        return ast.type;
+    }
+
+    public Object visitCastExpr(CastExpr ast, Object o) {
+        // Never hit, they're constructed in this phase
         return null;
     }
 

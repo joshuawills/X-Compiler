@@ -202,6 +202,36 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitCharType(CharType ast, Object o) {
+        print(indentString() + "char");
+        return null;
+    }
+
+    public Object visitCharLiteral(CharLiteral ast, Object o) {
+        print(indentString() + ast.spelling);
+        return null;
+    }
+
+    public Object visitCharExpr(CharExpr ast, Object o) {
+        print(indentString() + "CharExpr");
+        ++indent;
+        ast.CL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitCastExpr(CastExpr ast, Object o) {
+        print(indentString() + "CastExpr");
+        ++indent;
+        ast.tFrom.visit(this, o);
+        ast.tFrom.visit(this, o);
+        ++indent;
+        ast.E.visit(this, o);
+        --indent;
+        --indent;
+        return null;
+    }
+
     @Override
     public Object visitBreakStmt(BreakStmt ast, Object o) {
         print(indentString() + "BreakStmt");

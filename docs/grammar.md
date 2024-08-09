@@ -52,6 +52,7 @@ stmt})? \\
 \textbf{FLOATLITERAL} \\
 \textbf{STRINGLITERAL} \\
 \textbf{BOOLLITERAL} \\
+\textbf{CHARLITERAL} \\
 "(" \textit{ expr } ")" \\
 \textit{ident} \\
 \textit{(+ | - | ! | * | \&) unary-expr} \\
@@ -70,12 +71,13 @@ stmt})? \\
 \textit{decl} &\to \textbf{mut}? \textit{ type ident}  (\textit{[]})?\\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
-\textit{type} &\to \textbf{int | str | void | bool | float | \textit{type}* } \\
+\textit{type} &\to \textbf{char | int | str | void | bool | float | \textit{type}* } \\
 
 \textit{INTLITERAL} &\to [0-9]+ \\
 \textit{FLOATLITERAL} &\to [0-9]^+\textit{"."}[0-9]? \\
 \textit{STRINGLITERAL} &\to \textit{"} \textit{ident} \textit{"} \\
-\textit{BOOLLITERAL} &\to true | false
+\textit{BOOLLITERAL} &\to true | false \\
+\textit{CHARLITERAL} &\to \textit{'ident'} \\
 
 \end{align}
 $$

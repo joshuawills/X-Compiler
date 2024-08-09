@@ -24,7 +24,7 @@ public class X {
     private static AST ast;
     private static final DecimalFormat df = new DecimalFormat("0.00");
     private static void help() {
-        System.out.println("XY Compiler Options:");
+        System.out.println("X Compiler Options:");
         System.out.println("\t-h  | --help => Provides summary of CL arguments and use of program");
         System.out.println("\t-r  | --run => Will run the program after compilation");
         System.out.println("\t-o  | --out => Specify the name of the executable (default to a.out)");

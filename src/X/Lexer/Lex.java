@@ -53,10 +53,9 @@ public class Lex {
         if (currChar == '/' && file.inspectChar(1) == '/') {
             while (currChar != '\n') {
                 if (currChar == File.EOF) {
-                    System.out.printf("ERROR: %d(%d)..%d(%d): : unterminated comment\n", line, col, line, col);
-                    return;
+                    break;
                 }
-                accept();
+               accept();
             }
             accept();
         } else if (currChar == '/' && file.inspectChar(1) == '*') {
@@ -250,6 +249,31 @@ public class Lex {
 
     private TokenType handleOther() {
 
+        if (currChar == '\'') {
+            accept();
+            while (currChar != '\'') {
+                if (currChar == '\n' || currChar == File.EOF) {
+                    System.err.println("ERROR: Unterminated character");
+                    return TokenType.CHAR_LIT;
+                }
+                if (currChar == '\\') {
+                    if (!isValidEscape()) {
+                        if (file.inspectChar(1) != '\n') {
+                            System.err.println("ERROR: Illegal escape character");
+                        }
+                        acceptWithSpelling();
+                    } else {
+                        accept();
+                        acceptEscape();
+                    }
+                } else {
+                    acceptWithSpelling();
+                }
+            }
+            accept();
+            return TokenType.CHAR_LIT;
+        }
+
         if (currChar == '"') {
             accept();
             while (currChar != '"') {
@@ -257,7 +281,6 @@ public class Lex {
                     System.err.println("ERROR: Unterminated string");
                     return TokenType.STRING_LIT;
                 }
-
                 if (currChar == '\\') {
                     if (!isValidEscape()) {
                         if (file.inspectChar(1) != '\n') {
@@ -286,7 +309,7 @@ public class Lex {
                 case "in" -> TokenType.IN;
                 case "return" -> TokenType.RETURN;
                 case "fn" -> TokenType.FN;
-                case "int", "float", "bool", "str", "void" -> TokenType.TYPE;
+                case "char", "int", "float", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
                 case "else" -> TokenType.ELSE;
                 case "else if" -> TokenType.ELIF;

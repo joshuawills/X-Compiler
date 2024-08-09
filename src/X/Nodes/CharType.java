@@ -2,32 +2,30 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-public class FloatType extends Type {
+public class CharType extends Type {
 
-    public FloatType(Position pos) {
+    public CharType(Position pos) {
         super(pos);
     }
 
     public Object visit(Visitor v, Object o) {
-        return v.visitFloatType(this, o);
+        return v.visitCharType(this, o);
     }
 
     public boolean equals(Object obj) {
         if (obj instanceof ErrorType) {
             return true;
         } else {
-            return obj instanceof FloatType;
+            return obj instanceof CharType;
         }
     }
 
     @Override
     public String toString() {
-        return "float";
+        return "char";
     }
+
     public boolean assignable(Object obj) {
-        if (obj instanceof ErrorType) {
-            return true;
-        }
-        return obj instanceof IntType || obj instanceof FloatType || obj instanceof CharType;
+        return equals(obj) || obj instanceof IntType;
     }
 }

@@ -21,6 +21,7 @@ public class Emitter implements Visitor {
         emitN("declare i32 @printf(i8*, ...)");
         emitN("declare i32 @scanf(i8*, ...)");
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
+        emitN("@.Cstr = constant [4 x i8] c\"%c\\0A\\00\"");
         emitN("@.IFstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
         emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");
         ast.visit(this, null);
@@ -377,31 +378,27 @@ public class Emitter implements Visitor {
 
     public Object visitOperator(Operator ast, Object o) {
         Frame f = (Frame) o;
-
         switch (ast.spelling) {
-            case "&", "*" -> {
-                // do nothing , handled elsewhere
-            }
-            case "i2f" -> {
-                if (ast.parent instanceof UnaryExpr parent) {
-                    int numOne = parent.E.tempIndex;
-                    int newNum = f.getNewIndex();
-                    parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = sitofp i32 %" + numOne + " to float");
-                }
-            }
-            case "i-", "f-" -> {
+            case "c-", "i-", "f-" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
                     int newNum = f.getNewIndex();
                     parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = sub i32 %" + numOne + ", %" + numTwo);
+                    if (ast.spelling.equals("c-")) {
+                        emitN("\t%" + newNum + " = sub i8 %" + numOne + ", %" + numTwo);
+                    } else {
+                        emitN("\t%" + newNum + " = sub i32 %" + numOne + ", %" + numTwo);
+                    }
                 } else if (ast.parent instanceof UnaryExpr parent) {
                     int numOne = parent.E.tempIndex;
                     int newNum = f.getNewIndex();
                     parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = sub i32 0, %" + numOne);
+                    if (ast.spelling.equals("c-")) {
+                        emitN("\t%" + newNum + " = sub i8 0, %" + numOne);
+                    } else {
+                        emitN("\t%" + newNum + " = sub i32 0, %" + numOne);
+                    }
                 }
             }
             case "!" -> {
@@ -412,8 +409,8 @@ public class Emitter implements Visitor {
                     emitN("\t%" + newNum + " = " +  "xor i1 1, " + " %" + numOne);
                 }
             }
-            case "i+", "f+", "i*", "f*", "i%", "i/", "f/", "i==", "f==", "b==", "i!=", "f!=", "b!=",
-                "i<", "f<", "i<=", "f<=", "i>", "f>", "i>=", "f>=", "b&&", "b||" -> {
+            case "i+", "f+", "c+", "i*", "f*", "c*", "i%", "c%", "i/", "f/", "c/", "i==", "f==", "b==", "c==", "i!=", "f!=", "c!=", "b!=",
+                "i<", "f<", "c<", "i<=", "f<=", "c<=", "i>", "f>", "c>", "i>=", "f>=", "c>=", "b&&", "b||" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
@@ -423,10 +420,7 @@ public class Emitter implements Visitor {
                         " %" + numOne + ", %" + numTwo);
                 }
             }
-            default -> {
-                System.out.println("OPERATOR NOT IMPLEMENTED: " + ast.spelling);
-                System.exit(1);
-            }
+            default -> {}
         }
         return null;
     }
@@ -434,25 +428,35 @@ public class Emitter implements Visitor {
     public String opToCommand(String input) {
         return switch (input)  {
             case "i+" ->  "add i32";
+            case "c+" ->  "add i8";
             case "f+" ->  "fadd float";
             case "i*" -> "mul i32";
+            case "c*" -> "mul i8";
             case "f*" -> "fmul float";
             case "i%" -> "srem i32";
+            case "c%" -> "srem i8";
             case "i/" -> "sdiv i32";
+            case "c/" -> "sdiv i8";
             case "f/" -> "fdiv float";
             case "i==" -> "icmp eq i32";
+            case "c==" -> "icmp eq i8";
             case "f==" -> "fcmp eq float";
             case "b==" -> "icmp eq i1";
             case "i!=" -> "icmp ne i32";
+            case "c!=" -> "icmp ne i8";
             case "f!=" -> "fcmp ne float";
             case "b!=" -> "icmp ne i1";
             case "i<=" -> "icmp sle i32";
+            case "c<=" -> "icmp sle i8";
             case "f<=" -> "fcmp sle float";
             case "i<" -> "icmp slt i32";
+            case "c<" -> "icmp slt i8";
             case "f<" -> "fcmp slt float";
             case "i>" -> "icmp sgt i32";
+            case "c>" -> "icmp sgt i8";
             case "f>" -> "fcmp sgt float";
             case "i>=" -> "icmp sge i32";
+            case "c>=" -> "icmp sge i8";
             case "f>=" -> "fcmp sge float";
             case "b&&" -> "and i1";
             case "b||" -> "or i1";
@@ -768,6 +772,16 @@ public class Emitter implements Visitor {
         emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i32 %" + index + ")");
     }
 
+    public void handleOutChar(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+        ((Args) ast.AL).E.visit(this, o);
+        int index = ((Args) ast.AL).E.tempIndex;
+        int indexStr = f.getNewIndex();
+        int newIndex = f.getNewIndex();
+        emitN("\t%" + indexStr + " = getelementptr [4 x i8], [4 x i8]* @.Cstr, i32 0, i32 0");
+        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i8 %" + index + ")");
+    }
+
     public void handleOutFloat(CallExpr ast, Object o) {
         Frame f = (Frame) o;
         ((Args) ast.AL).E.visit(this, o);
@@ -830,6 +844,11 @@ public class Emitter implements Visitor {
 
         if (ast.I.spelling.equals("outInt")) {
             handleOutInt(ast, o);
+            return null;
+        }
+
+        if (ast.I.spelling.equals("outChar")) {
+            handleOutChar(ast, o);
             return null;
         }
 
@@ -1206,6 +1225,45 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitCharType(CharType ast, Object o) {
+        emit(LLVM.CHAR_TYPE);
+        return null;
+    }
+
+    public Object visitCharLiteral(CharLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitCharExpr(CharExpr ast, Object o) {
+        Frame f = (Frame) o;
+        String value = ast.CL.spelling;
+        int v = (int) value.charAt(0);
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = add i8 0, " + v);
+        ast.tempIndex = num;
+        return null;
+    }
+
+
+    public Object visitCastExpr(CastExpr ast, Object o) {
+        Frame f = (Frame) o;
+        ast.E.visit(this, o);
+        int numOne = ast.E.tempIndex;
+        int temp = f.getNewIndex();
+        ast.tempIndex = temp;
+        Type from = ast.tFrom, to = ast.tTo;
+        emit("\t%" + temp+ " = ");
+        if (from.isInt() && to.isFloat()) {
+            emitN("sitofp i32 %" + numOne + " to float");
+        }
+        if (from.isChar() && to.isInt()) {
+            emitN("sext i8 %" + numOne + " to i32");
+        }
+        if (from.isInt() && to.isChar()) {
+            emitN("trunc i32 %" + numOne + " to i8");
+        }
+        return null;
+    }
     public void emitBase(Type t, Object o) {
         // TODO: handle other cases
         Expr I;

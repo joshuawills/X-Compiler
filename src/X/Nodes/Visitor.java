@@ -112,4 +112,12 @@ public interface Visitor {
     Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o);
 
     Object visitArrDeclStmt(DeclStmt ast, Object o);
+
+    Object visitCharType(CharType ast, Object o);
+
+    Object visitCharLiteral(CharLiteral ast, Object o);
+
+    Object visitCharExpr(CharExpr ast, Object o);
+
+    Object visitCastExpr(CastExpr ast, Object o);
 }

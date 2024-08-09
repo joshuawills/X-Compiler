@@ -75,7 +75,7 @@ public class Evaluator implements Visitor {
             case "||" -> (boolean) ast.E1.visit(this, o) || (boolean) ast.E2.visit(this, o);
             case "&&" -> (boolean) ast.E1.visit(this, o) && (boolean) ast.E2.visit(this, o);
             case "==" -> {
-                if (ast.E1.type.isInt()) {
+                if (ast.E1.type.isInt() || ast.E2.type.isChar()) {
                     yield (int) ast.E1.visit(this, o) == (int) ast.E1.visit(this, o);
                 } else if (ast.E1.type.isFloat()) {
                     yield (float) ast.E1.visit(this, o) == (float) ast.E1.visit(this, o);
@@ -86,7 +86,7 @@ public class Evaluator implements Visitor {
                 }
             }
             case "!=" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) != (int) ast.E1.visit(this, o);
                 }  else if (t.isFloat()) {
                     yield (float) ast.E1.visit(this, o) != (float) ast.E1.visit(this, o);
@@ -97,56 +97,56 @@ public class Evaluator implements Visitor {
                 }
             }
             case "<=" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) <= (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) <= (float) ast.E2.visit(this, o);
                 }
             }
             case "<" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) < (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) < (float) ast.E2.visit(this, o);
                 }
             }
             case ">" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) > (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) > (float) ast.E2.visit(this, o);
                 }
             }
             case ">=" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) >= (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) >= (float) ast.E2.visit(this, o);
                 }
             }
             case "+" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) + (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) + (float) ast.E2.visit(this, o);
                 }
             }
             case "-" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) - (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) - (float) ast.E2.visit(this, o);
                 }
             }
             case "/" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) / (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) / (float) ast.E2.visit(this, o);
                 }
             }
             case "*" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield (int) ast.E1.visit(this, o) * (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) * (float) ast.E2.visit(this, o);
@@ -165,7 +165,7 @@ public class Evaluator implements Visitor {
         return switch (ast.O.spelling) {
             case "+" -> ast.E.visit(this, o);
             case "-" -> {
-                if (t.isInt()) {
+                if (t.isInt() || t.isChar()) {
                     yield -(int) ast.E.visit(this, o);
                 } else if (t.isFloat()) {
                     yield -(float) ast.E.visit(this, o);
@@ -343,6 +343,23 @@ public class Evaluator implements Visitor {
     }
 
     public Object visitArrDeclStmt(DeclStmt ast, Object o) {
+        return null;
+    }
+
+    public Object visitCharType(CharType ast, Object o) {
+        return null;
+    }
+
+    public Object visitCharLiteral(CharLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitCharExpr(CharExpr ast, Object o) {
+        return (int) ast.CL.spelling.charAt(0);
+    }
+
+    public Object visitCastExpr(CastExpr ast, Object o) {
+        System.out.println("EVALUATOR: CastExpr");
         return null;
     }
 }

@@ -129,6 +129,22 @@ public class LayoutVisitor implements Visitor {
         return layoutTernary("ArrDeclStmt", ast.I, ast.aeAST.get(), ast.E);
     }
 
+    public Object visitCharType(CharType ast, Object o) {
+        return layoutNullary("char");
+    }
+
+    public Object visitCharLiteral(CharLiteral ast, Object o) {
+        return layoutNullary(ast.spelling);
+    }
+
+    public Object visitCharExpr(CharExpr ast, Object o) {
+        return layoutUnary("CharExp", ast.CL);
+    }
+
+    public Object visitCastExpr(CastExpr ast, Object o) {
+        return layoutTernary("CastExpr", ast.E, ast.tFrom, ast.tTo);
+    }
+
     public Object visitForStmt(ForStmt ast, Object obj) {
         return layoutQuaternary("ForStmt", ast.S1, ast.E2, ast.S3, ast.S);
     }
@@ -210,6 +226,8 @@ public class LayoutVisitor implements Visitor {
     // Arguments
 
     public Object visitArgList(Args ast, Object obj) {
+        System.out.println(ast.E.parent);
+        System.out.println(ast.EL.parent);
         return layoutBinary("Args", ast.E, ast.EL);
     }
 

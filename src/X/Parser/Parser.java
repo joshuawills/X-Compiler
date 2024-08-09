@@ -556,6 +556,10 @@ public class Parser {
                 accept();
                 yield new IntType(pos);
             }
+            case "char" -> {
+                accept();
+                yield new CharType(pos);
+            }
             case "bool" -> {
                 accept();
                 yield new BooleanType(pos);
@@ -750,6 +754,11 @@ public class Parser {
                 finish(pos);
                 yield new BooleanExpr(blAST, pos);
             }
+            case CHAR_LIT -> {
+                CharLiteral clAST = parseCharLiteral();
+                finish(pos);
+                yield new CharExpr(clAST, pos);
+            }
             case STRING_LIT -> {
                 StringLiteral slAST = parseStringLiteral();
                 finish(pos);
@@ -809,6 +818,18 @@ public class Parser {
             syntacticError("integer literal expected here", "");
         }
         return SL;
+    }
+
+    private CharLiteral parseCharLiteral() throws SyntaxError {
+        CharLiteral CL = null;
+        if (currentToken.kind == TokenType.CHAR_LIT) {
+            String spelling = currentToken.lexeme;
+            accept();
+            CL = new CharLiteral(spelling, previousPosition);
+        } else {
+            syntacticError("char literal expected here", "");
+        }
+        return CL;
     }
 
     private List parseArrayInitList() throws SyntaxError {

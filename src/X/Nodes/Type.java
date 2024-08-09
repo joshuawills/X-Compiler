@@ -18,7 +18,7 @@ public abstract class Type extends AST {
     }
 
     public boolean isInt() {
-        return (this instanceof IntType);
+        return (this instanceof IntType || this instanceof CharType);
     }
 
     public boolean isFloat() {
@@ -42,5 +42,9 @@ public abstract class Type extends AST {
 
     public boolean isArray() {
         return this instanceof ArrayType;
+    }
+
+    public boolean isChar() {
+        return this instanceof CharType;
     }
 }

@@ -53,6 +53,15 @@
 
 - basic array initialisation
 
+*07.08.2024*
+
+- remove math-decl stmts
+- fix array access bug for local vars
+
+*09.08.2024*
+
+- char support mostly :)
+
 # TODO
 
 - float support
@@ -75,7 +84,6 @@
 - generics
 - classes
 
-- remove math decl stmt
 - clean up all the todos
 - set default values for uninitialised
 - change strs to native char *
