@@ -2,7 +2,7 @@
   "name": "x",
   "displayName": "X",
   "description": "X Programming Language",
-  "publisher": "Joshua Wills",
+  "publisher": "A",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.81.0"
@@ -21,6 +21,16 @@
       "language": "x",
       "scopeName": "source.x",
       "path": "./syntaxes/x.tmLanguage.json"
-    }]
+    }],
+    "iconThemes": [
+      {
+         "id": "id-theme-icon",
+         "label": "X Icon",
+         "path": "./icons/X-Logo.json"
+      }
+    ],
+    "activationEvents": [
+      "onLanguage:yourLanguageId"
+    ]
   }
 }

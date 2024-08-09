@@ -1,0 +1,14 @@
+{
+   "iconDefinitions": {
+     "file-icon": {
+       "iconPath": "./X-Logo.png"
+     }
+   },
+   "fileExtensions": {
+     "x": "file-icon"
+   },
+   "languageIds": {
+     "yourLanguageId": "file-icon"
+   }
+ }
+ 
