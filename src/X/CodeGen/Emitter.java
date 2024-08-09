@@ -8,6 +8,7 @@ public class Emitter implements Visitor {
 
     private final String outputName;
     private int loopDepth = 0;
+    private int strCount = 3;
     private int numConstStrings = 0;
     private ArrayType arrayDetails;
     private String arrName = "";
@@ -52,6 +53,9 @@ public class Emitter implements Visitor {
         emit("define ");
         ast.T.visit(this, f);
         emit(" @" + ast.I.spelling);
+        if (!ast.I.spelling.equals("main")) {
+            emit("." + ast.TypeDef);
+        }
         ast.PL.visit(this, f);
         emitN(" {");
 
@@ -130,6 +134,16 @@ public class Emitter implements Visitor {
 
         if (ast.E instanceof EmptyExpr) {
             // TODO: assign default values
+            return null;
+        }
+
+        // Declare a 'char *'
+        if (ast.T.isPointer() && ((PointerType) ast.T).t.isChar() && ast.E instanceof StringExpr) {
+            ast.E.visit(this, o);
+            int l = ((StringExpr) ast.E).SL.spelling.length() + 1;
+            int n = ((StringExpr) ast.E).Identifier;
+            emitN("\tstore i8 * getelementptr inbounds ([" + l + " x i8], [" + l + " x i8]* @..str" + n +
+                    " , i64 0, i64 0), i8** %" + ast.I.spelling + loopDepth);
             return null;
         }
 
@@ -759,7 +773,7 @@ public class Emitter implements Visitor {
             emit("\t%" + num + " = call ");
         }
         functionRef.T.visit(this, o);
-        emit(" @" + ast.I.spelling);
+        emit(" @" + ast.I.spelling + "." + ast.TypeDef);
 
         emit("(");
         if (!(ast.AL instanceof EmptyArgList)) {
@@ -1133,6 +1147,19 @@ public class Emitter implements Visitor {
         }
         return null;
     }
+
+    public Object visitStringLiteral(StringLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitStringExpr(StringExpr ast, Object o) {
+        int l = ast.SL.spelling.length() + 1;
+        emitNConst("@..str" + strCount + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
+        ast.Identifier = strCount;
+        strCount += 1;
+        return null;
+    }
+
     public void emitBase(Type t, Object o) {
         // TODO: handle other cases
         Expr I;
@@ -1152,7 +1179,14 @@ public class Emitter implements Visitor {
         LLVM.append(new Instruction(s));
     }
 
+    public void emitConst(String s) {
+        LLVM.appendConstant(new Instruction(s));
+    }
+
     public void emitN(String s) {
         LLVM.append(new Instruction(s + "\n"));
+    }
+    public void emitNConst(String s) {
+        LLVM.appendConstant(new Instruction(s + "\n"));
     }
 }

@@ -6,6 +6,12 @@ public class CallExpr extends Expr {
 
     public Ident I;
     public List AL;
+    public String TypeDef;
+
+
+    public void setTypeDef(String X) {
+        TypeDef = X;
+    }
 
     public CallExpr(Ident id, List alAST, Position pos) {
         super(pos);

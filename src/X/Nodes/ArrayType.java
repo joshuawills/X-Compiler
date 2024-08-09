@@ -35,4 +35,8 @@ public class ArrayType extends Type {
     public Object visit(Visitor v, Object o) {
         return v.visitArrayType(this, o);
     }
+
+    public String getMini() {
+        return "P" + t.getMini();
+    }
 }

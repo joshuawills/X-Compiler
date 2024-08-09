@@ -24,6 +24,11 @@ public class IntType extends Type {
     public String toString() {
         return "int";
     }
+
+    public String getMini() {
+        return "I";
+    }
+
     public boolean assignable(Object obj) {
         return equals(obj) || obj instanceof CharType;
     }

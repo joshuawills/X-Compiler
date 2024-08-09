@@ -23,4 +23,8 @@ public class ErrorType extends Type {
     public boolean assignable(Object obj) {
         return true;
     }
+
+    public String getMini() {
+        return "E";
+    }
 }

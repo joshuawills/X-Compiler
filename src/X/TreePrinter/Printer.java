@@ -491,4 +491,17 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitStringExpr(StringExpr ast, Object o) {
+        print(indentString() + "StringExpr");
+        ++indent;
+        ast.SL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitStringLiteral(StringLiteral ast, Object o) {
+        print(indentString() + ast.spelling);
+        return null;
+    }
+
 }

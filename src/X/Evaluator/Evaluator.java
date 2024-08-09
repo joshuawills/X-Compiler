@@ -350,4 +350,12 @@ public class Evaluator implements Visitor {
         System.out.println("EVALUATOR: CastExpr");
         return null;
     }
+
+    public Object visitStringExpr(StringExpr ast, Object o) {
+        return null;
+    }
+
+    public Object visitStringLiteral(StringLiteral ast, Object o) {
+        return null;
+    }
 }

@@ -114,4 +114,8 @@ public interface Visitor {
     Object visitCharExpr(CharExpr ast, Object o);
 
     Object visitCastExpr(CastExpr ast, Object o);
+
+    Object visitStringLiteral(StringLiteral ast, Object o);
+
+    Object visitStringExpr(StringExpr ast, Object o);
 }

@@ -29,6 +29,11 @@ public class BooleanType extends Type {
         return v.visitBooleanType(this, o);
     }
 
+
+    public String getMini() {
+        return "B";
+    }
+
 }
 
 

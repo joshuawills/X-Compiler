@@ -25,6 +25,10 @@ public class CharType extends Type {
         return "char";
     }
 
+    public String getMini() {
+        return "C";
+    }
+
     public boolean assignable(Object obj) {
         return equals(obj) || obj instanceof IntType;
     }

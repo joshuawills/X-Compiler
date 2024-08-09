@@ -750,6 +750,11 @@ public class Parser {
                 finish(pos);
                 yield new BooleanExpr(blAST, pos);
             }
+            case STRING_LIT -> {
+                StringLiteral slAST = parseStringLiteral();
+                finish(pos);
+                yield new StringExpr(slAST, pos);
+            }
             case CHAR_LIT -> {
                 CharLiteral clAST = parseCharLiteral();
                 finish(pos);
@@ -808,6 +813,18 @@ public class Parser {
             syntacticError("char literal expected here", "");
         }
         return CL;
+    }
+
+    private StringLiteral parseStringLiteral() throws SyntaxError {
+        StringLiteral SL = null;
+        if (currentToken.kind == TokenType.STRING_LIT) {
+            String spelling = currentToken.lexeme;
+            accept();
+            SL = new StringLiteral(spelling, previousPosition);
+        } else {
+            syntacticError("integer literal expected here", "");
+        }
+        return SL;
     }
 
     private List parseArrayInitList() throws SyntaxError {

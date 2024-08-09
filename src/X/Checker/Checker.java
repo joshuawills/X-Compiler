@@ -5,6 +5,8 @@ import X.ErrorHandler;
 import X.Lexer.Position;
 import X.Nodes.*;
 
+import java.util.ArrayList;
+
 public class Checker implements Visitor {
 
     private final String[] errors = {
@@ -49,7 +51,7 @@ public class Checker implements Visitor {
         "*38: excess elements in array initializer",
         "*39: attempted reassignment of array",
         "*40: array index is not an integer",
-        "*41: char expr greater than one character"
+        "*41: char expr greater than one character",
     };
 
     private final SymbolTable idTable;
@@ -81,9 +83,13 @@ public class Checker implements Visitor {
             } else if (L.D instanceof Function F) {
                 Decl e = idTable.retrieve(F.I.spelling);
                 if (e != null) {
-                    String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
-                            e.pos.lineStart);
-                    handler.reportError(errors[2] + ": %", message, F.I.pos);
+                    String tOne = F.TypeDef;
+                    String tTwo = ((Function) e).TypeDef;
+                    if (tOne.equals(tTwo)) {
+                        String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
+                                e.pos.lineStart);
+                        handler.reportError(errors[2] + ": %", message, F.I.pos);
+                    }
                 }
                 stdFunction(F);
             }
@@ -147,12 +153,12 @@ public class Checker implements Visitor {
     private Function stdFunction(Type resultType, String id, List pl) {
         Function binding = new Function(resultType, new Ident(id, dummyPos),
             pl, new EmptyStmt(dummyPos), dummyPos);
-        idTable.insert(id, false, binding);
+        idTable.insert(id + "." + binding.TypeDef, false, binding);
         return binding;
     }
 
     private void stdFunction(Function funct) {
-        idTable.insert(funct.I.spelling, funct.isMut, funct);
+        idTable.insert(funct.I.spelling + "." + funct.TypeDef, funct.isMut, funct);
     }
 
     public Object visitProgram(Program ast, Object o) {
@@ -1069,7 +1075,19 @@ public class Checker implements Visitor {
         }
 
         // Check function exists
-        Decl type = (Decl) ast.I.visit(this, null);
+        String TL;
+        if (ast.TypeDef == null) {
+            TL = genTypes(ast.AL, o);
+            ast.setTypeDef(TL);
+        } else {
+            TL = ast.TypeDef;
+        }
+
+        Decl type = idTable.retrieve(ast.I.spelling + "." + TL);
+        if (type != null) {
+            ast.I.decl = type;
+        }
+
         if (type == null) {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
@@ -1080,12 +1098,23 @@ public class Checker implements Visitor {
             handler.reportError(errors[10], "", ast.I.pos);
             return Environment.errorType;
         } else {
-            Decl x = idTable.retrieve(ast.I.spelling);
+            Decl x = idTable.retrieve(ast.I.spelling + "." + TL);
             ((Function) x).setUsed();
         }
         ast.AL.visit(this, function.PL);
         ast.type = type.T;
         return type.T;
+    }
+
+    private String genTypes(List PL, Object o) {
+        List head = PL;
+        ArrayList<String> options = new ArrayList<>();
+        while (!(head instanceof EmptyArgList)) {
+            Expr D = ((Args) head).E;
+            options.add(((Type) D.visit(this, o)).getMini());
+            head = ((Args) head).EL;
+        }
+        return String.join("_", options);
     }
 
     public Object visitEmptyArgList(EmptyArgList ast, Object o) {
@@ -1100,4 +1129,14 @@ public class Checker implements Visitor {
         ast.V.visit(this, o);
         return null;
     }
+
+    public Object visitStringExpr(StringExpr ast, Object o) {
+        ast.type = new PointerType(ast.pos, new CharType(ast.pos));
+        return ast.type;
+    }
+
+    public Object visitStringLiteral(StringLiteral ast, Object o) {
+        return new PointerType(ast.pos, new CharType(ast.pos));
+    }
+
 }

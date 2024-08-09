@@ -30,6 +30,10 @@ public class PointerType extends Type {
         return false;
     }
 
+    public String getMini() {
+        return "P" + t.getMini();
+    }
+
     public boolean assignable(Object obj) {
         return equals(obj);
     }

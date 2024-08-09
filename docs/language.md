@@ -50,6 +50,24 @@ fn foo(mut int x, bool y) -> void {
 }
 ```
 
+X supports function overloading. Multiple functions can be declared with the same name, as long as they 
+have differing input types. An example of this is shown below.
+
+```Rust
+fn add(int x) -> int {
+    return add(0, x);
+}
+
+fn add(int x, int y) -> int {
+    return x + y;
+}
+
+fn main() -> int {
+    outInt(add(2, 1)); // logs 3
+    outInt(add(2));   // logs 2
+}
+```
+
 ## Mutability
 
 I've adopted the Rust approach to variables, that they are constant by default. In order to express
@@ -176,6 +194,8 @@ structs. There are boolean expressions, denoted with the `bool` keyword, integer
 although it is done implicitlty between chars and ints as well as ints to floats.
 
 Simple pointers are also currently supported. They are declared in a C like way, seen in a simple example below.
+
+Statically sized arrays are supported for all types. They are always passed by reference in function calls.
 
 ```Rust
 fn swap(mut int *a, mut int *b) -> void {

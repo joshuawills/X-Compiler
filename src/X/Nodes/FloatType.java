@@ -24,6 +24,11 @@ public class FloatType extends Type {
     public String toString() {
         return "float";
     }
+
+    public String getMini() {
+        return "F";
+    }
+
     public boolean assignable(Object obj) {
         if (obj instanceof ErrorType) {
             return true;

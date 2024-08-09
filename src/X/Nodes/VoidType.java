@@ -29,4 +29,7 @@ public class VoidType extends Type {
         return equals(obj);
     }
 
+    public String getMini() {
+        return "V";
+    }
 }

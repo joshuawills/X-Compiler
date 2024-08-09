@@ -51,7 +51,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitFunction(Function ast, Object obj) {
-        return layoutQuaternary("FunDec", ast.T, ast.I, ast.PL, ast.S);
+        return layoutQuaternary("FunDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S);
     }
 
     public Object visitGlobalVar(GlobalVar ast, Object obj) {
@@ -134,7 +134,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitCharLiteral(CharLiteral ast, Object o) {
-        return layoutNullary(ast.spelling);
+        return layoutNullary("'" + ast.spelling + "'");
     }
 
     public Object visitCharExpr(CharExpr ast, Object o) {
@@ -473,4 +473,11 @@ public class LayoutVisitor implements Visitor {
         return r;
     }
 
+    public Object visitStringExpr(StringExpr ast, Object obj) {
+        return layoutUnary("StrExp", ast.SL);
+    }
+
+    public Object visitStringLiteral(StringLiteral ast, Object obj) {
+        return layoutNullary("\"" + ast.spelling + "\"");
+    }
 }
