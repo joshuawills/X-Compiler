@@ -211,10 +211,6 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("BoolExp", ast.BL);
     }
 
-    public Object visitStringExpr(StringExpr ast, Object obj) {
-        return layoutUnary("StrExp", ast.SL);
-    }
-
     public Object visitParaList(ParaList ast, Object obj) {
         return layoutBinary("ParaLst", ast.P, ast.PL);
     }
@@ -244,11 +240,6 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("void");
     }
 
-    // not called
-    public Object visitStringType(StringType ast, Object obj) {
-        return layoutNullary("string");
-    }
-
     public Object visitErrorType(ErrorType ast, Object obj) {
         return layoutNullary("err");
     }
@@ -259,10 +250,6 @@ public class LayoutVisitor implements Visitor {
 
 
     public Object visitBooleanLiteral(BooleanLiteral ast, Object obj) {
-        return layoutNullary(ast.spelling);
-    }
-
-    public Object visitStringLiteral(StringLiteral ast, Object obj) {
         return layoutNullary(ast.spelling);
     }
 

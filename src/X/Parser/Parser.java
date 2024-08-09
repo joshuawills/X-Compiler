@@ -564,10 +564,6 @@ public class Parser {
                 accept();
                 yield new BooleanType(pos);
             }
-            case "str" -> {
-                accept();
-                yield new StringType(pos);
-            }
             case "void" -> {
                 accept();
                 yield new VoidType(pos);
@@ -759,11 +755,6 @@ public class Parser {
                 finish(pos);
                 yield new CharExpr(clAST, pos);
             }
-            case STRING_LIT -> {
-                StringLiteral slAST = parseStringLiteral();
-                finish(pos);
-                yield new StringExpr(slAST, pos);
-            }
             default -> {
                 syntacticError("Illegal primary expression", "");
                 yield null;
@@ -805,19 +796,6 @@ public class Parser {
             syntacticError("integer literal expected here", "");
         }
         return BL;
-    }
-
-
-    private StringLiteral parseStringLiteral() throws SyntaxError {
-        StringLiteral SL = null;
-        if (currentToken.kind == TokenType.STRING_LIT) {
-            String spelling = currentToken.lexeme;
-            accept();
-            SL = new StringLiteral(spelling, previousPosition);
-        } else {
-            syntacticError("integer literal expected here", "");
-        }
-        return SL;
     }
 
     private CharLiteral parseCharLiteral() throws SyntaxError {

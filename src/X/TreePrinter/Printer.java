@@ -401,27 +401,6 @@ public class Printer implements Visitor {
     }
 
     @Override
-    public Object visitStringExpr(StringExpr ast, Object o) {
-        print(indentString() + "StringExpr");
-        ++indent;
-        ast.SL.visit(this, o);
-        --indent;
-        return null;
-    }
-
-    @Override
-    public Object visitStringLiteral(StringLiteral ast, Object o) {
-        print(indentString() + ast.spelling);
-        return null;
-    }
-
-    @Override
-    public Object visitStringType(StringType ast, Object o) {
-        print(indentString() + "string");
-        return null;
-    }
-
-    @Override
     public Object visitEmptyParaList(EmptyParaList ast, Object o) {
         print(indentString() + "EmptyParaList");
         return null;

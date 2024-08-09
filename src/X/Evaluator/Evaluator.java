@@ -251,18 +251,6 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitStringExpr(StringExpr ast, Object o) {
-        return null;
-    }
-
-    public Object visitStringLiteral(StringLiteral ast, Object o) {
-        return null;
-    }
-
-    public Object visitStringType(StringType ast, Object o) {
-        return null;
-    }
-
     public Object visitEmptyParaList(EmptyParaList ast, Object o) {
         return null;
     }

@@ -128,17 +128,8 @@ public class Checker implements Visitor {
         Environment.charType= new CharType(dummyPos);
         Environment.intType = new IntType(dummyPos);
         Environment.floatType = new FloatType(dummyPos);
-        Environment.strType = new StringType(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
         Environment.errorType = new ErrorType(dummyPos);
-        Environment.inInt = stdFunction(Environment.voidType, "inInt", new ParaList(
-            new ParaDecl(Environment.strType, i, dummyPos, false),
-            new ParaList(
-                    new ParaDecl(Environment.intType, i, dummyPos, false),
-                    new EmptyParaList(dummyPos), dummyPos
-            ),
-            dummyPos
-        ));
         Environment.outInt = stdFunction(Environment.voidType, "outInt", new ParaList(
                 new ParaDecl(Environment.intType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
@@ -151,11 +142,7 @@ public class Checker implements Visitor {
                 new ParaDecl(Environment.floatType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
-        Environment.outStr = stdFunction(Environment.voidType, "outStr", new ParaList(
-                new ParaDecl(Environment.strType, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-    }
+   }
 
     private Function stdFunction(Type resultType, String id, List pl) {
         Function binding = new Function(resultType, new Ident(id, dummyPos),
@@ -752,19 +739,6 @@ public class Checker implements Visitor {
         ast.P.visit(this, null);
         ast.PL.visit(this, null);
         return null;
-    }
-
-    public Object visitStringExpr(StringExpr ast, Object o) {
-        ast.type = Environment.strType;
-        return ast.type;
-    }
-
-    public Object visitStringLiteral(StringLiteral ast, Object o) {
-        return Environment.strType;
-    }
-
-    public Object visitStringType(StringType ast, Object o) {
-        return Environment.strType;
     }
 
     public Object visitEmptyParaList(EmptyParaList ast, Object o) {

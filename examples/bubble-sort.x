@@ -1,9 +1,7 @@
 fn main() -> int {
     mut int x[] = [2, 3, 1, 4, 5, 9, 8, 7, 6, 0];
-    outStr("Array before sorting: \n");
     print_arr(x, 10);
     bubble_sort(x, 10);
-    outStr("Array after sorting: \n");
     print_arr(x, 10);
 }
 

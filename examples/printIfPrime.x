@@ -5,7 +5,6 @@ fn main() -> int {
         if is_prime(x) {
             outInt(x);
         } else {
-            outStr("That number was not prime\n");
             break;
         }
     }

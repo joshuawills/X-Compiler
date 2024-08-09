@@ -24,9 +24,6 @@ public abstract class Type extends AST {
     public boolean isFloat() {
         return (this instanceof FloatType);
     }
-    public boolean isString() {
-        return (this instanceof StringType);
-    }
 
     public boolean isBoolean() {
         return (this instanceof BooleanType);

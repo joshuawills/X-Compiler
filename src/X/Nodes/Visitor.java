@@ -66,12 +66,6 @@ public interface Visitor {
 
     Object visitParaList(ParaList ast, Object o);
 
-    Object visitStringExpr(StringExpr ast, Object o);
-
-    Object visitStringLiteral(StringLiteral ast, Object o);
-
-    Object visitStringType(StringType ast, Object o);
-
     Object visitEmptyParaList(EmptyParaList ast, Object o);
 
     Object visitParaDecl(ParaDecl ast, Object o);

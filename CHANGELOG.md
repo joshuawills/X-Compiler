@@ -88,3 +88,8 @@
 - set default values for uninitialised
 - change strs to native char *
 - underline relevant part in error messages
+
+HERE
+
+- pointer arithmetic
+- assigning string literals

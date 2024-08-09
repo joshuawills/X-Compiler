@@ -4,7 +4,7 @@
 
 ```Rust
 fn main() -> int {
-    outStr("hello, world!\n");
+    outInt(1);
     return 0;
 }
 ```
@@ -230,8 +230,5 @@ Although quite primitive, we have some basic IO functions as a standard library.
 `outChar` takes in a character and prints it to stdout, followed by a newline.
 
 `outFloat` takes in a float and prints it to stdout, followed by a newline.
-
-`inInt` takes in a string constant and an integer. It logs the string as a prompt, then reads an
-integer from stdin and writes to that mutable variable.
 
 `outStr` takes in a string constant and prints it to stdout.
