@@ -1,0 +1,26 @@
+{
+  "name": "x",
+  "displayName": "X",
+  "description": "X Programming Language",
+  "publisher": "Joshua Wills",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.81.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "x",
+      "aliases": ["X Programming Language"],
+      "extensions": [".x"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "x",
+      "scopeName": "source.x",
+      "path": "./syntaxes/x.tmLanguage.json"
+    }]
+  }
+}

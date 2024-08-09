@@ -61,6 +61,7 @@
 *09.08.2024*
 
 - char support mostly :)
+- removing strings :()
 
 # TODO
 

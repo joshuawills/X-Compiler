@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "x",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#libraries"
+    },
+    {
+      "include": "#datatypes"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#literal"
+    },
+    {
+      "include": "#strings"
+    }
+  ],
+  "repository": {
+    "libraries": {
+      "patterns": [
+        {
+          "match": "([a-zA-Z]+)(::)([a-zA-Z0-9]+)",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.preprocessor.x"
+            },
+            "2": {
+              "name": "keyword.operator.logical.x"
+            },
+            "3": {
+              "name": "support.type.property-name.less.x"
+            }
+          }
+        }
+      ]
+    },
+
+    "operators": {
+      "patterns": [
+        {
+          "match": "&&|!|\\|\\|",
+          "name": "keyword.operator.logical.x"
+        },
+        {
+          "match": "=",
+          "name": "keyword.operator.assignment.x"
+        },
+        {
+          "match": "!=|<=|>=|==|<|>",
+          "name": "keyword.operator.comparison.x"
+        },
+        {
+          "match": "%=|\\+=|-=|\\*=|(?<!\\()/=",
+          "name": "keyword.operator.assignment.compound.x"
+        }
+      ]
+    },
+    "literal": {
+      "patterns": [
+        {
+          "name": "constant.Language.x",
+          "match": "\\b(false|true)\\b"
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "begin": "//",
+          "end": "$",
+          "name": "comment.line.x"
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.x"
+        }
+      ]
+    },
+    "datatypes": {
+      "patterns": [
+        {
+          "name": "variable.parameter.x",
+          "match": "(?<!<)(int|void|float|char|bool)( *)*"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.x",
+          "match": "mut"
+        },
+        {
+          "name": "keyword.operator.arrow.x",
+          "match": "->"
+        },
+        {
+          "name": "keyword.other.x",
+          "match": "\\b(if|else if|else|while|in|loop|do|for|return|fn)\\b"
+        },
+        {
+          "name": "keyword.control.x",
+          "match": "\\b(break|continue)\\b"
+        }
+      ]
+    },
+
+    "strings": {
+      "name": "string.quoted.double.x",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.x",
+          "match": "\\\\."
+        }
+      ]
+    }
+  },
+  "scopeName": "source.x"
+}

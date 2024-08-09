@@ -6,7 +6,6 @@ a.out
 gradle/
 build/
 bin/
-.vscode/
 gradlew
 gradlew.bat
 test.x
