@@ -369,8 +369,8 @@ public class Evaluator implements Visitor {
     }
 
     public Object visitEnumExpr(EnumExpr ast, Object o) {
-        System.out.println("EVALUATOR: ENUMEXPR");
-        return null;
+        EnumType T = (EnumType) ast.type;
+        return T.E.getValue(ast.Entry.spelling);
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object o) {

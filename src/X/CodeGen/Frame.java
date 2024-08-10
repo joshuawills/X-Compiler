@@ -46,6 +46,14 @@ public class Frame {
         return "L" + label++;
     }
 
+    public String getPreceding() {
+        if (label == 0) {
+            return "0";
+        } else {
+            return "L" + (label - 1);
+        }
+    }
+
     public void push() {
         push(1);
     }

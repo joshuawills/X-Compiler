@@ -699,6 +699,14 @@ public class Checker implements Visitor {
                     ast.type = Environment.errorType;
                     break;
                 }
+                if (eT instanceof IntType) {
+                    ast.O.spelling = "i" + ast.O.spelling;
+                } else if (eT instanceof CharType) {
+                    ast.O.spelling = "c" + ast.O.spelling;
+                } else if (eT instanceof FloatType) {
+                    ast.O.spelling = "f" + ast.O.spelling;
+                }
+
                 ast.type = eT;
             }
             case "!" -> {
@@ -707,6 +715,7 @@ public class Checker implements Visitor {
                     ast.type = Environment.errorType;
                     break;
                 }
+                ast.O.spelling = "b" + ast.O.spelling;
                 ast.type = eT;
             }
             case "*" -> { // de-reference operator

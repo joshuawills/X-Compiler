@@ -134,7 +134,7 @@ public class Parser {
             match(TokenType.LET);
             boolean isMut = tryConsume(TokenType.MUT);
             Ident iAST = parseIdent();
-            match(TokenType.COMMA);
+            match(TokenType.COLON);
             Type tAST = parseType();
             Expr eAST = new EmptyExpr(pos);
             if (tryConsume(TokenType.ASSIGN)) {

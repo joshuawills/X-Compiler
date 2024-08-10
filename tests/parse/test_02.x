@@ -1,9 +1,11 @@
-fn is_itself(int y) -> int {
+// Arbitrary, simple program
+
+fn is_itself(y: int) -> int {
     return y;
 }
 
 fn main() -> int {
-    mut int y = (1 * 2) / 21;
-    out(is_itself(3));
+    let mut y: int = (1 * 2) / 21;
+    y = is_itself(3);
     return 0;
 }

@@ -178,12 +178,11 @@ public class Emitter implements Visitor {
     public Object visitIfStmt(IfStmt ast, Object o) {
 
         Frame f = (Frame) o;
+        ast.E.visit(this, o);
         String middle= f.getNewLabel();
         String elseC = f.getNewLabel();
         String bottom = f.getNewLabel();
         trueBottom = bottom;
-
-        ast.E.visit(this, o);
         int index = ast.E.tempIndex;
         emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + elseC);
         emitN("\n" + middle + ":");
@@ -387,7 +386,7 @@ public class Emitter implements Visitor {
                     }
                 }
             }
-            case "!" -> {
+            case "b!" -> {
                 if (ast.parent instanceof UnaryExpr parent) {
                     int numOne = parent.E.tempIndex;
                     int newNum = f.getNewIndex();
@@ -396,7 +395,7 @@ public class Emitter implements Visitor {
                 }
             }
             case "i+", "f+", "c+", "i*", "f*", "c*", "i%", "ii%", "c%", "i/", "f/", "c/", "i==", "f==", "b==", "c==", "i!=", "f!=", "c!=", "b!=",
-                "i<", "f<", "c<", "i<=", "f<=", "c<=", "i>", "f>", "c>", "i>=", "f>=", "c>=", "b&&", "b||" -> {
+                "i<", "f<", "c<", "i<=", "f<=", "c<=", "i>", "f>", "c>", "i>=", "f>=", "c>=" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
@@ -444,8 +443,6 @@ public class Emitter implements Visitor {
             case "i>=" -> "icmp sge i32";
             case "c>=" -> "icmp sge i8";
             case "f>=" -> "fcmp sge float";
-            case "b&&" -> "and i1";
-            case "b||" -> "or i1";
             default -> {
                 System.out.println("opToCommand not implemented: " + input);
                 yield "";
@@ -454,6 +451,45 @@ public class Emitter implements Visitor {
     }
 
     public Object visitBinaryExpr(BinaryExpr ast, Object o) {
+        Frame f = (Frame) o;
+        if (ast.O.spelling.equals("b&&")) {
+            String X = f.getPreceding();
+            // Don't entirely get this, just looked at LLVM output for C++
+            String L1 = f.getNewLabel();
+            String L2 = f.getNewLabel();
+            ast.E1.visit(this, o);
+            int indexOne = ast.E1.tempIndex;
+            emitN("\tbr i1 %" + indexOne + ", label %" + L1 + ", label %" + L2);
+            emitN(L1 +":");
+            ast.E2.visit(this, o);
+            emitN("\tbr label %" + L2);
+            int indexTwo = ast.E2.tempIndex;
+            emitN(L2 +":");
+            int i = f.getNewIndex();
+            ast.tempIndex = i;
+            emitN("\t%" + i + " = phi i1 [ false, %" + X + " ], [ %" + indexTwo + ", %" + L1 + " ]");
+            return null;
+        }
+
+        if (ast.O.spelling.equals("b||")) {
+            String X = f.getPreceding();
+            // Don't entirely get this, just looked at LLVM output for C++
+            String L1 = f.getNewLabel();
+            String L2 = f.getNewLabel();
+            ast.E1.visit(this, o);
+            int indexOne = ast.E1.tempIndex;
+            emitN("\tbr i1 %" + indexOne + ", label %" + L2 + ", label %" + L1);
+            emitN(L1 +":");
+            ast.E2.visit(this, o);
+            emitN("\tbr label %" + L2);
+            int indexTwo = ast.E2.tempIndex;
+            emitN(L2 +":");
+            int i = f.getNewIndex();
+            ast.tempIndex = i;
+            emitN("\t%" + i + " = phi i1 [ true, %" + X + " ], [ %" + indexTwo + ", %" + L1 + " ]");
+            return null;
+        }
+
         ast.E1.visit(this, o);
         ast.E2.visit(this, o);
         ast.O.visit(this, o);

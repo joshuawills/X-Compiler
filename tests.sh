@@ -52,6 +52,8 @@ do
   java -jar "$EXE" "$file" -t -q > "$TEMP"
   real_file=$(echo "$file" | sed -E 's/x$/txt/g')
 
+  message=$(head -n1 "$file")
+
   if ! [ -f "$real_file" ]
   then
     continue
@@ -59,10 +61,10 @@ do
 
   if ! diff -q "$TEMP" "$real_file" >> /dev/null 2>&1
   then
-    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET}"
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
     PASS=$((PASS+1))
   else
-    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET}"
+    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
     FAIL=$((FAIL+1))
   fi
 
@@ -77,19 +79,46 @@ do
     continue
   fi
 
-  java -jar "$EXE" "$file" -pr -q
+  message=$(head -n1 "$file")
+
+  java -jar "$EXE" "$file" -pr -q > "$TEMP"
   real_file=$(echo "$file" | sed -E 's/x$/txt/g')
 
   if ! diff -q ".tree" "$real_file" >> /dev/null 2>&1
   then
-    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET}"
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
     PASS=$((PASS+1))
   else
-    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET}"
+    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
     FAIL=$((FAIL+1))
   fi
 
 done < <(find "tests/parse" -type f)
+
+echo -e "${YELLOW}RUNNING TESTS: ${RESET}"
+while IFS= read -r file
+do
+
+  if echo "$file" | grep -vE "\.x" >> /dev/null 2>&1
+  then
+    continue
+  fi
+
+  message=$(head -n1 "$file")
+
+  java -jar "$EXE" "$file" -q -r > "$TEMP"
+  real_file=$(echo "$file" | sed -E 's/x$/txt/g')
+
+  if ! diff -q ".tree" "$real_file" >> /dev/null 2>&1
+  then
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
+    PASS=$((PASS+1))
+  else
+    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
+    FAIL=$((FAIL+1))
+  fi
+
+done < <(find "tests/running" -type f)
 
 
 rm "$TEMP"

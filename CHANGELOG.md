@@ -63,6 +63,14 @@
 - char support mostly :)
 - removing strings :()
 
+*10.08.2024*
+
+- switching to Rust style declarations 
+- Enum support
+- Basic Function overloading
+- Fixed boolean short-circuiting
+- More tests!
+
 # TODO
 
 - float support
