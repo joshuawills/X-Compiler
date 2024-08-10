@@ -59,7 +59,7 @@
            "name": "keyword.operator.logical.x"
          },
          {
-           "match": "=",
+           "match": "=|:",
            "name": "keyword.operator.assignment.x"
          },
          {
@@ -98,7 +98,7 @@
        "patterns": [
          {
            "name": "variable.parameter.x",
-           "match": "(?<!<)(int|void|float|char|bool)( *)*"
+           "match": "(?<!<)(int|void|float|char|bool)( *\\**)*"
          }
        ]
      },
@@ -114,7 +114,7 @@
          },
          {
            "name": "keyword.other.x",
-           "match": "\\b(if|else if|else|while|in|loop|do|for|return|fn)\\b"
+           "match": "\\b(if|else if|else|while|in|loop|do|for|return|fn|let|enum)\\b"
          },
          {
            "name": "keyword.control.x",
