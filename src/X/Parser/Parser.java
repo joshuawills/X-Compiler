@@ -14,7 +14,6 @@ public class Parser {
 
     private boolean isPreviousVarMut = false;
     private Type prevType = null;
-    private boolean isComma = false;
     private final ArrayList<Token> tokenStream;
     private int tokenIndex = 1;
     private final ErrorHandler handler;
@@ -132,52 +131,22 @@ public class Parser {
             finish(pos);
             dlAST = new DeclList(E, dlAST2, pos);
         } else {
-            // Global var
-            boolean isMut;
-            Type tAST;
-            if (isComma) {
-                isMut = isPreviousVarMut;
-                tAST = prevType;
-            } else {
-                isMut = tryConsume(TokenType.MUT);
-                tAST = parseType();
-            }
-
+            match(TokenType.LET);
+            boolean isMut = tryConsume(TokenType.MUT);
             Ident iAST = parseIdent();
-
-            if (tryConsume(TokenType.LEFT_SQUARE)) {
-                int length = -1;
-                if (currentToken.kind == TokenType.INT_LIT) {
-                    length = Integer.parseInt(currentToken.lexeme);
-                    match(TokenType.INT_LIT);
-                }
-                match(TokenType.RIGHT_SQUARE);
-                tAST = new ArrayType(pos, tAST, length);
-            }
-
-            Expr eAST;
+            match(TokenType.COMMA);
+            Type tAST = parseType();
+            Expr eAST = new EmptyExpr(pos);
             if (tryConsume(TokenType.ASSIGN)) {
                 eAST = parseExpr();
-            } else {
-                finish(pos);
-                eAST = new EmptyExpr(pos);
             }
             finish(pos);
-            if (tryConsume((TokenType.COMMA))) {
-                isComma = true;
-                isPreviousVarMut = isMut;
-                prevType = tAST;
-            } else {
-                isComma = false;
-                match(TokenType.SEMI);
-            }
-
+            match(TokenType.SEMI);
             GlobalVar globalVar = new GlobalVar(tAST, iAST, eAST, pos, isMut);
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(globalVar, dlAST2, pos);
         }
-
         return dlAST;
     }
 
@@ -200,44 +169,17 @@ public class Parser {
     private LocalVar parseLocalVar() throws SyntaxError {
         Position pos = new Position();
         start(pos);
-        boolean isMut;
-        Type tAST;
-        if (isComma) {
-            isMut = isPreviousVarMut;
-            tAST = prevType;
-        } else {
-            isMut = tryConsume(TokenType.MUT);
-            tAST = parseType();
-        }
+        match(TokenType.LET);
+        boolean isMut = tryConsume(TokenType.MUT);
         Ident iAST = parseIdent();
-
-        if (tryConsume(TokenType.LEFT_SQUARE)) {
-            int length = -1;
-            if (currentToken.kind == TokenType.INT_LIT) {
-                length = Integer.parseInt(currentToken.lexeme);
-                match(TokenType.INT_LIT);
-            }
-            match(TokenType.RIGHT_SQUARE);
-            tAST = new ArrayType(pos, tAST, length);
-        }
-
-        Expr eAST;
+        match(TokenType.COLON);
+        Type tAST = parseType();
+        finish(pos);
+        Expr eAST = new EmptyExpr(pos);
         if (tryConsume(TokenType.ASSIGN)) {
             eAST = parseExpr();
-        } else {
-            finish(pos);
-            eAST = new EmptyExpr(pos);
         }
-
-        finish(pos);
-        if (tryConsume(TokenType.COMMA)) {
-            isComma = true;
-            isPreviousVarMut = isMut;
-            prevType = tAST;
-        } else {
-            isComma = false;
-            match(TokenType.SEMI);
-        }
+        match(TokenType.SEMI);
         return new LocalVar(tAST, iAST, eAST, pos, isMut);
     }
 
@@ -255,11 +197,7 @@ public class Parser {
 
     }
 
-    // this will NOT be called for a local-var case
     private Stmt parseStmt() throws SyntaxError {
-        if (isComma) {
-            return parseLocalVarStmt();
-        }
         return switch (currentToken.kind) {
             case OPEN_CURLY -> parseCompoundStmt();
             case IF -> parseIfStmt();
@@ -271,7 +209,11 @@ public class Parser {
             case CONTINUE -> parseContinueStmt();
             case RETURN -> parseReturnStmt();
             case IDENT, DOLLAR, STAR -> parseDeclOrFuncCallStmt(); // this could also be a func call
-            default -> parseLocalVarStmt();
+            case LET -> parseLocalVarStmt();
+            default -> {
+                System.out.println("Unknown statement!");
+                yield null;
+            }
         };
     }
 
@@ -552,12 +494,9 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         boolean isMut = tryConsume(TokenType.MUT);
-        Type tAST = parseType();
         Ident idAST = parseIdent();
-        if (tryConsume(TokenType.LEFT_SQUARE)) {
-            tAST = new ArrayType(pos, tAST, -1);
-            match(TokenType.RIGHT_SQUARE);
-        }
+        match(TokenType.COLON);
+        Type tAST = parseType();
         finish(pos);
         return new ParaDecl(tAST, idAST, pos, isMut);
     }
@@ -596,6 +535,17 @@ public class Parser {
                 yield new MurkyType(V, pos);
             }
         };
+
+        if (tryConsume(TokenType.LEFT_SQUARE)) {
+            int length = -1;
+            if (currentToken.kind == TokenType.INT_LIT) {
+                length = Integer.parseInt(currentToken.lexeme);
+                match(TokenType.INT_LIT);
+            }
+            match(TokenType.RIGHT_SQUARE);
+            t = new ArrayType(pos, t, length);
+        }
+
         // Nested pointers ?? TODO
         if (tryConsume(TokenType.STAR)) {
             finish(pos);

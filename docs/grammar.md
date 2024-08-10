@@ -3,9 +3,9 @@
 $$
 \begin{align}
 \textit{program} &\to (\textit{function }|\textit{ global-var}|\textit{ enum})^*  \\ \\
-\textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\textit{[]})?  (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
-\textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\textit{[]})? (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
-\textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \\
+\textit{global-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } \text{ ":" type} (\text{"="} expr)? \text{";"}\\
+\textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } \text{ ":" type} (\text{"="} expr)? \text{";"}\\
+\textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
 \textit{enum} &\to \textbf{enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\ \\
 
 \text{compound-stmt} &\to \text{"\\\{" } (\textit{stmt } | \textit{ local-var})^* \text{ "\\\}"} \\
@@ -68,11 +68,11 @@ stmt})? \\
 \textit{func-call} &\to \textit{ident } "(" \textit{args} ")" \\
 \textit{array-init-expr} &\to \textit{"["} (\textit{expr } (\text{","} \textit{ expr})^*)? \textit{"]"} \\
 \textit{args} &\to \textit{expr } (\text{","} \textit{ expr})^* \text{ | } \epsilon\\
-\textit{para-list} &\to \textit{decl } (\textit{"," decl})^*  \text{ | } \epsilon \\ \\
-\textit{decl} &\to \textbf{mut}? \textit{ type ident}  (\textit{[]})?\\
+\textit{para-list} &\to \textit{arg } (\textit{"," arg})^*  \text{ | } \epsilon \\ \\
+\textit{arg} &\to \textbf{mut}? \textit{ ident } \text{ ":" } \textit{ type}\\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
-\textit{type} &\to \textbf{ident | char | int | str | void | bool | float | \textit{type}* } \\
+\textit{type} &\to \textbf{ident | char | int | str | void | bool | float | \textit{type}* | \textit{type}[\textit{INTLITERAL}] } \\
 
 \textit{INTLITERAL} &\to [0-9]+ \\
 \textit{FLOATLITERAL} &\to [0-9]^+\textit{"."}[0-9]? \\

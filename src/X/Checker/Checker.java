@@ -5,7 +5,6 @@ import X.ErrorHandler;
 import X.Lexer.Position;
 import X.Nodes.*;
 import X.Nodes.Enum;
-
 import java.util.ArrayList;
 
 public class Checker implements Visitor {
@@ -268,21 +267,24 @@ public class Checker implements Visitor {
         return null;
     }
 
-    private Object visitVarDecl(Decl ast, Type T, Ident I, Expr E) {
-
-        if (T.isMurky()) {
-            String S = ((MurkyType) T).V;
-            Decl D = idTable.retrieve(S);
-            if (!(D instanceof Enum)) {
-                handler.reportError(errors[43] + ": %", "'" + S + "'", ast.T.pos);
-                T = Environment.errorType;
-                return T;
-            }
-            ast.T = new EnumType((Enum) D, D.pos);
-            ast.T.parent = ast;
-            T = ast.T;
+    private void unMurk(Decl ast) {
+        String S = ((MurkyType) ast.T).V;
+        Decl D = idTable.retrieve(S);
+        if (!(D instanceof Enum)) {
+            handler.reportError(errors[43] + ": %", "'" + S + "'", ast.T.pos);
+            ast.T = Environment.errorType;
         }
+        ast.T = new EnumType((Enum) D, D.pos);
+        ast.T.parent = ast;
+    }
+
+    private Object visitVarDecl(Decl ast, Type T, Ident I, Expr E) {
+        if (T.isMurky()) {
+            unMurk(ast);
+        }
+
         declareVariable(ast.I, ast);
+
         if (T.isVoid()) {
             handler.reportError(errors[3] + ": %", ast.I.spelling, ast.T.pos);
             T = Environment.errorType;
@@ -299,6 +301,8 @@ public class Checker implements Visitor {
         }
 
         I.visit(this, ast);
+
+        // Unknown size of array
         if (E instanceof EmptyExpr) {
             if (T.isArray() && ((ArrayType) T).length == -1) {
                 handler.reportError(errors[37] + ": %", ast.I.spelling, ast.T.pos);
@@ -315,31 +319,28 @@ public class Checker implements Visitor {
             return T;
         }
 
+        // May need to cast
         Expr e2AST = checkCast(ast.T, E, null);
-        if (ast instanceof LocalVar) {
-            ((LocalVar) ast).E = e2AST;
-        } else if (ast instanceof GlobalVar) {
-            ((GlobalVar) ast).E = e2AST;
+
+        if (ast instanceof LocalVar V) {
+            V.E = e2AST;
+        } else if (ast instanceof GlobalVar V) {
+            V.E = e2AST;
         }
-
-        /* if (returnType.isInt() && ast.T.isFloat()) {
-            Operator op = new Operator("i2f", E.pos);
-            if (ast instanceof LocalVar) {
-                ((LocalVar) ast).E = new UnaryExpr(op, E, E.pos);
-            } else if (ast instanceof GlobalVar) {
-                ((GlobalVar) ast).E = new UnaryExpr(op, E, E.pos);
-            }
-        } */
-
         return T;
     }
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
-        if (expectedT.assignable(expr.type) || expr.type.isError() || expectedT.equals(expr.type)) {
+
+        Type t = expr.type;
+        if (expr instanceof ArrayIndexExpr) {
+            t = ((ArrayType) expr.type).t;
+        }
+        if (expectedT.assignable(t) || t.isError() || expectedT.equals(t)) {
             return expr;
         }
 
-        Type tFromAST = expr.type;
+        Type tFromAST = t;
         Type tToAST = expectedT;
         if (parent != null) {
             return new CastExpr(expr, tFromAST, tToAST, expr.pos, parent);
@@ -350,28 +351,22 @@ public class Checker implements Visitor {
 
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {
         ast.SL.visit(this, o);
-
         List S = ast.SL;
-        while (true) {
-           if (S instanceof EmptyStmtList) {
-                break;
-           }
-           StmtList SL = (StmtList) S;
-           if (SL.S instanceof LocalVarStmt) {
-               LocalVar V = ((LocalVarStmt) SL.S).V;
-               if (!V.isUsed) {
-                   String message = "'" + V.I.spelling + "'";
-                   handler.reportMinorError(errors[24] + ": %", message, V.pos);
-               }
-               if (V.isMut && !V.isReassigned) {
-                   String message = "'" + V.I.spelling + "'";
-                   handler.reportMinorError(errors[25] + ": %", message, V.pos);
-               }
-           }
-
-           S = SL.SL;
+        while (!(S instanceof EmptyStmtList)) {
+            StmtList SL = (StmtList) S;
+            if (SL.S instanceof LocalVarStmt) {
+                LocalVar V = ((LocalVarStmt) SL.S).V;
+                if (!V.isUsed) {
+                    String message = "'" + V.I.spelling + "'";
+                    handler.reportMinorError(errors[24] + ": %", message, V.pos);
+                }
+                if (V.isMut && !V.isReassigned) {
+                    String message = "'" + V.I.spelling + "'";
+                    handler.reportMinorError(errors[25] + ": %", message, V.pos);
+                }
+            }
+            S = SL.SL;
         }
-
         ast.containsExit = ast.SL.containsExit;
         return null;
     }
@@ -459,10 +454,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[14], "", ast.pos);
         }
         ast.containsExit = true;
-        if (ast.parent instanceof Stmt) {
-            ((Stmt) ast.parent).containsExit = true;
-        } else if (ast.parent instanceof List) {
-            ((List) ast.parent).containsExit = true;
+        if (ast.parent instanceof Stmt S) {
+            S.containsExit = true;
+        } else if (ast.parent instanceof List S) {
+            S.containsExit = true;
         }
         return null;
     }
@@ -472,10 +467,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[15], "", ast.pos);
         }
         ast.containsExit = true;
-        if (ast.parent instanceof Stmt) {
-            ((Stmt) ast.parent).containsExit = true;
-        } else if (ast.parent instanceof List) {
-            ((List) ast.parent).containsExit = true;
+        if (ast.parent instanceof Stmt S) {
+            S.containsExit = true;
+        } else if (ast.parent instanceof List S) {
+            S.containsExit = true;
         }
         return null;
     }
@@ -502,14 +497,13 @@ public class Checker implements Visitor {
         }
 
         ast.containsExit = true;
-        if (ast.parent instanceof Stmt) {
-            ((Stmt) ast.parent).containsExit = true;
-        } else if (ast.parent instanceof List) {
-            ((List) ast.parent).containsExit = true;
+        if (ast.parent instanceof Stmt S) {
+            S.containsExit = true;
+        } else if (ast.parent instanceof List S) {
+            S.containsExit = true;
         } else {
             System.out.println("WHAT");
         }
-
         return null;
     }
 
@@ -555,7 +549,12 @@ public class Checker implements Visitor {
             handler.reportError(errors[5] + ": %", message, ast.E.pos);
         }
 
-        Expr e2AST = checkCast(existingType, ast.E, null);
+        Expr e2AST;
+        if (ast.opt == DeclOptions.ARRAY_ACC) {
+            e2AST = checkCast(((ArrayType) existingType).t, ast.E, null);
+        } else {
+            e2AST = checkCast(existingType, ast.E, null);
+        }
         ast.E = e2AST;
         return null;
     }
@@ -565,15 +564,20 @@ public class Checker implements Visitor {
     }
 
     public Object visitBinaryExpr(BinaryExpr ast, Object o) {
-
         ast.O.visit(this, ast);
         Type t1 = (Type) ast.E1.visit(this, ast);
         Type t2 = (Type) ast.E2.visit(this, ast);
         boolean v1Numeric = t1.isChar() || t1.isInt() || t1.isFloat() || t1.isEnum() || t1.isError();
         boolean v2Numeric = t2.isChar() || t2.isInt() || t2.isFloat() || t2.isEnum() || t2.isError();
+
+        if (t1.isError() || t2.isError()) {
+            ast.type = Environment.errorType;
+            return ast.type;
+        }
+
         switch (ast.O.spelling) {
             case "||", "&&" -> {
-                if ((!t1.isBoolean() && !t1.isError()) || (!t2.isBoolean() && !t2.isError())) {
+                if (!t1.isBoolean() || !t2.isBoolean()) {
                     handler.reportError(errors[7], "", t1.pos);
                     ast.type = Environment.errorType;
                 } else {
@@ -590,9 +594,6 @@ public class Checker implements Visitor {
                     ast.type = Environment.errorType;
                     break;
                 }
-                if (t1.isError() || t2.isError()) {
-                    break;
-                }
                 ast.type = Environment.booleanType;
             }
             case "<", "<=", ">", ">=" -> {
@@ -601,10 +602,7 @@ public class Checker implements Visitor {
                     ast.type = Environment.errorType;
                     break;
                 }
-                if (t1.isError() || t2.isError()) {
-                    break;
-                }
-                ast.type = Environment.booleanType;
+               ast.type = Environment.booleanType;
             }
             case "+", "-", "/", "*", "%" -> {
                 if (!v1Numeric || !v2Numeric) {
@@ -616,7 +614,6 @@ public class Checker implements Visitor {
             }
         }
         if (ast.type.isBoolean()) {
-
             if (t1.isChar() && t2.isChar()) {
                 ast.O.spelling = "c" + ast.O.spelling;
                 return ast.type;
@@ -663,7 +660,6 @@ public class Checker implements Visitor {
             ast.type = Environment.intType;
             return ast.type;
         }
-
         if (t1.isInt() && t2.isInt()) {
             ast.O.spelling = "i" + ast.O.spelling;
             ast.type = Environment.intType;
@@ -809,7 +805,6 @@ public class Checker implements Visitor {
 
     public Object visitArgList(Args ast, Object o) {
         Type realType = (Type) ast.E.visit(this, null);
-
         List PL = (List) o;
         // Too many params
         if (PL instanceof EmptyParaList) {
@@ -840,16 +835,7 @@ public class Checker implements Visitor {
     public Object visitParaDecl(ParaDecl ast, Object o) {
         Type T = ast.T;
         if (T.isMurky()) {
-            String S = ((MurkyType) T).V;
-            Decl D = idTable.retrieve(S);
-            if (!(D instanceof Enum)) {
-                handler.reportError(errors[43] + ": %", "'" + S + "'", ast.T.pos);
-                T = Environment.errorType;
-                return T;
-            }
-            ast.T = new EnumType((Enum) D, D.pos);
-            T = ast.T;
-            ast.T.parent = ast;
+            unMurk(ast);
         }
         declareVariable(ast.I, ast);
         if (ast.T.isVoid()) {
@@ -1047,6 +1033,7 @@ public class Checker implements Visitor {
             aT.length = iterator;
         }
 
+        ast.type = aT;
         return aT;
     }
 
@@ -1174,10 +1161,12 @@ public class Checker implements Visitor {
 
         // Check function exists
         String TL;
+        boolean runArgsAgain = false;
         if (ast.TypeDef == null) {
             TL = genTypes(ast.AL, o);
             ast.setTypeDef(TL);
         } else {
+            runArgsAgain = true;
             TL = ast.TypeDef;
         }
 
@@ -1199,7 +1188,9 @@ public class Checker implements Visitor {
             Decl x = idTable.retrieve(ast.I.spelling + "." + TL);
             ((Function) x).setUsed();
         }
-        ast.AL.visit(this, function.PL);
+        if (runArgsAgain) {
+            ast.AL.visit(this, function.PL);
+        }
         ast.type = type.T;
         return type.T;
     }
@@ -1248,5 +1239,4 @@ public class Checker implements Visitor {
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         return new PointerType(ast.pos, new CharType(ast.pos));
     }
-
 }

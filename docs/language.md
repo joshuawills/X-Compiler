@@ -15,25 +15,15 @@ arguments `hello.x -o hello`. The file `hello` will be generated as a binary exe
 ## General Structure
 
 An X program is composed of a series of global variable declarations and function declarations.
-Variables are declared in a C-like manner, with the addition of a special optional `mut`. See the 
-below mutability section for an explanation of this (it's the same semantics as Rust).
+Variables are declared in a Rust-like manner, including the mutability specifier `mut`.
 
 *Example Variable Declarations*
 
 ```Rust
-mut int x = 1; // can be modified
-bool isEven = x % 2 == 0; // cannot be modified, checked at compile time
-str myName = "What is your name? ";
+let mut x: int = 1; // can be modified
+let isEven: bool = x % 2 == 0; // cannot be modified, checked at compile time
+let myName: str = "What is your name? ";
 ```
-
-Variable declarations may also be comma-separated. All contiguous declarations inherit the mutability of the base
-variable.
-
-```Rust
-mut int x = 1, y = 2; // both x and y will be mutable variables
-mut bool z = false, a = z && true; // this is appropriate, as variables are evaluated left to right
-```
-
 
 Below is an example of a function declaration. The pattern is quite clear, and follows standard C/Rust
 like semantics. Note that function parameters are also delimited as being mutable or not.
@@ -41,7 +31,7 @@ like semantics. Note that function parameters are also delimited as being mutabl
 *Example Function Declaration*
 
 ```Rust
-fn foo(mut int x, bool y) -> void {
+fn foo(mut x: int, y: bool) -> void {
     x += 1;
     if x < 10 && y {
         outStr("Condition true");
@@ -54,11 +44,11 @@ X supports function overloading. Multiple functions can be declared with the sam
 have differing input types. An example of this is shown below.
 
 ```Rust
-fn add(int x) -> int {
+fn add(x: int) -> int {
     return add(0, x);
 }
 
-fn add(int x, int y) -> int {
+fn add(x: int, y: int) -> int {
     return x + y;
 }
 
@@ -89,7 +79,7 @@ type, you can't do certain expressions that you can in C, such as
 ```C
 // This is C code
 
-int x = 1;
+let x: int = 1;
 // Invalid in X
 if (x) {
     printf("x\n");
@@ -116,21 +106,21 @@ if true {
 }
 
 // Permissible
-mut int i = 0;
+let mut i: int = 0;
 while i < 10 {
     outInt(i);
     i += 1;
 }
 
 // Permissible
-mut int i = 0;
+let mut i: int = 0;
 do {
     outInt(i);
     i += 1;
 } while (i < 10);
 
 // Permissible
-mut int i;
+let mut i: int;
 for i = 0; i < 10; i += 1 {
     outInt(i);
 }
@@ -198,14 +188,15 @@ Simple pointers are also currently supported. They are declared in a C like way,
 Statically sized arrays are supported for all types. They are always passed by reference in function calls.
 
 ```Rust
-fn swap(mut int *a, mut int *b) -> void {
-    int temp = *a;
+fn swap(mut a: int*, mut b: int *) -> void {
+    let temp: int = *a;
     *a = *b;
     *b = temp;
 }
 
 fn main() -> int {
-    mut int a = 2, b = 3;
+    let mut a: int = 2;
+    let mut b: int = 3;
     swap(&a, &b);
     outInt(a);
     outInt(b);

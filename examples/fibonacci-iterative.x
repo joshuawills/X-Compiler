@@ -1,11 +1,12 @@
 fn main() -> int {
-	mut int x;
-	inInt("Enter number: ", x);
+    let x: int = 9;
 	outInt(fib(x));
 }
 
-fn fib(int x) -> int {
-	mut int f1 = 0, f2 = 1, fi;
+fn fib(x: int) -> int {
+    let mut f1: int = 0;
+    let mut f2: int = 1;
+    let mut fi: int;
 	if x == 0 || x == 1 { return x; }
 	loop i in 2 x {
 		fi = f1 + f2;

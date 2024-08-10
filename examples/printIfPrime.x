@@ -1,5 +1,5 @@
 fn main() -> int {
-    mut int x;
+    let mut x;
     loop {
         inInt("Enter a number: ", x);
         if is_prime(x) {
@@ -11,7 +11,7 @@ fn main() -> int {
     return 0;
 }
 
-fn is_prime(int x) -> bool {
+fn is_prime(x: int) -> bool {
     if x == 0 || x == 1 {
         return false;
     }

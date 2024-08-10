@@ -395,7 +395,7 @@ public class Emitter implements Visitor {
                     emitN("\t%" + newNum + " = " +  "xor i1 1, " + " %" + numOne);
                 }
             }
-            case "i+", "f+", "c+", "i*", "f*", "c*", "i%", "c%", "i/", "f/", "c/", "i==", "f==", "b==", "c==", "i!=", "f!=", "c!=", "b!=",
+            case "i+", "f+", "c+", "i*", "f*", "c*", "i%", "ii%", "c%", "i/", "f/", "c/", "i==", "f==", "b==", "c==", "i!=", "f!=", "c!=", "b!=",
                 "i<", "f<", "c<", "i<=", "f<=", "c<=", "i>", "f>", "c>", "i>=", "f>=", "c>=", "b&&", "b||" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
@@ -419,7 +419,7 @@ public class Emitter implements Visitor {
             case "i*" -> "mul i32";
             case "c*" -> "mul i8";
             case "f*" -> "fmul float";
-            case "i%" -> "srem i32";
+            case "i%", "ii%" -> "srem i32";
             case "c%" -> "srem i8";
             case "i/" -> "sdiv i32";
             case "c/" -> "sdiv i8";

@@ -1,11 +1,12 @@
-fn swap(mut int *a, mut int *b) -> void {
-    int temp = *a;
+fn swap(mut a: int*, mut b: int*) -> void {
+    let temp: int = *a;
     *a = *b;
     *b = temp;
 }
 
 fn main() -> int {
-    mut int a = 2, b = 3;
+    let mut a: int = 2;
+    let mut b: int = 3;
     swap(&a, &b);
     outInt(a);
     outInt(b);

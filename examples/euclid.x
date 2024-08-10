@@ -1,10 +1,7 @@
 fn main() -> int {
 
-    mut int x;
-    mut int y;
-
-    inInt("Enter a positive number here: ", x);
-    inInt("Enter a positive number here: ", y);
+    let x: int = 6;
+    let y: int = 2;
 
     if x <= 0 || y <= 0 {
         return 1;
@@ -14,7 +11,7 @@ fn main() -> int {
     return 0;
 }
 
-fn euclid(int x, int y) -> int {
+fn euclid(x: int, y: int) -> int {
     if x == 0 {
         return y;
     }

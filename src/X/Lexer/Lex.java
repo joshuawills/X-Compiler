@@ -109,6 +109,10 @@ public class Lex {
                 }
                 yield TokenType.FLOAT_LIT;
             }
+            case ':' -> {
+                acceptWithSpelling();
+                yield TokenType.COLON;
+            }
             case '(' -> {
                 acceptWithSpelling();
                 yield TokenType.OPEN_PAREN;
@@ -310,6 +314,7 @@ public class Lex {
                 case "return" -> TokenType.RETURN;
                 case "fn" -> TokenType.FN;
                 case "enum" -> TokenType.ENUM;
+                case "let" -> TokenType.LET;
                 case "char", "int", "float", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
                 case "else" -> TokenType.ELSE;

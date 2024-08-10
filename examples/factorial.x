@@ -1,10 +1,9 @@
 fn main() -> int {
-    mut int x;
-    inInt("Enter a number: ", x);
+    let x: int = 5;
     outInt(factorial(x));
 }
 
-fn factorial(int x) -> int {
+fn factorial(x: int) -> int {
     if x <= 1 {
         return 1;
     }
