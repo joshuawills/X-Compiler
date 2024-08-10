@@ -2,11 +2,11 @@
 
 $$
 \begin{align}
-\textit{program} &\to (\textit{function }|\textit{ global-var})^*  \\ \\
+\textit{program} &\to (\textit{function }|\textit{ global-var}|\textit{ enum})^*  \\ \\
 \textit{global-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\textit{[]})?  (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
 \textit{local-var} &\to \textit{decl } (\text{ "=" }\textit{ expr})? (\textit{","} \textit{ ident} (\textit{[]})? (\text{ "=" } \textit{ expr}?))^* \text{ ";"}\\
-\textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"}
-\textit{type} \textit{ compound-stmt}\\ \\
+\textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \\
+\textit{enum} &\to \textbf{enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\ \\
 
 \text{compound-stmt} &\to \text{"\\\{" } (\textit{stmt } | \textit{ local-var})^* \text{ "\\\}"} \\
 \text{stmt} &\to
@@ -59,6 +59,7 @@ stmt})? \\
 \textit{func-call} \\
 \textit{array-init-expr} \\
 \textit{array-index} \\
+\textit{ident . ident} \\
 \end{cases} \\
 
 \\
@@ -71,7 +72,7 @@ stmt})? \\
 \textit{decl} &\to \textbf{mut}? \textit{ type ident}  (\textit{[]})?\\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
-\textit{type} &\to \textbf{char | int | str | void | bool | float | \textit{type}* } \\
+\textit{type} &\to \textbf{ident | char | int | str | void | bool | float | \textit{type}* } \\
 
 \textit{INTLITERAL} &\to [0-9]+ \\
 \textit{FLOATLITERAL} &\to [0-9]^+\textit{"."}[0-9]? \\

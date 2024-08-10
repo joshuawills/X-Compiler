@@ -309,6 +309,7 @@ public class Lex {
                 case "in" -> TokenType.IN;
                 case "return" -> TokenType.RETURN;
                 case "fn" -> TokenType.FN;
+                case "enum" -> TokenType.ENUM;
                 case "char", "int", "float", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
                 case "else" -> TokenType.ELSE;
@@ -405,4 +406,3 @@ public class Lex {
     }
 
 }
-

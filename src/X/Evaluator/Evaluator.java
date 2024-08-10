@@ -1,6 +1,7 @@
 package X.Evaluator;
 
 import X.Nodes.*;
+import X.Nodes.Enum;
 
 public class Evaluator implements Visitor {
 
@@ -352,6 +353,18 @@ public class Evaluator implements Visitor {
     }
 
     public Object visitStringExpr(StringExpr ast, Object o) {
+        return null;
+    }
+
+    public Object visitEnum(Enum ast, Object o) {
+        return null;
+    }
+
+    public Object visitMurkyType(MurkyType ast, Object o) {
+       return null;
+    }
+
+    public Object visitEnumType(EnumType ast, Object o) {
         return null;
     }
 

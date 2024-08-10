@@ -20,7 +20,6 @@ public class Function extends Decl {
 
             head = ((ParaList) head).PL;
         }
-
         TypeDef  = String.join("_", options);
     }
 

@@ -1,9 +1,11 @@
 package X.TreePrinter;
 
 import X.Nodes.*;
+import X.Nodes.Enum;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.Arrays;
 
 public class Printer implements Visitor {
 
@@ -496,6 +498,22 @@ public class Printer implements Visitor {
         ++indent;
         ast.SL.visit(this, o);
         --indent;
+        return null;
+    }
+
+    public Object visitEnum(Enum ast, Object o) {
+        print(indentString() + "Enum" + ast.I.spelling + Arrays.toString(ast.IDs));
+        return null;
+    }
+
+    @Override
+    public Object visitMurkyType(MurkyType ast, Object o) {
+        print(indentString() + "MurkyType");
+        return null;
+    }
+
+    public Object visitEnumType(EnumType ast, Object o) {
+        print(indentString() + "EnumType");
         return null;
     }
 

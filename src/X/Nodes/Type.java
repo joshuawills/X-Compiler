@@ -19,7 +19,7 @@ public abstract class Type extends AST {
     }
 
     public boolean isInt() {
-        return (this instanceof IntType || this instanceof CharType);
+        return (this instanceof IntType || this instanceof CharType || this instanceof EnumType);
     }
 
     public boolean isFloat() {
@@ -44,5 +44,13 @@ public abstract class Type extends AST {
 
     public boolean isChar() {
         return this instanceof CharType;
+    }
+
+    public boolean isMurky() {
+        return this instanceof MurkyType;
+    }
+
+    public boolean isEnum() {
+        return this instanceof EnumType;
     }
 }

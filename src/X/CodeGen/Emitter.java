@@ -3,6 +3,7 @@ package X.CodeGen;
 import X.Evaluator.Evaluator;
 import X.Lexer.Position;
 import X.Nodes.*;
+import X.Nodes.Enum;
 
 public class Emitter implements Visitor {
 
@@ -684,7 +685,7 @@ public class Emitter implements Visitor {
             int newIndex = f.getNewIndex();
             emit("\t%" + newIndex + " = ");
             Type T = ((ParaDecl) d).T;
-            if (T.isInt() || T.isBoolean()) {
+            if (T.isInt() || T.isBoolean() || T.isChar() || T.isEnum()) {
                 emit("add ");
                 T.visit(this, o);
                 emit(" 0, ");
@@ -1149,6 +1150,19 @@ public class Emitter implements Visitor {
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitEnum(Enum ast, Object o) {
+        return null;
+    }
+
+    public Object visitMurkyType(MurkyType ast, Object o) {
+        return null;
+    }
+
+    public Object visitEnumType(EnumType ast, Object o) {
+        emit(LLVM.INT_TYPE);
         return null;
     }
 

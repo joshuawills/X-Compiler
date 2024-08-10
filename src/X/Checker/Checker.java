@@ -4,6 +4,7 @@ import X.Environment;
 import X.ErrorHandler;
 import X.Lexer.Position;
 import X.Nodes.*;
+import X.Nodes.Enum;
 
 import java.util.ArrayList;
 
@@ -52,6 +53,8 @@ public class Checker implements Visitor {
         "*39: attempted reassignment of array",
         "*40: array index is not an integer",
         "*41: char expr greater than one character",
+        "*42: enum declared but never used",
+        "*43: unknown type",
     };
 
     private final SymbolTable idTable;
@@ -75,12 +78,59 @@ public class Checker implements Visitor {
 
     public void check(AST ast) {
 
-        // Load in function names and global vars
+        // Load  in all unique types
         DeclList L = (DeclList) ((Program) ast).PL;
+        while (true) {
+            if (L.D instanceof Enum E) {
+                idTable.insert(E.I.spelling, E.isMut, E);
+            }
+            if (L.DL instanceof EmptyDeclList) {
+                break;
+            }
+            L = (DeclList) L.DL;
+        }
+
+        // Load in function names and global vars
+        L = (DeclList) ((Program) ast).PL;
         while (true) {
             if (L.D instanceof GlobalVar V) {
                 visitVarDecl(V, V.T, V.I, V.E);
             } else if (L.D instanceof Function F) {
+                List P = F.PL;
+
+                // Recalculating params for abstract types
+                if (!(P instanceof EmptyParaList)) {
+                    while (true) {
+                        ParaDecl PE = ((ParaList) P).P;
+                        Type T = PE.T;
+                        if (T.isMurky()) {
+                            String S = ((MurkyType) T).V;
+                            Decl D = idTable.retrieve(S);
+                            if (!(D instanceof Enum)) {
+                                handler.reportError(errors[43] + ": %", "'" + S + "'", T.pos);
+                                T = Environment.errorType;
+                            }
+                            PE.T = new EnumType((Enum) D, D.pos);
+                            PE.T.parent = ast;
+                        }
+                        if (((ParaList) P).PL instanceof EmptyParaList) {
+                            break;
+                        }
+                        P = ((ParaList) P).PL;
+                    }
+                }
+
+                if (F.T.isMurky()) {
+                    String S = ((MurkyType) F.T).V;
+                    Decl D = idTable.retrieve(S);
+                    if (!(D instanceof Enum)) {
+                        handler.reportError(errors[43] + ": %", "'" + S + "'", F.T.pos);
+                        F.T = Environment.errorType;
+                    }
+                    F.T = new EnumType((Enum) D, D.pos);
+                    F.T.parent = ast;
+                }
+
                 Decl e = idTable.retrieve(F.I.spelling);
                 if (e != null) {
                     String tOne = F.TypeDef;
@@ -91,6 +141,8 @@ public class Checker implements Visitor {
                         handler.reportError(errors[2] + ": %", message, F.I.pos);
                     }
                 }
+
+                F.setTypeDef();
                 stdFunction(F);
             }
             if (L.DL instanceof EmptyDeclList) {
@@ -98,8 +150,11 @@ public class Checker implements Visitor {
             }
             L = (DeclList) L.DL;
         }
+
+        // Actually visiting everything
         ast.visit(this, null);
 
+        // Checking use of variables/reassignment
         L = (DeclList) ((Program) ast).PL;
         while (true) {
             if (L.D instanceof GlobalVar V) {
@@ -115,6 +170,11 @@ public class Checker implements Visitor {
                 if (!F.isUsed && !F.I.spelling.equals("main")) {
                     String message = "'" + F.I.spelling + "'";
                     handler.reportMinorError(errors[26] + ": %", message, F.pos);
+                }
+            } else if (L.D instanceof Enum E) {
+                if (!E.isUsed) {
+                    String message = "'" + E.I.spelling + "'";
+                    handler.reportMinorError(errors[42] + ": %", message, E.pos);
                 }
             }
             if (L.DL instanceof EmptyDeclList) {
@@ -209,6 +269,19 @@ public class Checker implements Visitor {
     }
 
     private Object visitVarDecl(Decl ast, Type T, Ident I, Expr E) {
+
+        if (T.isMurky()) {
+            String S = ((MurkyType) T).V;
+            Decl D = idTable.retrieve(S);
+            if (!(D instanceof Enum)) {
+                handler.reportError(errors[43] + ": %", "'" + S + "'", ast.T.pos);
+                T = Environment.errorType;
+                return T;
+            }
+            ast.T = new EnumType((Enum) D, D.pos);
+            ast.T.parent = ast;
+            T = ast.T;
+        }
         declareVariable(ast.I, ast);
         if (T.isVoid()) {
             handler.reportError(errors[3] + ": %", ast.I.spelling, ast.T.pos);
@@ -262,7 +335,7 @@ public class Checker implements Visitor {
     }
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
-        if (!expectedT.assignable(expr.type) || expr.type.isError() || expectedT.equals(expr.type)) {
+        if (expectedT.assignable(expr.type) || expr.type.isError() || expectedT.equals(expr.type)) {
             return expr;
         }
 
@@ -496,8 +569,8 @@ public class Checker implements Visitor {
         ast.O.visit(this, ast);
         Type t1 = (Type) ast.E1.visit(this, ast);
         Type t2 = (Type) ast.E2.visit(this, ast);
-        boolean v1Numeric = t1.isChar() || t1.isInt() || t1.isFloat() || t1.isError();
-        boolean v2Numeric = t2.isChar() || t2.isInt() || t2.isFloat() || t2.isError();
+        boolean v1Numeric = t1.isChar() || t1.isInt() || t1.isFloat() || t1.isEnum() || t1.isError();
+        boolean v2Numeric = t2.isChar() || t2.isInt() || t2.isFloat() || t2.isEnum() || t2.isError();
         switch (ast.O.spelling) {
             case "||", "&&" -> {
                 if ((!t1.isBoolean() && !t1.isError()) || (!t2.isBoolean() && !t2.isError())) {
@@ -543,6 +616,20 @@ public class Checker implements Visitor {
             }
         }
         if (ast.type.isBoolean()) {
+
+            if (t1.isChar() && t2.isChar()) {
+                ast.O.spelling = "c" + ast.O.spelling;
+                return ast.type;
+            } else if (t1.isChar() && t2.isInt()) {
+                ast.O.spelling = "i" + ast.O.spelling;
+                ast.E1 = new CastExpr(ast.E1, t1, t2, ast.E1.pos, ast);
+                return ast.type;
+            } else if (t1.isInt() && t2.isChar()) {
+                ast.O.spelling = "i" + ast.O.spelling;
+                ast.E2= new CastExpr(ast.E2, t2, t1, ast.E2.pos, ast);
+                return ast.type;
+            }
+
             if (t1.isInt() && t2.isInt()) {
                 ast.O.spelling = "i" + ast.O.spelling;
             } else if (t1.isInt() && t2.isFloat()) {
@@ -576,7 +663,6 @@ public class Checker implements Visitor {
             ast.type = Environment.intType;
             return ast.type;
         }
-
 
         if (t1.isInt() && t2.isInt()) {
             ast.O.spelling = "i" + ast.O.spelling;
@@ -752,11 +838,23 @@ public class Checker implements Visitor {
     }
 
     public Object visitParaDecl(ParaDecl ast, Object o) {
+        Type T = ast.T;
+        if (T.isMurky()) {
+            String S = ((MurkyType) T).V;
+            Decl D = idTable.retrieve(S);
+            if (!(D instanceof Enum)) {
+                handler.reportError(errors[43] + ": %", "'" + S + "'", ast.T.pos);
+                T = Environment.errorType;
+                return T;
+            }
+            ast.T = new EnumType((Enum) D, D.pos);
+            T = ast.T;
+            ast.T.parent = ast;
+        }
         declareVariable(ast.I, ast);
         if (ast.T.isVoid()) {
             handler.reportError(errors[3] + ": %", ast.I.spelling, ast.I.pos);
         }
-
         if (ast.T.isArray()) {
             Type iT = ((ArrayType) ast.T).t;
             if (iT instanceof VoidType) {
@@ -1133,6 +1231,18 @@ public class Checker implements Visitor {
     public Object visitStringExpr(StringExpr ast, Object o) {
         ast.type = new PointerType(ast.pos, new CharType(ast.pos));
         return ast.type;
+    }
+
+    public Object visitEnum(Enum ast, Object o) {
+        return null;
+    }
+
+    public Object visitMurkyType(MurkyType ast, Object o) {
+        return null;
+    }
+
+    public Object visitEnumType(EnumType ast, Object o) {
+        return null;
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object o) {

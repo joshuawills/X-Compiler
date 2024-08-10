@@ -5,6 +5,7 @@ import X.Lexer.Position;
 import X.Lexer.Token;
 import X.Lexer.TokenType;
 import X.Nodes.*;
+import X.Nodes.Enum;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -112,9 +113,26 @@ public class Parser {
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(function, dlAST2, pos);
+        } else if (tryConsume(TokenType.ENUM)) {
+            Ident ident = parseIdent();
+            match(TokenType.ARROW);
+            match(TokenType.OPEN_CURLY);
+            ArrayList<String> args = new ArrayList<>();
+            assert(currentToken.kind == TokenType.IDENT);
+            args.add(currentToken.lexeme);
+            accept();
+            while (!tryConsume(TokenType.CLOSE_CURLY)) {
+                match(TokenType.COMMA);
+                assert(currentToken.kind == TokenType.IDENT);
+                args.add(currentToken.lexeme);
+                accept();
+            }
+            Enum E = new Enum(args.toArray(new String[0]), ident, pos);
+            List dlAST2 = parseDeclList();
+            finish(pos);
+            dlAST = new DeclList(E, dlAST2, pos);
         } else {
             // Global var
-
             boolean isMut;
             Type tAST;
             if (isComma) {
@@ -545,11 +563,6 @@ public class Parser {
     }
 
     private Type parseType() throws SyntaxError {
-
-        if (currentToken.kind != TokenType.TYPE) {
-            syntacticError("Expected a type, received \"%\"", currentToken.kind.toString().strip());
-            return null;
-        }
         Position pos = currentToken.pos;
         Type t = switch (currentToken.lexeme) {
             case "int" -> {
@@ -572,11 +585,18 @@ public class Parser {
                 accept();
                 yield new FloatType(pos);
             }
+            // Murky type -> TBD during type evaluation
             default -> {
-                System.out.println("Should be unreachable");
-                yield null;
+                if (currentToken.kind != TokenType.IDENT) {
+                    syntacticError("Expected a type, received \"%\"", currentToken.kind.toString().strip());
+                    yield null;
+                }
+                String V = currentToken.lexeme;
+                accept();
+                yield new MurkyType(V, pos);
             }
         };
+        // Nested pointers ?? TODO
         if (tryConsume(TokenType.STAR)) {
             finish(pos);
             t = new PointerType(pos, t);

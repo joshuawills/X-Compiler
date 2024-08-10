@@ -118,4 +118,10 @@ public interface Visitor {
     Object visitStringLiteral(StringLiteral ast, Object o);
 
     Object visitStringExpr(StringExpr ast, Object o);
+
+    Object visitEnum(Enum ast, Object o);
+
+    Object visitMurkyType(MurkyType ast, Object o);
+
+    Object visitEnumType(EnumType ast, Object o);
 }

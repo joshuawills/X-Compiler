@@ -2,7 +2,10 @@ package X.TreeDrawer;
 
 import X.Lexer.Position;
 import X.Nodes.*;
+import X.Nodes.Enum;
+
 import java.awt.*;
+import java.util.Arrays;
 
 public class LayoutVisitor implements Visitor {
     private final int BORDER = 5;
@@ -475,6 +478,18 @@ public class LayoutVisitor implements Visitor {
 
     public Object visitStringExpr(StringExpr ast, Object obj) {
         return layoutUnary("StrExp", ast.SL);
+    }
+
+    public Object visitEnum(Enum ast, Object o) {
+        return layoutUnary("Enum" + Arrays.toString(ast.IDs), ast.I);
+    }
+
+    public Object visitMurkyType(MurkyType ast, Object o) {
+        return layoutNullary("MurkyType");
+    }
+
+    public Object visitEnumType(EnumType ast, Object o) {
+        return layoutUnary("EnumType", ast.E.I);
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object obj) {
