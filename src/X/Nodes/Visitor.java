@@ -124,4 +124,6 @@ public interface Visitor {
     Object visitMurkyType(MurkyType ast, Object o);
 
     Object visitEnumType(EnumType ast, Object o);
+
+    Object visitEnumExpr(EnumExpr ast, Object o);
 }

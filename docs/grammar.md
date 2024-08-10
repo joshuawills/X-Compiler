@@ -59,12 +59,13 @@ stmt})? \\
 \textit{func-call} \\
 \textit{array-init-expr} \\
 \textit{array-index} \\
-\textit{ident . ident} \\
+\textit{enum-expr} \\
 \end{cases} \\
 
 \\
 
 \textit{array-index} &\to \textit{ident } "[" \textit{expr} "]" \\
+\textit{enum-expr} &\to \textit{ident } \text{ "." }\textit{ident} \\
 \textit{func-call} &\to \textit{ident } "(" \textit{args} ")" \\
 \textit{array-init-expr} &\to \textit{"["} (\textit{expr } (\text{","} \textit{ expr})^*)? \textit{"]"} \\
 \textit{args} &\to \textit{expr } (\text{","} \textit{ expr})^* \text{ | } \epsilon\\

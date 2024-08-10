@@ -517,6 +517,11 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitEnumExpr(EnumExpr ast, Object o) {
+        print(indentString() + ast.Type.spelling + "." + ast.Entry.spelling);
+        return null;
+    }
+
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         print(indentString() + ast.spelling);
         return null;

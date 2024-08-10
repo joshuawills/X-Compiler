@@ -492,6 +492,10 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("EnumType", ast.E.I);
     }
 
+    public Object visitEnumExpr(EnumExpr ast, Object o) {
+        return layoutBinary("EnumExpr", ast.Type, ast.Entry);
+    }
+
     public Object visitStringLiteral(StringLiteral ast, Object obj) {
         return layoutNullary("\"" + ast.spelling + "\"");
     }

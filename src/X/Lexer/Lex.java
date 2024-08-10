@@ -102,7 +102,7 @@ public class Lex {
             case '.' -> {
                 acceptWithSpelling();
                 if (!isDigit()) {
-                    yield TokenType.ERROR;
+                    yield TokenType.PERIOD;
                 }
                 while (isDigit()) {
                     acceptWithSpelling();

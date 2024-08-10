@@ -693,6 +693,10 @@ public class Parser {
                     match(TokenType.RIGHT_SQUARE);
                     finish(pos);
                     yield new ArrayIndexExpr(iAST, eAST, pos);
+                } else if (tryConsume(TokenType.PERIOD)) {
+                    Ident i2AST = parseIdent();
+                    finish(pos);
+                    yield new EnumExpr(iAST, i2AST, pos);
                 } else {
                     finish(pos);
                     Var simVAST = new SimpleVar(iAST, pos);

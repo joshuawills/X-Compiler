@@ -368,6 +368,11 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitEnumExpr(EnumExpr ast, Object o) {
+        System.out.println("EVALUATOR: ENUMEXPR");
+        return null;
+    }
+
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         return null;
     }

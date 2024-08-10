@@ -204,6 +204,28 @@ fn main() -> int {
 }
 ```
 
+### Enums
+
+Enums are a top level declarator in the same way as global variables and functions. They are declared as seen below.
+
+```Rust
+enum DaysOfWeek -> {
+    MON, TUE, WED, THU, FRI, SAT, SUN
+}
+```
+
+You can use them interchangeably with integers and chars, as they are just `i32`'s under the hood. Here is an example below
+
+```Rust
+fn main() -> int {
+    let mut day: DaysOfWeek = DaysOfWeek.MON; 
+    day += 1; // setting it to TUE
+    if day == DaysOfWeek.TUE {
+        outInt(2);
+    }
+}
+```
+
 ## Operators
 
 X supports all standard mathematical operators a language like C has. For a formal understanding of operator

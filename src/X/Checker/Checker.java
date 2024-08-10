@@ -54,6 +54,8 @@ public class Checker implements Visitor {
         "*41: char expr greater than one character",
         "*42: enum declared but never used",
         "*43: unknown type",
+        "*44: unknown enum key",
+        "*45: duplicate keys in enum"
     };
 
     private final SymbolTable idTable;
@@ -273,6 +275,8 @@ public class Checker implements Visitor {
         if (!(D instanceof Enum)) {
             handler.reportError(errors[43] + ": %", "'" + S + "'", ast.T.pos);
             ast.T = Environment.errorType;
+        } else {
+            ((Enum) D).isUsed = true;
         }
         ast.T = new EnumType((Enum) D, D.pos);
         ast.T.parent = ast;
@@ -282,6 +286,7 @@ public class Checker implements Visitor {
         if (T.isMurky()) {
             unMurk(ast);
         }
+        T = ast.T;
 
         declareVariable(ast.I, ast);
 
@@ -1234,6 +1239,34 @@ public class Checker implements Visitor {
 
     public Object visitEnumType(EnumType ast, Object o) {
         return null;
+    }
+
+    public Object visitEnumExpr(EnumExpr ast, Object o) {
+
+        Decl d = idTable.retrieve(ast.Type.spelling);
+        if (!(d instanceof Enum)) {
+            handler.reportError(errors[43] + ": %", ast.Type.spelling, ast.pos);
+            return Environment.errorType;
+        }
+        Enum E = (Enum) d;
+        E.isUsed = true;
+        if (!E.containsKey(ast.Entry.spelling)) {
+            String message = "'" + ast.Entry.spelling + "' in enum '" + ast.Type.spelling + "'";
+            handler.reportError(errors[44] + ": %", message, ast.pos);
+            return Environment.errorType;
+        }
+
+        ArrayList<String> duplicates = E.findDuplicates();
+        if (!duplicates.isEmpty()) {
+            String message = "found keys '" + String.join(", ", duplicates)
+                + "' in enum '" + ast.Type.spelling + "'";
+            handler.reportError(errors[45] + ": %", message, ast.pos);
+            return Environment.errorType;
+        }
+
+        EnumType ET = new EnumType(E, E.pos);
+        ast.type = ET;
+        return ET;
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object o) {

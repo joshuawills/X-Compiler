@@ -18,7 +18,7 @@ public class EnumType extends Type {
     }
 
     public String toString() {
-        return "enum" + E.I;
+        return "enum." + E.I.spelling;
     }
 
     public String getMini() {

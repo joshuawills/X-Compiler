@@ -1166,6 +1166,16 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitEnumExpr(EnumExpr ast, Object o) {
+        Frame f = (Frame) o;
+        EnumType T = (EnumType) ast.type;
+        int value = T.E.getValue(ast.Entry.spelling);
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = add i32 0, " + value);
+        ast.tempIndex = num;
+        return null;
+    }
+
     public Object visitStringExpr(StringExpr ast, Object o) {
         int l = ast.SL.spelling.length() + 1;
         emitNConst("@..str" + strCount + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");

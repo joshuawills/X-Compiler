@@ -60,5 +60,6 @@ public enum TokenType {
     IN,
     ENUM,
     LET,
-    COLON
+    COLON,
+    PERIOD
 }
