@@ -1,6 +1,7 @@
 package X.Checker;
 
 import X.Nodes.Decl;
+import X.Nodes.Function;
 
 public class SymbolTable {
 
@@ -22,6 +23,19 @@ public class SymbolTable {
 
     public void insert(String id, boolean isMut, Decl attr) {
         this.latest = new IdEntry(id, isMut, attr, this.level, this.latest);
+    }
+
+    public void print() {
+        System.out.println("=====");
+        IdEntry e = this.latest;
+        while (e != null) {
+            if (e.attr instanceof Function) {
+                Function F = (Function) e.attr;
+                System.out.println(e.id + ": " + F.I.spelling + F.TypeDef);
+            }
+            e = e.previousEntry;
+        }
+        System.out.println("=====");
     }
 
     public Decl retrieve(String id) {

@@ -326,7 +326,6 @@ public class Checker implements Visitor {
 
         // May need to cast
         Expr e2AST = checkCast(ast.T, E, null);
-
         if (ast instanceof LocalVar V) {
             V.E = e2AST;
         } else if (ast instanceof GlobalVar V) {
@@ -336,6 +335,14 @@ public class Checker implements Visitor {
     }
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
+
+        // TODO: fix this, so lazy
+        if (expectedT instanceof CharType && expr.type instanceof IntType) {
+            CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
+            E.type = expectedT;
+            return E;
+        }
+        // End TODO
 
         Type t = expr.type;
         if (expr instanceof ArrayIndexExpr) {
@@ -347,11 +354,14 @@ public class Checker implements Visitor {
 
         Type tFromAST = t;
         Type tToAST = expectedT;
+        CastExpr E;
         if (parent != null) {
-            return new CastExpr(expr, tFromAST, tToAST, expr.pos, parent);
+            E = new CastExpr(expr, tFromAST, tToAST, expr.pos, parent);
         } else {
-            return new CastExpr(expr, tFromAST, tToAST, expr.pos);
+            E = new CastExpr(expr, tFromAST, tToAST, expr.pos);
         }
+        E.type = expectedT;
+        return E;
     }
 
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {

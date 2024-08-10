@@ -5,7 +5,7 @@ public class IdEntry {
 
     protected String id;
     protected boolean isMut;
-    protected Decl attr;
+    public Decl attr;
     protected int level;
     protected IdEntry previousEntry;
 

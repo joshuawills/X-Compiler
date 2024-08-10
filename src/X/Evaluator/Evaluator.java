@@ -1,5 +1,7 @@
 package X.Evaluator;
 
+import X.CodeGen.Emitter;
+import X.CodeGen.LLVM;
 import X.Nodes.*;
 import X.Nodes.Enum;
 
@@ -8,6 +10,10 @@ public class Evaluator implements Visitor {
 
     public static Object evalExpression(Expr ast) {
         return ast.visit(new Evaluator(), null);
+    }
+
+    public static Object evalExpression(Expr ast, Object e) {
+        return ast.visit(new Evaluator(), e);
     }
 
     public Object visitProgram(Program ast, Object o) {
@@ -322,8 +328,49 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public String TypeMapping(Type t) {
+        if (t instanceof IntType) {
+            return LLVM.INT_TYPE;
+        } else if (t instanceof BooleanType) {
+            return LLVM.BOOL_TYPE;
+        } else if (t instanceof CharType) {
+            return LLVM.CHAR_TYPE;
+        } else if (t instanceof EnumType) {
+            return LLVM.INT_TYPE;
+        }
+        return "OHOH";
+    }
+
+    // Assume o is the type
     public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
-        return null;
+        StringBuilder value = new StringBuilder("[");
+        int length = ((ArrayType) ast.type).length;
+        int i = 0;
+        Type T = (Type) o;
+        List A = ast.AL;
+        Expr ex = ((Args) A).E;
+        boolean reachedEnd= false;
+        while (i < length) {
+            if (A instanceof Args) {
+                ex = ((Args) A).E;
+            }
+            value.append(TypeMapping(T));
+            value.append(" ");
+            value.append(ex.visit(this, o));
+            if (A instanceof Args) {
+                A = ((Args) A).EL;
+            }
+
+            if (i != length - 1) {
+                value.append(", ");
+            } else {
+                reachedEnd = true;
+            }
+            i++;
+        }
+
+        value.append("]");
+        return value.toString();
     }
 
     public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {

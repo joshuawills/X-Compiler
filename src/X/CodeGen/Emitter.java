@@ -15,6 +15,7 @@ public class Emitter implements Visitor {
     private String arrName = "";
     private final Position dummyPos = new Position();
 
+
     public Emitter(String outputName) {
         this.outputName = outputName;
     }
@@ -92,7 +93,13 @@ public class Emitter implements Visitor {
 
     // TODO: make this handle empty expressions (should be easy)
     public Object visitGlobalVar(GlobalVar ast, Object o) {
-        Object result = Evaluator.evalExpression(ast.E);
+        Object result;
+        if (ast.T.isArray()) {
+            Type T = ((ArrayType) ast.T).t;
+            result = Evaluator.evalExpression(ast.E, T);
+        } else {
+            result = Evaluator.evalExpression(ast.E);
+        }
         emit("@" + ast.I.spelling + " = global ");
         ast.T.visit(this, o);
         emitN(" " + result.toString());
@@ -820,8 +827,13 @@ public class Emitter implements Visitor {
                 int index = E.tempIndex;
                 // pass arrays by ref, not val
                 if (E.type.isArray()) {
-                    PointerType pT = new PointerType(dummyPos, ((ArrayType) E.type).t);
-                    pT.visit(this, o);
+                    if (E instanceof ArrayIndexExpr) {
+                        Type T = ((ArrayType) E.type).t;
+                        T.visit(this, o);
+                    } else {
+                        PointerType pT = new PointerType(dummyPos, ((ArrayType) E.type).t);
+                        pT.visit(this, o);
+                    }
                 } else {
                     E.type.visit(this, o);
                 }
