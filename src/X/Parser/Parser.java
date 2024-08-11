@@ -212,6 +212,8 @@ public class Parser {
             case LET -> parseLocalVarStmt();
             default -> {
                 System.out.println("Unknown statement!");
+                System.out.println(currentToken);
+                System.exit(1);
                 yield null;
             }
         };
@@ -383,6 +385,7 @@ public class Parser {
         if (currentToken.kind != TokenType.SEMI) {
             s1AST = parseStmt();
         }
+        match(TokenType.SEMI);
 
         finish(pos);
         Expr e2AST = new EmptyExpr(pos);
@@ -394,7 +397,7 @@ public class Parser {
         finish(pos);
         Stmt s3AST = new EmptyStmt(pos);
         if ((hasParen && currentToken.kind == TokenType.CLOSE_PAREN) ||
-            currentToken.kind != TokenType.CLOSE_CURLY) {
+            currentToken.kind != TokenType.OPEN_CURLY) {
             s3AST = parseStmt();
         }
 

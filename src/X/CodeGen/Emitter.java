@@ -252,8 +252,12 @@ public class Emitter implements Visitor {
         emitN("\tbr label %" + top);
         emitN("\n" + top + ":");
         ast.E2.visit(this, o);
-        int index = ast.E2.tempIndex;
-        emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + bottom);
+        if (!(ast.E2 instanceof EmptyExpr)) {
+            int index = ast.E2.tempIndex;
+            emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + bottom);
+        } else {
+            emitN("\tbr label %" + middle);
+        }
         emitN("\n" + middle + ":");
         ast.S.visit(this, o);
         if (!ast.S.containsExit) {
