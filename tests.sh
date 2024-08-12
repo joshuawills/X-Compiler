@@ -59,13 +59,14 @@ do
     continue
   fi
 
-  if ! diff -q "$TEMP" "$real_file" >> /dev/null 2>&1
+  output=$(diff -q "$TEMP" "$real_file")
+  if [ -n "$output" ]
   then
-    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
-    PASS=$((PASS+1))
-  else
     echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
     FAIL=$((FAIL+1))
+  else
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
+    PASS=$((PASS+1))
   fi
 
 done < <(find "tests/tokens" -type f)
@@ -84,13 +85,14 @@ do
   java -jar "$EXE" "$file" -q -r > "$TEMP"
   real_file=$(echo "$file" | sed -E 's/x$/txt/g')
 
-  if ! diff "$TEMP" "$real_file" >> /dev/null 2>&1
+  output=$(diff -q "$TEMP" "$real_file")
+  if [ -n "$output" ]
   then
-    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
-    PASS=$((PASS+1))
-  else
     echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
     FAIL=$((FAIL+1))
+  else
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
+    PASS=$((PASS+1))
   fi
 
 done < <(find "tests/running" -type f)
