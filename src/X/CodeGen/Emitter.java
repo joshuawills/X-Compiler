@@ -8,9 +8,6 @@ import X.Nodes.Enum;
 public class Emitter implements Visitor {
 
     private final String outputName;
-    private int loopDepth = 0;
-    private int strCount = 3;
-    private int numConstStrings = 0;
     private ArrayType arrayDetails;
     private String arrName = "";
     private final Position dummyPos = new Position();
@@ -107,31 +104,20 @@ public class Emitter implements Visitor {
     }
 
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {
-        if (!(ast.parent instanceof  Function || ast.parent instanceof IfStmt ||
-            ast.parent instanceof ElseIfStmt || ast.parent instanceof WhileStmt
-            || ast.parent instanceof ForStmt || ast.parent instanceof LoopStmt))
-        {
-            loopDepth++;
-            ast.SL.visit(this, o);
-            loopDepth--;
-        } else {
-            ast.SL.visit(this, o);
-        }
+        ast.SL.visit(this, o);
         return null;
     }
 
     public Object visitLocalVar(LocalVar ast, Object o) {
-
+        String depth = ast.index;
         Frame f = (Frame) o;
-        emit("\t%" + ast.I.spelling + loopDepth + " = alloca ");
-        int length;
-        String strValue = "";
+        emit("\t%" + ast.I.spelling + depth + " = alloca ");
         ast.T.visit(this, o);
         emitN("");
 
         if (ast.T.isArray()) {
             arrayDetails = (ArrayType) ast.T;
-            arrName = ast.I.spelling + loopDepth;
+            arrName = ast.I.spelling + depth;
             Expr E = ast.E;
             if (E instanceof EmptyExpr) {
                 E = new ArrayInitExpr(new EmptyArgList(dummyPos), dummyPos);
@@ -149,9 +135,9 @@ public class Emitter implements Visitor {
         if (ast.T.isPointer() && ((PointerType) ast.T).t.isChar() && ast.E instanceof StringExpr) {
             ast.E.visit(this, o);
             int l = ((StringExpr) ast.E).SL.spelling.length() + 1;
-            int n = ((StringExpr) ast.E).Identifier;
+            int n = ((StringExpr) ast.E).index;
             emitN("\tstore i8 * getelementptr inbounds ([" + l + " x i8], [" + l + " x i8]* @..str" + n +
-                    " , i64 0, i64 0), i8** %" + ast.I.spelling + loopDepth);
+                    " , i64 0, i64 0), i8** %" + ast.I.spelling + depth);
             return null;
         }
 
@@ -163,8 +149,7 @@ public class Emitter implements Visitor {
             pT.t.visit(this, o);
             emit("* %" + val + ", ");
             ast.T.visit(this, o);
-            emitN("* %" + ast.I.spelling + loopDepth);
-            ast.index = loopDepth;
+            emitN("* %" + ast.I.spelling + depth);
             return null;
         }
 
@@ -175,8 +160,7 @@ public class Emitter implements Visitor {
         int value = f.localVarIndex - 1;
         emit(" %" + value + ", ");
         ast.T.visit(this, o);
-        emitN("* %" + ast.I.spelling + loopDepth);
-        ast.index = loopDepth;
+        emitN("* %" + ast.I.spelling + depth);
         return null;
     }
 
@@ -193,18 +177,14 @@ public class Emitter implements Visitor {
         int index = ast.E.tempIndex;
         emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + elseC);
         emitN("\n" + middle + ":");
-        loopDepth++;
         ast.S1.visit(this, o);
-        loopDepth--;
         if (!ast.S1.containsExit) {
             emitN("\tbr label %" + bottom);
         }
 
         ast.S2.visit(this, o);
         emitN("\n" + elseC + ":");
-        loopDepth++;
         ast.S3.visit(this, o);
-        loopDepth--;
         if (!ast.S3.containsExit) {
             emitN("\tbr label %" + bottom);
         }
@@ -223,9 +203,7 @@ public class Emitter implements Visitor {
         int index = ast.E.tempIndex;
         emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + nextCondition);
         emitN("\n" + middle + ":");
-        loopDepth++;
         ast.S1.visit(this, o);
-        loopDepth--;
         if (!ast.S1.containsExit) {
             emitN("\tbr label %" + trueBottom);
         }
@@ -246,7 +224,6 @@ public class Emitter implements Visitor {
         f.brkStack.push(bottom);
         f.conStack.push(m2);
 
-        loopDepth++;
         ast.S1.visit(this, o);
 
         emitN("\tbr label %" + top);
@@ -265,7 +242,6 @@ public class Emitter implements Visitor {
         }
         emitN("\n" + m2 + ":");
         ast.S3.visit(this, o);
-        loopDepth--;
         if (!ast.S.containsExit) {
             emitN("\tbr label %" + top);
         }
@@ -291,9 +267,7 @@ public class Emitter implements Visitor {
         int index = ast.E.tempIndex;
         emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + bottom);
         emitN("\n" + middle + ":");
-        loopDepth++;
         ast.S.visit(this, o);
-        loopDepth--;
         if (!ast.S.containsExit) {
             emitN("\tbr label %" + top);
         }
@@ -872,15 +846,9 @@ public class Emitter implements Visitor {
     public Object visitLoopStmt(LoopStmt ast, Object o) {
         Frame f = (Frame) o;
         int newIndex;
-        loopDepth++;
 
         String dollars;
-        if (ast.varName.isPresent()) {
-            dollars = ast.varName.get().I.spelling + loopDepth;
-            ast.varName.get().index = loopDepth;
-        } else {
-            dollars = "$".repeat(f.getDollarDepth() + 1);
-        }
+        dollars = ast.varName.map(lv -> lv.I.spelling + lv.index).orElseGet(() -> "$".repeat(f.getDollarDepth() + 1));
         f.setDollarDepth(f.getDollarDepth() + 1);
 
         String topLabel = f.getNewLabel();
@@ -922,7 +890,6 @@ public class Emitter implements Visitor {
             emitN(midLabel + ":");
 
             ast.S.visit(this, o);
-            loopDepth--;
             int dol2Index = f.getNewIndex();
             int newIndexTwo = f.getNewIndex();
 
@@ -941,9 +908,7 @@ public class Emitter implements Visitor {
             emitN("\tstore i32 %" + newIndex + ", i32* %" + dollars);
             emitN("\tbr label %" + topLabel);
             emitN(topLabel + ":");
-            loopDepth++;
             ast.S.visit(this, o);
-            loopDepth--;
             int dol2Index = f.getNewIndex();
 
             emitN("\tbr label %" + iterateLabel);
@@ -969,9 +934,7 @@ public class Emitter implements Visitor {
         f.conStack.push(top);
         emitN("\tbr label %" + top);
         emitN("\n" + top + ":");
-        loopDepth++;
         ast.S.visit(this, o);
-        loopDepth--;
         if (!ast.S.containsExit) {
             ast.E.visit(this, o);
             int index = ast.E.tempIndex;
@@ -1229,10 +1192,12 @@ public class Emitter implements Visitor {
     }
 
     public Object visitStringExpr(StringExpr ast, Object o) {
+        if (!ast.needToEmit) {
+            return  null;
+        }
+
         int l = ast.SL.spelling.length() + 1;
-        emitNConst("@..str" + strCount + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
-        ast.Identifier = strCount;
-        strCount += 1;
+        emitNConst("@..str" + ast.index + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
         return null;
     }
 

@@ -5,7 +5,8 @@ import X.Lexer.Position;
 public class StringExpr extends Expr {
 
     public StringLiteral SL;
-    public int Identifier;
+    public int index;
+    public boolean needToEmit = false;
 
     public StringExpr(StringLiteral slAST, Position pos) {
         super(pos);

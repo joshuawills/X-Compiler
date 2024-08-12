@@ -7,7 +7,7 @@ public abstract class Decl extends AST {
     public Type T;
     public Ident I;
 
-    public int index;
+    public String index;
     public boolean isUsed = false;
     public boolean isReassigned = false;
 

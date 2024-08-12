@@ -6,8 +6,13 @@ import X.Lexer.Position;
 import X.Nodes.*;
 import X.Nodes.Enum;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Checker implements Visitor {
+
+
+    private HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
+    private int strCount = 0;
 
     private final String[] errors = {
         "*0: main function is missing",
@@ -64,8 +69,16 @@ public class Checker implements Visitor {
     private boolean hasMain = false;
     private boolean hasReturn = false;
     private boolean inMain = false;
+
+    // Used for checking break/continue stmt
     private int loopDepth = 0;
-    private int loopKDepth = 0;
+
+    // Used for assigning
+    private int loopAssignDepth = 0;
+
+    // Base statement counter, used for constructing variable names
+    private int baseStatementCounter = 0;
+
     private boolean validDollar = false;
     private Type currentFunctionType = null;
 
@@ -236,6 +249,8 @@ public class Checker implements Visitor {
     }
 
     public Object visitFunction(Function ast, Object o) {
+        baseStatementCounter = 0;
+
         // Check if func already exists with that name
         this.currentFunctionType = ast.T;
         if (ast.I.spelling.equals("main")) {
@@ -262,6 +277,7 @@ public class Checker implements Visitor {
 
         this.currentFunctionType = null;
         inMain = hasReturn = false;
+        baseStatementCounter = 0;
         return ast.T;
     }
 
@@ -364,7 +380,18 @@ public class Checker implements Visitor {
         return E;
     }
 
+    private boolean isIsolatedCompoundStmt(Object o) {
+        return !(o instanceof Function || o instanceof IfStmt || o instanceof ElseIfStmt || o instanceof WhileStmt
+            || o instanceof ForStmt || o instanceof LoopStmt || o instanceof DoWhileStmt);
+    }
+
     public Object visitCompoundStmt(CompoundStmt ast, Object o) {
+
+        boolean isIsolatedCompoundStmt = isIsolatedCompoundStmt(ast.parent);
+        if (isIsolatedCompoundStmt) {
+            loopAssignDepth += 1;
+        }
+
         ast.SL.visit(this, o);
         List S = ast.SL;
         while (!(S instanceof EmptyStmtList)) {
@@ -383,10 +410,15 @@ public class Checker implements Visitor {
             S = SL.SL;
         }
         ast.containsExit = ast.SL.containsExit;
+
+        if (isIsolatedCompoundStmt) {
+            loopAssignDepth -= 1;
+        }
         return null;
     }
 
     public Object visitLocalVar(LocalVar ast, Object o) {
+        ast.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter);
         ast.T = (Type) visitVarDecl(ast, ast.T, ast.I, ast.E);
         return ast.T;
     }
@@ -398,7 +430,9 @@ public class Checker implements Visitor {
         }
 
         idTable.openScope();
+        loopAssignDepth += 1;
         ast.S1.visit(this, ast);
+        loopAssignDepth -= 1;
         idTable.closeScope();
 
         idTable.openScope();
@@ -406,7 +440,9 @@ public class Checker implements Visitor {
         idTable.closeScope();
 
         idTable.openScope();
+        loopAssignDepth += 1;
         ast.S3.visit(this, ast);
+        loopAssignDepth -= 1;
         idTable.closeScope();
 
         return null;
@@ -419,7 +455,9 @@ public class Checker implements Visitor {
         }
 
         idTable.openScope();
+        loopAssignDepth += 1;
         ast.S1.visit(this, ast);
+        loopAssignDepth -= 1;
         idTable.closeScope();
 
         idTable.openScope();
@@ -431,23 +469,20 @@ public class Checker implements Visitor {
 
     public Object visitForStmt(ForStmt ast, Object o) {
         idTable.openScope();
-        if (!(ast.S1 instanceof EmptyStmt)) {
-            ast.S1.visit(this, ast);
-        }
-
+        loopAssignDepth += 1;
+        ast.S1.visit(this, ast);
         if (!(ast.E2 instanceof EmptyExpr)) {
             Type conditionType = (Type) ast.E2.visit(this, ast);
             if (!conditionType.isBoolean()) {
                 handler.reportError(errors[12], "", ast.E2.pos);
             }
         }
-        if (!(ast.S3 instanceof EmptyStmt)) {
-            ast.S3.visit(this, ast);
-        }
-        this.loopDepth++;
+        ast.S3.visit(this, ast);
+        loopDepth++;
         ast.S.visit(this, ast);
         idTable.closeScope();
-        this.loopDepth--;
+        loopDepth--;
+        loopAssignDepth -= 1;
         return null;
     }
 
@@ -456,11 +491,13 @@ public class Checker implements Visitor {
         if (!conditionType.isBoolean()) {
             handler.reportError(errors[13], "", ast.E.pos);
         }
-        this.loopDepth++;
+        loopDepth++;
+        loopAssignDepth += 1;
         idTable.openScope();
         ast.S.visit(this, ast);
         idTable.closeScope();
-        this.loopDepth--;
+        loopAssignDepth -= 1;
+        loopDepth--;
         return null;
     }
 
@@ -774,6 +811,7 @@ public class Checker implements Visitor {
     }
 
     public Object visitStmtList(StmtList ast, Object o) {
+        baseStatementCounter += 1;
         if (ast.S instanceof CompoundStmt) {
             idTable.openScope();
             ast.S.visit(this, o);
@@ -944,6 +982,7 @@ public class Checker implements Visitor {
 
         idTable.openScope();
         ast.varName.ifPresent(localVar -> declareVariable(localVar.I, localVar));
+        ast.varName.ifPresent(localVar -> localVar.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter));
         validDollar = !ast.varName.isPresent();
         if (ast.I1.isPresent()) {
             T1 = (Type) ast.I1.get().visit(this, o);
@@ -958,10 +997,10 @@ public class Checker implements Visitor {
             }
         }
 
-        loopKDepth += 1;
         loopDepth++;
+        loopAssignDepth += 1;
         ast.S.visit(this, o);
-        loopKDepth -= 1;
+        loopAssignDepth -= 1;
         loopDepth--;
         idTable.closeScope();
         validDollar = false;
@@ -971,7 +1010,9 @@ public class Checker implements Visitor {
     public Object visitDoWhileStmt(DoWhileStmt ast, Object o) {
         this.loopDepth++;
         idTable.openScope();
+        loopAssignDepth += 1;
         ast.S.visit(this, ast);
+        loopAssignDepth -= 1;
         idTable.closeScope();
         this.loopDepth--;
         Type conditionType = (Type) ast.E.visit(this, ast);
@@ -1244,6 +1285,15 @@ public class Checker implements Visitor {
     }
 
     public Object visitStringExpr(StringExpr ast, Object o) {
+        String v = ast.SL.spelling;
+        if (stringConstantsMapping.containsKey(v)) {
+            ast.index = stringConstantsMapping.get(v);
+            ast.needToEmit = false;
+        } else {
+            ast.needToEmit = true;
+            stringConstantsMapping.put(v, strCount);
+            ast.index = strCount++;
+        }
         ast.type = new PointerType(ast.pos, new CharType(ast.pos));
         return ast.type;
     }

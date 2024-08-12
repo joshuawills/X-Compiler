@@ -10,7 +10,7 @@ fn print_arr(x: int[], len: int) -> void {
 }
 
 fn bubble_sort(mut x: int[], len: int) -> void {
-    let mut swapped : bool = false;
+    let mut swapped: bool = false;
     loop i in (len - 1) {
         swapped = false;
         loop j in (len - i - 1) {
