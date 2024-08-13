@@ -420,6 +420,10 @@ public class Evaluator implements Visitor {
         return T.E.getValue(ast.Entry.spelling);
     }
 
+    public Object visitUnknownType(UnknownType ast, Object o) {
+        return null;
+    }
+
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         return null;
     }

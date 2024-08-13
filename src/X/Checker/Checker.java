@@ -58,7 +58,8 @@ public class Checker implements Visitor {
         "*40: unknown type",
         "*41: unknown enum key",
         "*42: duplicate keys in enum",
-        "*43: no function found with provided parameter types"
+        "*43: no function found with provided parameter types",
+        "*44: type may not be emitted if expression not provided"
     };
 
     private final SymbolTable idTable;
@@ -334,6 +335,12 @@ public class Checker implements Visitor {
 
         // Unknown size of array
         if (E instanceof EmptyExpr) {
+
+            if (ast.T.isUnknown()) {
+                handler.reportError(errors[44] + ": %", ast.I.spelling, ast.I.pos);
+                T = Environment.errorType;
+            }
+
             if (T.isArray() && ((ArrayType) T).length == -1) {
                 handler.reportError(errors[34] + ": %", ast.I.spelling, ast.T.pos);
                 T = Environment.errorType;
@@ -342,6 +349,13 @@ public class Checker implements Visitor {
         }
 
         Type returnType = (Type) E.visit(this, ast);
+
+        if (ast.T.isUnknown()) {
+           ast.T = returnType;
+           ast.T.parent = ast;
+           return ast.T;
+        }
+
         if (returnType != null && !T.assignable(returnType) && !returnType.isError()) {
             String message = "expected " + T + ", received " + returnType;
             handler.reportError(errors[5] + ": %", message, E.pos);
@@ -366,6 +380,12 @@ public class Checker implements Visitor {
             CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
             E.type = expectedT;
             return E;
+        } else if (expectedT instanceof IntType && expr.type instanceof CharType) {
+            CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
+            E.type = expectedT;
+            return E;
+        } else if (expectedT instanceof IntType && expr.type instanceof EnumType) {
+            return expr;
         }
         // End TODO
 
@@ -1057,8 +1077,40 @@ public class Checker implements Visitor {
         return new ArrayType(dummyPos, t, ast.length);
     }
 
+    private Object handleUnknownArr(ArrayInitExpr ast, Object o) {
+
+        if (ast.AL instanceof EmptyArgList) {
+            handler.reportError(errors[44] + ": %", "array type cannot be deduced from 0 elements", ast.pos);
+            return Environment.errorType;
+        }
+        int length = 0;
+        List args = ast.AL;
+        Type T = (Type) ((Args) args).E.visit(this, o);
+
+        length++;
+        args = ((Args) args).EL;
+        while (!(args instanceof EmptyArgList)) {
+            Type t = (Type) ((Args) args).E.visit(this, o);
+            if (!t.assignable(T)) {
+                String message = "expected " + T + ", received " + t + " at position " + length;
+                handler.reportError(errors[33] + ": %", message, ast.pos);
+            }
+            ((Args) args).E = checkCast(T, ((Args) args).E, ast);
+            ((Args) args).E.parent = ast.AL;
+            length++;
+            args = ((Args) args).EL;
+        }
+        return new ArrayType(ast.pos, T, length);
+    }
+
     public Object visitArrayInitExpr(ArrayInitExpr ast, Object o) {
         Type expectedT = ((Decl) o).T;
+
+        if (expectedT.isUnknown()) {
+            ast.type = (Type) handleUnknownArr(ast, o);
+            return ast.type;
+        }
+
         if (!expectedT.isArray()) {
             String message = "attempting to assign array to scalar";
             handler.reportError(errors[5] + ": %", message, ast.pos);
@@ -1082,11 +1134,13 @@ public class Checker implements Visitor {
         boolean seenExcess = false;
         while (true) {
             Type t = (Type) args.E.visit(this, o);
-            if (!iT.assignable(t)) {
+            if (!t.assignable(iT)) {
                 String message = "expected " + iT + ", received " + t + " at position " + (iterator - 1);
                 handler.reportError(errors[33] + ": %", message, ast.pos);
                 isError = true;
             }
+            args.E = checkCast(iT, args.E, ast);
+            args.E.parent = ast.AL;
 
             if (iterator > length && length != -1 && !seenExcess) {
                 handler.reportError(errors[35] + ": %", ((Decl) o).I.spelling, ast.pos);
@@ -1316,6 +1370,10 @@ public class Checker implements Visitor {
         EnumType ET = new EnumType(E, E.pos);
         ast.type = ET;
         return ET;
+    }
+
+    public Object visitUnknownType(UnknownType ast, Object o) {
+        return null;
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object o) {

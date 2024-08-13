@@ -53,4 +53,8 @@ public abstract class Type extends AST {
     public boolean isEnum() {
         return this instanceof EnumType;
     }
+
+    public boolean isUnknown() {
+        return this instanceof UnknownType;
+    }
 }

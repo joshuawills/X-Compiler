@@ -1191,6 +1191,10 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitUnknownType(UnknownType ast, Object o) {
+        return null;
+    }
+
     public Object visitStringExpr(StringExpr ast, Object o) {
         if (!ast.needToEmit) {
             return  null;

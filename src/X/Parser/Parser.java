@@ -134,8 +134,11 @@ public class Parser {
             match(TokenType.LET);
             boolean isMut = tryConsume(TokenType.MUT);
             Ident iAST = parseIdent();
-            match(TokenType.COLON);
-            Type tAST = parseType();
+            finish(pos);
+            Type tAST = new UnknownType(pos);
+            if (tryConsume(TokenType.COLON)) {
+                tAST = parseType();
+            }
             Expr eAST = new EmptyExpr(pos);
             if (tryConsume(TokenType.ASSIGN)) {
                 eAST = parseExpr();
@@ -172,8 +175,11 @@ public class Parser {
         match(TokenType.LET);
         boolean isMut = tryConsume(TokenType.MUT);
         Ident iAST = parseIdent();
-        match(TokenType.COLON);
-        Type tAST = parseType();
+        finish(pos);
+        Type tAST = new UnknownType(pos);
+        if (tryConsume(TokenType.COLON)) {
+            tAST = parseType();
+        }
         finish(pos);
         Expr eAST = new EmptyExpr(pos);
         if (tryConsume(TokenType.ASSIGN)) {

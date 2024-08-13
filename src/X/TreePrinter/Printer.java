@@ -522,6 +522,11 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitUnknownType(UnknownType ast, Object o) {
+        print(indentString() + "UnknownType");
+        return null;
+    }
+
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         print(indentString() + ast.spelling);
         return null;

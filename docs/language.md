@@ -14,8 +14,8 @@ arguments `hello.x -o hello`. The file `hello` will be generated as a binary exe
 
 ## General Structure
 
-An X program is composed of a series of global variable declarations and function declarations.
-Variables are declared in a Rust-like manner, including the mutability specifier `mut`.
+An X program is composed of a series of global variable declarations, type declarations and 
+function declarations. Variables are declared in a Rust-like manner, including the mutability specifier `mut`.
 
 *Example Variable Declarations*
 
@@ -23,6 +23,9 @@ Variables are declared in a Rust-like manner, including the mutability specifier
 let mut x: int = 1; // can be modified
 let isEven: bool = x % 2 == 0; // cannot be modified, checked at compile time
 let myName: str = "What is your name? ";
+
+// The type can be emitted when its clear
+let number = 21;
 ```
 
 Below is an example of a function declaration. The pattern is quite clear, and follows standard C/Rust

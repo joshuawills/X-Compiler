@@ -3,8 +3,8 @@
 $$
 \begin{align}
 \textit{program} &\to (\textit{function }|\textit{ global-var}|\textit{ enum})^*  \\ \\
-\textit{global-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } \text{ ":" type} (\text{"="} expr)? \text{";"}\\
-\textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } \text{ ":" type} (\text{"="} expr)? \text{";"}\\
+\textit{global-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
+\textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
 \textit{enum} &\to \textbf{enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\ \\
 

@@ -126,4 +126,6 @@ public interface Visitor {
     Object visitEnumType(EnumType ast, Object o);
 
     Object visitEnumExpr(EnumExpr ast, Object o);
+
+    Object visitUnknownType(UnknownType ast, Object o);
 }
