@@ -177,7 +177,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {
-        return layoutBinary("CallExpr", ast.I, ast.AL);
+        return layoutBinary("CallExpr(" + ast.TypeDef + ")", ast.I, ast.AL);
     }
 
     public Object visitCallStmt(CallStmt ast, Object o) {

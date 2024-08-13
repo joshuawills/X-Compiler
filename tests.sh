@@ -98,8 +98,69 @@ do
 done < <(find "tests/running" -type f)
 
 
+echo -e "${YELLOW}FAILING TESTS: ${RESET}"
+while IFS= read -r file
+do
+
+  if echo "$file" | grep -vE "\.x" >> /dev/null 2>&1
+  then
+    continue
+  fi
+
+  message=$(head -n1 "$file")
+
+  errors=$(java -jar "$EXE" -q "$file")
+  cleaned_errors=$(echo "$errors" | sed 's/\x1b\[[0-9;]*m//g')
+  sorted_numbers=$(echo "$cleaned_errors" | grep -Eo "\*[0-9]+" | sed -E 's/\*//g'| sort -n)
+  echo "$sorted_numbers" > "$TEMP"
+
+  real_file=$(echo "$file" | sed -E 's/x$/txt/g')
+
+  output=$(diff -q "$TEMP" "$real_file")
+  if [ -n "$output" ]
+  then
+    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
+    FAIL=$((FAIL+1))
+  else
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
+    PASS=$((PASS+1))
+  fi
+
+done < <(find "tests/errors" -type f)
+
+
+echo -e "${YELLOW}FAILING TESTS: ${RESET}"
+while IFS= read -r file
+do
+
+  if echo "$file" | grep -vE "\.x" >> /dev/null 2>&1
+  then
+    continue
+  fi
+
+  message=$(head -n1 "$file")
+
+  errors=$(java -jar "$EXE" "$file")
+  cleaned_errors=$(echo "$errors" | sed 's/\x1b\[[0-9;]*m//g')
+  sorted_numbers=$(echo "$cleaned_errors" | grep -Eo "\*[0-9]+" | sed -E 's/\*//g'| sort -n)
+  echo "$sorted_numbers" > "$TEMP"
+
+  real_file=$(echo "$file" | sed -E 's/x$/txt/g')
+
+  output=$(diff -q "$TEMP" "$real_file")
+  if [ -n "$output" ]
+  then
+    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
+    FAIL=$((FAIL+1))
+  else
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
+    PASS=$((PASS+1))
+  fi
+
+done < <(find "tests/minor-errors" -type f)
+
+
 rm "$TEMP"
-rm "tests/.tree"
 
 echo
 echo -e "${YELLOW}TEST SUMMARY: ${RESET}"

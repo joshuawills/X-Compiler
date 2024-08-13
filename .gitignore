@@ -10,3 +10,5 @@ gradlew
 gradlew.bat
 test.x
 .tree
+gen_err_numbers.sh
+gen_err_minor_numbers.sh

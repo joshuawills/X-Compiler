@@ -11,7 +11,7 @@ import java.util.HashMap;
 public class Checker implements Visitor {
 
 
-    private HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
+    private final HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
     private int strCount = 0;
 
     private final String[] errors = {
@@ -29,38 +29,36 @@ public class Checker implements Visitor {
         "*11: if conditional is not boolean",
         "*12: for conditional is not boolean",
         "*13: while conditional is not boolean",
-        "*14: break must be in a while/for",
-        "*15: continue must be in a while/for",
-        "*16: too many actual parameters",
-        "*17: too few actual parameters",
-        "*18: wrong type for actual parameter",
-        "*19: main function may not have any parameters",
-        "*20: main function may not call itself",
-        "*21: statement(s) not reached",
-        "*22: missing return statement",
-        "*23: attempting to redeclare a constant",
-        "*24: variable declared but never used",
-        "*25: variable declared mutable but never reassigned",
-        "*26: function declared but never used",
-        "*27: inappropriate use of '$' operator",
-        "*28: loop iterators must be integers",
-        "*29: do-while conditional is not boolean",
-        "*30: address-of operand only applicable to variables",
-        "*31: can't get address of a constant variable",
-        "*32: inappropriate deference of variable",
-        "*33: identifier declared void[]",
-        "*34: attempt to use an array as a scalar",
-        "*35: attempt to use a scalar/function as an array",
-        "*36: wrong type for element in array initializer",
-        "*37: unknown array size at compile time",
-        "*38: excess elements in array initializer",
-        "*39: attempted reassignment of array",
-        "*40: array index is not an integer",
-        "*41: char expr greater than one character",
-        "*42: enum declared but never used",
-        "*43: unknown type",
-        "*44: unknown enum key",
-        "*45: duplicate keys in enum"
+        "*14: break must be in a loop construct",
+        "*15: continue must be in a loop construct",
+        "*16: main function may not have any parameters",
+        "*17: main function may not call itself",
+        "*18: statement(s) not reached",
+        "*19: missing return statement",
+        "*20: attempting to redeclare a constant",
+        "*21: variable declared but never used",
+        "*22: variable declared mutable but never reassigned",
+        "*23: function declared but never used",
+        "*24: inappropriate use of '$' operator",
+        "*25: loop iterators must be integers",
+        "*26: do-while conditional is not boolean",
+        "*27: address-of operand only applicable to variables",
+        "*28: can't get address of a constant variable",
+        "*29: inappropriate deference of variable",
+        "*30: identifier declared void[]",
+        "*31: attempt to use an array as a scalar",
+        "*32: attempt to use a scalar/function as an array",
+        "*33: wrong type for element in array initializer",
+        "*34: unknown array size at compile time",
+        "*35: excess elements in array initializer",
+        "*36: attempted reassignment of array",
+        "*37: array index is not an integer",
+        "*38: char expr greater than one character",
+        "*39: enum declared but never used",
+        "*40: unknown type",
+        "*41: unknown enum key",
+        "*42: duplicate keys in enum",
+        "*43: no function found with provided parameter types"
     };
 
     private final SymbolTable idTable;
@@ -92,10 +90,21 @@ public class Checker implements Visitor {
 
     public void check(AST ast) {
 
+        if (((Program) ast).PL instanceof EmptyDeclList) {
+            handler.reportError(errors[0], "", ast.pos);
+            return;
+        }
+
         // Load  in all unique types
         DeclList L = (DeclList) ((Program) ast).PL;
         while (true) {
             if (L.D instanceof Enum E) {
+                ArrayList<String> duplicates = E.findDuplicates();
+                if (!duplicates.isEmpty()) {
+                    String message = "found keys '" + String.join(", ", duplicates)
+                            + "' in enum '" + E.I.spelling + "'";
+                    handler.reportError(errors[42] + ": %", message, ast.pos);
+                }
                 idTable.insert(E.I.spelling, E.isMut, E);
             }
             if (L.DL instanceof EmptyDeclList) {
@@ -138,7 +147,7 @@ public class Checker implements Visitor {
                     String S = ((MurkyType) F.T).V;
                     Decl D = idTable.retrieve(S);
                     if (!(D instanceof Enum)) {
-                        handler.reportError(errors[43] + ": %", "'" + S + "'", F.T.pos);
+                        handler.reportError(errors[40] + ": %", "'" + S + "'", F.T.pos);
                         F.T = Environment.errorType;
                     }
                     F.T = new EnumType((Enum) D, D.pos);
@@ -174,21 +183,21 @@ public class Checker implements Visitor {
             if (L.D instanceof GlobalVar V) {
                 if (!V.isUsed) {
                     String message = "'" + V.I.spelling + "'";
-                    handler.reportMinorError(errors[24] + ": %", message, V.pos);
+                    handler.reportMinorError(errors[21] + ": %", message, V.pos);
                 }
                 if (V.isMut && !V.isReassigned) {
                     String message = "'" + V.I.spelling + "'";
-                    handler.reportMinorError(errors[25] + ": %", message, V.pos);
+                    handler.reportMinorError(errors[22] + ": %", message, V.pos);
                 }
             } else if (L.D instanceof Function F) {
                 if (!F.isUsed && !F.I.spelling.equals("main")) {
                     String message = "'" + F.I.spelling + "'";
-                    handler.reportMinorError(errors[26] + ": %", message, F.pos);
+                    handler.reportMinorError(errors[23] + ": %", message, F.pos);
                 }
             } else if (L.D instanceof Enum E) {
                 if (!E.isUsed) {
                     String message = "'" + E.I.spelling + "'";
-                    handler.reportMinorError(errors[42] + ": %", message, E.pos);
+                    handler.reportMinorError(errors[39] + ": %", message, E.pos);
                 }
             }
             if (L.DL instanceof EmptyDeclList) {
@@ -260,10 +269,10 @@ public class Checker implements Visitor {
                 handler.reportError(errors[1] + ": %", message, ast.I.pos);
             }
             if (!(ast.PL instanceof EmptyParaList)) {
-               handler.reportError(errors[19], "", ast.I.pos);
+               handler.reportError(errors[16], "", ast.I.pos);
             }
         } else if (ast.I.spelling.equals("$")) {
-            handler.reportError(errors[27] + ": %", "can't be used as function name", ast.I.pos);
+            handler.reportError(errors[24] + ": %", "can't be used as function name", ast.I.pos);
         }
         idTable.openScope();
         ast.PL.visit(this, null);
@@ -271,7 +280,7 @@ public class Checker implements Visitor {
         idTable.closeScope();
         if (!hasReturn && !ast.T.isVoid()) {
             if (!ast.I.spelling.equals("main")) {
-                handler.reportError(errors[22], "", ast.I.pos);
+                handler.reportError(errors[19], "", ast.I.pos);
             }
         }
 
@@ -289,7 +298,7 @@ public class Checker implements Visitor {
         String S = ((MurkyType) ast.T).V;
         Decl D = idTable.retrieve(S);
         if (!(D instanceof Enum)) {
-            handler.reportError(errors[43] + ": %", "'" + S + "'", ast.T.pos);
+            handler.reportError(errors[40] + ": %", "'" + S + "'", ast.T.pos);
             ast.T = Environment.errorType;
         } else {
             ((Enum) D).isUsed = true;
@@ -315,7 +324,7 @@ public class Checker implements Visitor {
         if (T.isArray()) {
             Type iT = ((ArrayType) T).t;
             if (iT instanceof VoidType) {
-                handler.reportError(errors[33] + ": %", ast.I.spelling, ast.T.pos);
+                handler.reportError(errors[30] + ": %", ast.I.spelling, ast.T.pos);
                 T = Environment.errorType;
                 return T;
             }
@@ -326,14 +335,14 @@ public class Checker implements Visitor {
         // Unknown size of array
         if (E instanceof EmptyExpr) {
             if (T.isArray() && ((ArrayType) T).length == -1) {
-                handler.reportError(errors[37] + ": %", ast.I.spelling, ast.T.pos);
+                handler.reportError(errors[34] + ": %", ast.I.spelling, ast.T.pos);
                 T = Environment.errorType;
             }
             return T;
         }
 
         Type returnType = (Type) E.visit(this, ast);
-        if (!T.assignable(returnType) && !returnType.isError()) {
+        if (returnType != null && !T.assignable(returnType) && !returnType.isError()) {
             String message = "expected " + T + ", received " + returnType;
             handler.reportError(errors[5] + ": %", message, E.pos);
             T = Environment.errorType;
@@ -364,7 +373,7 @@ public class Checker implements Visitor {
         if (expr instanceof ArrayIndexExpr) {
             t = ((ArrayType) expr.type).t;
         }
-        if (expectedT.assignable(t) || t.isError() || expectedT.equals(t)) {
+        if (expectedT.assignable(t) || t == null || t.isError() || expectedT.equals(t)) {
             return expr;
         }
 
@@ -400,11 +409,11 @@ public class Checker implements Visitor {
                 LocalVar V = ((LocalVarStmt) SL.S).V;
                 if (!V.isUsed) {
                     String message = "'" + V.I.spelling + "'";
-                    handler.reportMinorError(errors[24] + ": %", message, V.pos);
+                    handler.reportMinorError(errors[21] + ": %", message, V.pos);
                 }
                 if (V.isMut && !V.isReassigned) {
                     String message = "'" + V.I.spelling + "'";
-                    handler.reportMinorError(errors[25] + ": %", message, V.pos);
+                    handler.reportMinorError(errors[22] + ": %", message, V.pos);
                 }
             }
             S = SL.SL;
@@ -529,9 +538,11 @@ public class Checker implements Visitor {
 
     public Object visitReturnStmt(ReturnStmt ast, Object o) {
         this.hasReturn = true;
+        boolean seenIncompatible = false;
 
         // Returning nothing but there's something to return
         if (ast.E instanceof EmptyExpr && !(this.currentFunctionType.isVoid())) {
+            seenIncompatible = true;
             String message = "expected " + this.currentFunctionType.toString() + ", received void";
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
         }
@@ -542,7 +553,7 @@ public class Checker implements Visitor {
         } else {
             conditionType = (Type) ast.E.visit(this, ast);
         }
-        if (!this.currentFunctionType.assignable(conditionType)) {
+        if (!this.currentFunctionType.assignable(conditionType) && !seenIncompatible) {
             String message = "expected " + this.currentFunctionType.toString() +
                 ", received " + conditionType.toString();
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
@@ -576,20 +587,21 @@ public class Checker implements Visitor {
         }
 
         if (!decl.isMut) {
-            handler.reportError(errors[23], "", ast.E.pos);
+            String message = "'" + decl.I.spelling + "'";
+            handler.reportError(errors[20] + ": %", message, ast.E.pos);
             return null;
         }
 
         Type existingType = decl.T;
 
         if (existingType.isArray()) {
-            handler.reportError(errors[39] + ": %", ast.I.spelling, ast.E.pos);
+            handler.reportError(errors[36] + ": %", ast.I.spelling, ast.E.pos);
             return null;
         }
 
         if (ast.isDeref) {
             if (!decl.T.isPointer()) {
-                handler.reportError(errors[32], "", ast.pos);
+                handler.reportError(errors[29], "", ast.pos);
                 return null;
             }
             existingType = ((PointerType) decl.T).t;
@@ -773,21 +785,21 @@ public class Checker implements Visitor {
                     break;
                 }
                 if (!(ast.E instanceof VarExpr)) {
-                    handler.reportError(errors[30], "", ast.O.pos);
+                    handler.reportError(errors[27], "", ast.O.pos);
                     break;
                 }
                 ast.type = ((PointerType) eT).t;
             }
             case "&" -> { // address of operator
                 if (!(ast.E instanceof VarExpr)) {
-                    handler.reportError(errors[30], "", ast.O.pos);
+                    handler.reportError(errors[27], "", ast.O.pos);
                     break;
                 }
                 VarExpr VE = (VarExpr) ast.E;
                 SimpleVar SV = (SimpleVar) VE.V;
                 Decl decl = idTable.retrieve(SV.I.spelling);
                 if (!decl.isMut) {
-                    handler.reportError(errors[31], "", ast.O.pos);
+                    handler.reportError(errors[28], "", ast.O.pos);
                     break;
                 }
                 ast.type = new PointerType(decl.pos, decl.T);
@@ -821,7 +833,7 @@ public class Checker implements Visitor {
         }
         // Unreached statements
         if (ast.S instanceof ReturnStmt && ast.SL instanceof StmtList) {
-            handler.reportMinorError(errors[21], "", ast.SL.pos);
+            handler.reportMinorError(errors[18], "", ast.SL.pos);
         }
         ast.SL.visit(this, o);
         return null;
@@ -870,13 +882,13 @@ public class Checker implements Visitor {
         List PL = (List) o;
         // Too many params
         if (PL instanceof EmptyParaList) {
-            handler.reportError(errors[16], "", ast.E.pos);
+            System.out.println("UNREACHABLE");
             return Environment.errorType;
         }
 
         Type expectedType = ((ParaList) PL).P.T;
         if (expectedType.isVoid() || !expectedType.assignable(realType)) {
-            handler.reportError(errors[18], "", ast.E.pos);
+            System.out.println("UNREACHABLE");
         }
 
         ast.E = checkCast(expectedType, ast.E, ast);
@@ -906,7 +918,7 @@ public class Checker implements Visitor {
         if (ast.T.isArray()) {
             Type iT = ((ArrayType) ast.T).t;
             if (iT instanceof VoidType) {
-                handler.reportError(errors[33] + ": %", ast.I.spelling, ast.T.pos);
+                handler.reportError(errors[30] + ": %", ast.I.spelling, ast.T.pos);
             }
         }
         return null;
@@ -914,7 +926,7 @@ public class Checker implements Visitor {
 
     private void declareVariable(Ident ident, Decl decl) {
         if (ident.spelling.equals("$")) {
-            handler.reportError(errors[27] +  ": %", "Can't use '$' operator as variable", ident.pos);
+            handler.reportError(errors[24] +  ": %", "Can't use '$' operator as variable", ident.pos);
         }
         IdEntry entry = idTable.retrieveOneLevel(ident.spelling);
         if (entry != null) {
@@ -942,7 +954,7 @@ public class Checker implements Visitor {
     public Object visitSimpleVar(SimpleVar ast, Object o) {
 
         if (ast.I.spelling.equals("$") && !validDollar) {
-            handler.reportError(errors[27] + ": %", ast.I.spelling, ast.I.pos);
+            handler.reportError(errors[24] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         } else if (ast.I.spelling.equals("$")) {
             return Environment.intType;
@@ -956,7 +968,7 @@ public class Checker implements Visitor {
 
         boolean isFnCall = ((VarExpr) ast.parent).parent instanceof Args;
         if (decl.T.isArray() && !isFnCall) {
-            handler.reportError(errors[34] + ": %", ast.I.spelling, ast.I.pos);
+            handler.reportError(errors[31] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
 
@@ -987,13 +999,13 @@ public class Checker implements Visitor {
         if (ast.I1.isPresent()) {
             T1 = (Type) ast.I1.get().visit(this, o);
             if (!T1.isInt()) {
-                handler.reportError(errors[28], "", ast.pos);
+                handler.reportError(errors[25], "", ast.pos);
             }
         }
         if (ast.I2.isPresent()) {
             T2 = (Type) ast.I2.get().visit(this, o);
             if (!T2.isInt()) {
-                handler.reportError(errors[28], "", ast.pos);
+                handler.reportError(errors[25], "", ast.pos);
             }
         }
 
@@ -1017,7 +1029,7 @@ public class Checker implements Visitor {
         this.loopDepth--;
         Type conditionType = (Type) ast.E.visit(this, ast);
         if (!conditionType.isBoolean()) {
-            handler.reportError(errors[29], "", ast.E.pos);
+            handler.reportError(errors[26], "", ast.E.pos);
         }
         return null;
     }
@@ -1072,12 +1084,12 @@ public class Checker implements Visitor {
             Type t = (Type) args.E.visit(this, o);
             if (!iT.assignable(t)) {
                 String message = "expected " + iT + ", received " + t + " at position " + (iterator - 1);
-                handler.reportError(errors[36] + ": %", message, ast.pos);
+                handler.reportError(errors[33] + ": %", message, ast.pos);
                 isError = true;
             }
 
             if (iterator > length && length != -1 && !seenExcess) {
-                handler.reportError(errors[38] + ": %", ((Decl) o).I.spelling, ast.pos);
+                handler.reportError(errors[35] + ": %", ((Decl) o).I.spelling, ast.pos);
                 isError = true;
                 seenExcess = true;
             }
@@ -1108,9 +1120,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
+        binding.isUsed = true;
         Type T = (Type) ast.index.visit(this, o);
         if (!T.isInt()) {
-            handler.reportError(errors[40] + ": %", ast.I.spelling, ast.I.pos);
+            handler.reportError(errors[37] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
         ast.type = binding.T;
@@ -1127,19 +1140,19 @@ public class Checker implements Visitor {
             decl.isReassigned = true;
         }
         ast.I.decl = decl;
-        if (decl instanceof Function) {
-            handler.reportError(errors[9], "", ast.E.pos);
+        if (decl instanceof Function || !decl.T.isArray()) {
+            handler.reportError(errors[32] +": %", ast.I.spelling, ast.E.pos);
             return null;
         }
-
         if (!decl.isMut) {
-            handler.reportError(errors[23], "", ast.E.pos);
+            String message = "'" + decl.I.spelling + "'";
+            handler.reportError(errors[20] + ": %", message, ast.E.pos);
             return null;
         }
 
         Type t1 = (Type) ast.aeAST.get().visit(this, o);
         if (!t1.isInt()) {
-            handler.reportError(errors[40] + ": %", ast.I.spelling, ast.E.pos);
+            handler.reportError(errors[37] + ": %", ast.I.spelling, ast.E.pos);
             return null;
         }
 
@@ -1147,7 +1160,7 @@ public class Checker implements Visitor {
         Type innerType = ((ArrayType) existingType).t;
         if (ast.isDeref) {
             if (!innerType.isPointer()) {
-                handler.reportError(errors[32], "", ast.pos);
+                handler.reportError(errors[29], "", ast.pos);
                 return null;
             }
             innerType = ((PointerType) innerType).t;
@@ -1178,7 +1191,7 @@ public class Checker implements Visitor {
         int l = ast.CL.spelling.length();
         if (l != 1) {
             String m = "received '" + ast.CL.spelling + "'";
-            handler.reportMinorError(errors[41] + ": %", m, ast.CL.pos);
+            handler.reportMinorError(errors[38] + ": %", m, ast.CL.pos);
             return Environment.errorType;
         }
         ast.type = Environment.charType;
@@ -1192,36 +1205,8 @@ public class Checker implements Visitor {
 
     public Object visitCallExpr(CallExpr ast, Object o) {
         if (inMain && ast.I.spelling.equals("main")) {
-            handler.reportError(errors[20], "", ast.I.pos);
+            handler.reportError(errors[17], "", ast.I.pos);
             return Environment.errorType;
-        }
-
-        if (ast.I.spelling.equals("inInt")) {
-            Args A= (Args) ast.AL;
-            Expr secondArg = ((Args) A.EL).E;
-            if (!(secondArg instanceof VarExpr || secondArg instanceof ArrayIndexExpr)) {
-                handler.reportError(errors[18] + ": %", "Second arg for 'inInt' must be a declared int variable", ast.I.pos);
-                return Environment.errorType;
-            }
-            Decl x = null;
-            String spelling = null;
-            if (secondArg instanceof VarExpr) {
-                VarExpr VE = (VarExpr) secondArg;
-                spelling = ((SimpleVar) VE.V).I.spelling;
-                x = idTable.retrieve(spelling);
-            } else {
-                spelling = ((ArrayIndexExpr) secondArg).I.spelling;
-                x =  idTable.retrieve(spelling);
-            }
-            if (x == null) {
-                handler.reportError(errors[4] + ": %", spelling, ast.I.pos);
-                return null;
-            }
-            x.isReassigned = true;
-            if (!x.isMut) {
-                handler.reportError(errors[23] + ": %", spelling, ast.I.pos);
-                return null;
-            }
         }
 
         // Check function exists
@@ -1235,14 +1220,11 @@ public class Checker implements Visitor {
             TL = ast.TypeDef;
         }
 
-        Decl type = idTable.retrieve(ast.I.spelling + "." + TL);
-        if (type != null) {
-            ast.I.decl = type;
-        }
-
+        Decl type = idTable.retrieve(ast.I.spelling);
         if (type == null) {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
-            return Environment.errorType;
+            ast.type = Environment.errorType;
+            return ast.type;
         }
 
         // Check function is actually a function
@@ -1250,8 +1232,15 @@ public class Checker implements Visitor {
             handler.reportError(errors[10], "", ast.I.pos);
             return Environment.errorType;
         } else {
-            Decl x = idTable.retrieve(ast.I.spelling + "." + TL);
-            ((Function) x).setUsed();
+            // Need to get the right one
+            type = idTable.retrieveFunc(ast.I.spelling + "." + ast.TypeDef);
+            if (type == null) {
+                handler.reportError(errors[43] + ": %", ast.I.spelling, ast.I.pos);
+                ast.type = Environment.errorType;
+                return ast.type;
+            }
+            ast.I.decl = type;
+            ((Function) type).setUsed();
         }
         if (runArgsAgain) {
             ast.AL.visit(this, function.PL);
@@ -1274,7 +1263,7 @@ public class Checker implements Visitor {
     public Object visitEmptyArgList(EmptyArgList ast, Object o) {
         List PL = (List) o;
         if (!(PL instanceof EmptyParaList)) {
-            handler.reportError(errors[17], "", ast.pos);
+            System.out.println("UNREACHABLE");
         }
         return null;
     }
@@ -1314,25 +1303,16 @@ public class Checker implements Visitor {
 
         Decl d = idTable.retrieve(ast.Type.spelling);
         if (!(d instanceof Enum)) {
-            handler.reportError(errors[43] + ": %", ast.Type.spelling, ast.pos);
+            handler.reportError(errors[40] + ": %", ast.Type.spelling, ast.pos);
             return Environment.errorType;
         }
         Enum E = (Enum) d;
         E.isUsed = true;
         if (!E.containsKey(ast.Entry.spelling)) {
             String message = "'" + ast.Entry.spelling + "' in enum '" + ast.Type.spelling + "'";
-            handler.reportError(errors[44] + ": %", message, ast.pos);
+            handler.reportError(errors[41] + ": %", message, ast.pos);
             return Environment.errorType;
         }
-
-        ArrayList<String> duplicates = E.findDuplicates();
-        if (!duplicates.isEmpty()) {
-            String message = "found keys '" + String.join(", ", duplicates)
-                + "' in enum '" + ast.Type.spelling + "'";
-            handler.reportError(errors[45] + ": %", message, ast.pos);
-            return Environment.errorType;
-        }
-
         EnumType ET = new EnumType(E, E.pos);
         ast.type = ET;
         return ET;

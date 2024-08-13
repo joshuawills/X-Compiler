@@ -59,12 +59,12 @@ public class ErrorHandler {
     }
 
     public void logLines(int line, int col) {
-        System.err.println(ANSI_YELLOW + this.fileName + ":" + line + ":" + col + ANSI_RESET + ":");
+        System.out.println(ANSI_YELLOW + this.fileName + ":" + line + ":" + col + ANSI_RESET + ":");
         for (int i = line - 2; i <= line + 2; i++) {
             if (i >= 1 && i <= this.numLines) {
-                System.err.printf("%5s | " + this.fileContents.split("\n")[i - 1] + "%n", i);
+                System.out.printf("%5s | " + this.fileContents.split("\n")[i - 1] + "%n", i);
             }
         }
-        System.err.println();
+        System.out.println();
     }
 }

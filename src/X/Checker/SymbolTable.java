@@ -38,15 +38,33 @@ public class SymbolTable {
         System.out.println("=====");
     }
 
-    public Decl retrieve(String id) {
-        boolean present = false, searching = true;
+    // Find with function type def
+    // Only use for FUNCTIONS!
+    public Decl retrieveFunc(String id) {
+        boolean searching = true;
         Decl attr = null;
         IdEntry entry = this.latest;
         while (searching) {
             if (entry == null) {
                 searching = false;
             } else if (entry.id.equals(id)) {
-                present = true;
+                searching = false;
+                attr = entry.attr;
+            } else {
+                entry = entry.previousEntry;
+            }
+        }
+        return attr;
+    }
+
+    public Decl retrieve(String id) {
+        boolean searching = true;
+        Decl attr = null;
+        IdEntry entry = this.latest;
+        while (searching) {
+            if (entry == null) {
+                searching = false;
+            } else if (entry.id.split("\\.")[0].equals(id)) {
                 searching = false;
                 attr = entry.attr;
             } else {
