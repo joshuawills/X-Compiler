@@ -1,3 +1,5 @@
+// No appropriate function
+
 fn foo() -> void {
 
 }

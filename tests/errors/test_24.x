@@ -1,3 +1,6 @@
+// inappropriate use of the '$' operator:w
+
+
 fn main() -> int {
 
     let $: int = 21;

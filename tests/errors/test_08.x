@@ -1,3 +1,5 @@
+// Invalid unary operator
+
 fn main() -> int
 {
 

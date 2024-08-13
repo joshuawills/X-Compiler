@@ -128,14 +128,9 @@ public class Checker implements Visitor {
                         ParaDecl PE = ((ParaList) P).P;
                         Type T = PE.T;
                         if (T.isMurky()) {
-                            String S = ((MurkyType) T).V;
-                            Decl D = idTable.retrieve(S);
-                            if (!(D instanceof Enum)) {
-                                handler.reportError(errors[43] + ": %", "'" + S + "'", T.pos);
-                                T = Environment.errorType;
-                            }
-                            PE.T = new EnumType((Enum) D, D.pos);
-                            PE.T.parent = ast;
+                            unMurk(PE);
+                        } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
+                            unMurkArr(PE);
                         }
                         if (((ParaList) P).PL instanceof EmptyParaList) {
                             break;
@@ -308,9 +303,25 @@ public class Checker implements Visitor {
         ast.T.parent = ast;
     }
 
+    private void unMurkArr(Decl ast) {
+        ArrayType AT = (ArrayType) ast.T;
+        String S = ((MurkyType) AT.t).V;
+        Decl D = idTable.retrieve(S);
+        if (!(D instanceof Enum)) {
+            handler.reportError(errors[40] + ": %", "'" + S + "'", ast.T.pos);
+            ast.T = Environment.errorType;
+        } else {
+            ((Enum) D).isUsed = true;
+        }
+        ast.T = new ArrayType(AT.pos, new EnumType((Enum) D, D.pos), AT.length);
+        ast.T.parent = ast;
+    }
+
     private Object visitVarDecl(Decl ast, Type T, Ident I, Expr E) {
         if (T.isMurky()) {
             unMurk(ast);
+        } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
+            unMurkArr(ast);
         }
         T = ast.T;
 
@@ -898,18 +909,10 @@ public class Checker implements Visitor {
     }
 
     public Object visitArgList(Args ast, Object o) {
-        Type realType = (Type) ast.E.visit(this, null);
         List PL = (List) o;
-        // Too many params
-        if (PL instanceof EmptyParaList) {
-            System.out.println("UNREACHABLE");
-            return Environment.errorType;
-        }
+        Type realType = (Type) ast.E.visit(this, null);
 
         Type expectedType = ((ParaList) PL).P.T;
-        if (expectedType.isVoid() || !expectedType.assignable(realType)) {
-            System.out.println("UNREACHABLE");
-        }
 
         ast.E = checkCast(expectedType, ast.E, ast);
         ast.EL.visit(this, ((ParaList) PL).PL);
@@ -930,6 +933,8 @@ public class Checker implements Visitor {
         Type T = ast.T;
         if (T.isMurky()) {
             unMurk(ast);
+        } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
+            unMurkArr(ast);
         }
         declareVariable(ast.I, ast);
         if (ast.T.isVoid()) {
@@ -967,6 +972,13 @@ public class Checker implements Visitor {
     }
 
     public Object visitVarExpr(VarExpr ast, Object o) {
+        // Assumes that when a function parameter is declared mutable
+        // It actually is mutated
+        Var V = ast.V;
+        Decl decl = idTable.retrieve(((SimpleVar) ast.V).I.spelling);
+        if (decl != null) {
+            decl.isReassigned = true;
+        }
         ast.type = (Type) ast.V.visit(this, o);
         return ast.type;
     }
