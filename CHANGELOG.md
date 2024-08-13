@@ -71,6 +71,15 @@
 - Fixed boolean short-circuiting
 - More tests!
 
+*13.08.24*
+
+- complete test suite covering all errors
+- can emit type declarations where possible
+- prevent variables having the same name in IR
+- optimisations by preventing duplicate string declarations
+- porting logic from emitter to type checker
+
+
 # TODO
 
 - float support
