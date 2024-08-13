@@ -63,7 +63,7 @@ public class Emitter implements Visitor {
         while (!(PL instanceof EmptyParaList)) {
             ParaDecl P = ((ParaList) PL).P;
             Type t = P.T;
-            if (P.isMut && !t.isArray()) {
+            if ((P.isMut && !t.isArray()) || t.isPointer()) {
                 emit("\t%" + P.I.spelling + "0 = alloca ");
                 t.visit(this, o);
                 emit("\n\tstore ");
@@ -643,7 +643,7 @@ public class Emitter implements Visitor {
             ast.T.visit(this, o);
         }
 
-        if (!ast.isMut) {
+        if (!ast.isMut && !ast.T.isPointer()) {
             emit(" %" + ast.I.spelling + "0");
         } else {
             emit(" %" + ast.I.spelling);

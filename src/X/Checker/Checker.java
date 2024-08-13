@@ -131,6 +131,8 @@ public class Checker implements Visitor {
                             unMurk(PE);
                         } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
                             unMurkArr(PE);
+                        } else if (T.isPointer() && ((PointerType) T).t.isMurky()) {
+                            unMurkPointer(PE);
                         }
                         if (((ParaList) P).PL instanceof EmptyParaList) {
                             break;
@@ -317,11 +319,27 @@ public class Checker implements Visitor {
         ast.T.parent = ast;
     }
 
+    private void unMurkPointer(Decl ast) {
+        PointerType PT = (PointerType) ast.T;
+        String S = ((MurkyType) PT.t).V;
+        Decl D = idTable.retrieve(S);
+        if (!(D instanceof Enum)) {
+            handler.reportError(errors[40] + ": %", "'" + S + "'", ast.T.pos);
+            ast.T = Environment.errorType;
+        } else {
+            ((Enum) D).isUsed = true;
+        }
+        ast.T = new PointerType(PT.pos, new EnumType((Enum) D, D.pos));
+        ast.T.parent = ast;
+    }
+
     private Object visitVarDecl(Decl ast, Type T, Ident I, Expr E) {
         if (T.isMurky()) {
             unMurk(ast);
         } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
             unMurkArr(ast);
+        } else if (T.isPointer() && ((PointerType) T).t.isMurky()) {
+            unMurkPointer(ast);
         }
         T = ast.T;
 
@@ -935,6 +953,8 @@ public class Checker implements Visitor {
             unMurk(ast);
         } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
             unMurkArr(ast);
+        } else if (T.isPointer() && ((PointerType) T).t.isMurky()) {
+            unMurkPointer(ast);
         }
         declareVariable(ast.I, ast);
         if (ast.T.isVoid()) {
