@@ -12,3 +12,5 @@ test.x
 .tree
 gen_err_numbers.sh
 gen_err_minor_numbers.sh
+website/mydocs/publish/
+website/mydocs/public/

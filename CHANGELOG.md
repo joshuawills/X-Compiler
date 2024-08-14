@@ -78,6 +78,7 @@
 - prevent variables having the same name in IR
 - optimisations by preventing duplicate string declarations
 - porting logic from emitter to type checker
+- enum Arrays
 
 
 # TODO
