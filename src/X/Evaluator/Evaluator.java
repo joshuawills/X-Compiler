@@ -424,6 +424,26 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitStructElem(StructElem ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructList(StructList ast, Object o) {
+        return null;
+    }
+
+    public Object visitStruct(Struct ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyStructList(EmptyStructList ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructType(StructType ast, Object o) {
+        return null;
+    }
+
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         return null;
     }

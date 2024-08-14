@@ -43,6 +43,10 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("EmptyParaList");
     }
 
+    public Object visitEmptyStructList(EmptyStructList ast, Object obj) {
+        return layoutNullary("EmptyStructList");
+    }
+
     public Object visitEmptyArgList(EmptyArgList ast, Object obj) {
         return layoutNullary("EmptyArgList");
     }
@@ -225,8 +229,6 @@ public class LayoutVisitor implements Visitor {
     // Arguments
 
     public Object visitArgList(Args ast, Object obj) {
-        System.out.println(ast.E.parent);
-        System.out.println(ast.EL.parent);
         return layoutBinary("Args", ast.E, ast.EL);
     }
 
@@ -492,12 +494,28 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("EnumType", ast.E.I);
     }
 
+    public Object visitStructType(StructType ast, Object o) {
+        return layoutUnary("StructType", ast.S.I);
+    }
+
     public Object visitEnumExpr(EnumExpr ast, Object o) {
         return layoutBinary("EnumExpr", ast.Type, ast.Entry);
     }
 
     public Object visitUnknownType(UnknownType ast, Object o) {
         return layoutNullary("UnknownType");
+    }
+
+    public Object visitStructElem(StructElem ast, Object o) {
+        return layoutBinary("StructElem", ast.T, ast.I);
+    }
+
+    public Object visitStructList(StructList ast, Object o) {
+        return layoutBinary("StructList", ast.S, ast.SL);
+    }
+
+    public Object visitStruct(Struct ast, Object o) {
+        return layoutBinary("Struct", ast.I, ast.SL);
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object obj) {

@@ -51,6 +51,10 @@ public class Enum extends Decl {
         return duplicates;
     }
 
+    public boolean isEmpty() {
+        return IDs.length == 0;
+    }
+
     public Object visit(Visitor v, Object o) {
         return v.visitEnum(this, o);
     }

@@ -1205,6 +1205,30 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitStructElem(StructElem ast, Object o) {
+        System.out.println("STRUCT ELEM : EMITTER");
+        return null;
+    }
+
+    public Object visitStructList(StructList ast, Object o) {
+        System.out.println("STRUCT LIST : EMITTER");
+        return null;
+    }
+
+    public Object visitStruct(Struct ast, Object o) {
+        System.out.println("STRUCT : EMITTER");
+        return null;
+    }
+
+    public Object visitEmptyStructList(EmptyStructList ast, Object o) {
+        System.out.println("EMPTY STRUCT LIST: EMITTER");
+        return null;
+    }
+
+    public Object visitStructType(StructType ast, Object o) {
+        return null;
+    }
+
     public void emitBase(Type t, Object o) {
         // TODO: handle other cases
         Expr I;

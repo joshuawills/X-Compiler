@@ -52,7 +52,6 @@ public enum TokenType {
     BITWISE_LEFT_SHIFT,
     BITWISE_RIGHT_SHIFT,
     TYPE,
-    ARR,
     LEFT_SQUARE,
     RIGHT_SQUARE,
     DOLLAR,
@@ -61,5 +60,6 @@ public enum TokenType {
     ENUM,
     LET,
     COLON,
-    PERIOD
+    PERIOD,
+    STRUCT
 }

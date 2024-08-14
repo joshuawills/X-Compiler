@@ -409,6 +409,12 @@ public class Printer implements Visitor {
     }
 
     @Override
+    public Object visitEmptyStructList(EmptyStructList ast, Object o) {
+        print(indentString() + "EmptyStructList");
+        return null;
+    }
+
+    @Override
     public Object visitParaDecl(ParaDecl ast, Object o) {
         print(indentString() + "ParaDecl");
         ++indent;
@@ -517,6 +523,11 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitStructType(StructType ast, Object o) {
+        print(indentString() + "StructType");
+        return null;
+    }
+
     public Object visitEnumExpr(EnumExpr ast, Object o) {
         print(indentString() + ast.Type.spelling + "." + ast.Entry.spelling);
         return null;
@@ -524,6 +535,33 @@ public class Printer implements Visitor {
 
     public Object visitUnknownType(UnknownType ast, Object o) {
         print(indentString() + "UnknownType");
+        return null;
+    }
+
+    public Object visitStructElem(StructElem ast, Object o) {
+        print(indentString() + "StructElem");
+        ++indent;
+        ast.T.visit(this, o);
+        ast.I.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitStructList(StructList ast, Object o) {
+        print(indentString() + "StructList");
+        ++indent;
+        ast.S.visit(this, o);
+        ast.SL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitStruct(Struct ast, Object o) {
+        print(indentString() + "Struct");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.SL.visit(this, o);
+        --indent;
         return null;
     }
 

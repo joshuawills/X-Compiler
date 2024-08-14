@@ -314,6 +314,7 @@ public class Lex {
                 case "return" -> TokenType.RETURN;
                 case "fn" -> TokenType.FN;
                 case "enum" -> TokenType.ENUM;
+                case "struct" -> TokenType.STRUCT;
                 case "let" -> TokenType.LET;
                 case "char", "int", "float", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;

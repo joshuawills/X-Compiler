@@ -117,20 +117,32 @@ public class Parser {
             match(TokenType.ARROW);
             match(TokenType.OPEN_CURLY);
             ArrayList<String> args = new ArrayList<>();
-            assert(currentToken.kind == TokenType.IDENT);
-            args.add(currentToken.lexeme);
-            accept();
-            while (!tryConsume(TokenType.CLOSE_CURLY)) {
-                match(TokenType.COMMA);
+            if (!tryConsume(TokenType.CLOSE_CURLY)) {
                 assert(currentToken.kind == TokenType.IDENT);
                 args.add(currentToken.lexeme);
                 accept();
+                while (!tryConsume(TokenType.CLOSE_CURLY)) {
+                    match(TokenType.COMMA);
+                    assert(currentToken.kind == TokenType.IDENT);
+                    args.add(currentToken.lexeme);
+                    accept();
+                }
             }
+            finish(pos);
             Enum E = new Enum(args.toArray(new String[0]), ident, pos);
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(E, dlAST2, pos);
-        } else {
+        } else if (tryConsume(TokenType.STRUCT)) {
+            Ident iAST = parseIdent();
+            match(TokenType.ARROW);
+            List SL = parseStructList();
+            finish(pos);
+            Struct S = new Struct(SL, iAST, pos);
+            List dlAST2 = parseDeclList();
+            finish(pos);
+            dlAST = new DeclList(S, dlAST2, pos);
+        }else {
             match(TokenType.LET);
             boolean isMut = tryConsume(TokenType.MUT);
             Ident iAST = parseIdent();
@@ -486,6 +498,31 @@ public class Parser {
         return new ParaList(dAST, parseFullParaList(), pos);
     }
 
+    private List parseFullStructList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        StructElem sAST = parseStructElem();
+        if (tryConsume(TokenType.CLOSE_CURLY)) {
+            finish(pos);
+            return new StructList(sAST, new EmptyStructList(pos), pos);
+        }
+        match(TokenType.COMMA);
+        finish(pos);
+        return new StructList(sAST, parseFullStructList(), pos);
+    }
+
+    private List parseStructList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        match(TokenType.OPEN_CURLY);
+        if (tryConsume(TokenType.CLOSE_CURLY)) {
+            finish(pos);
+            return new EmptyStructList(pos);
+        } else {
+            return parseFullStructList();
+        }
+    }
+
     private List parseParaList() throws SyntaxError {
         Position pos = new Position();
         start(pos);
@@ -508,6 +545,17 @@ public class Parser {
         Type tAST = parseType();
         finish(pos);
         return new ParaDecl(tAST, idAST, pos, isMut);
+    }
+
+    private StructElem parseStructElem() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        boolean isMut = tryConsume(TokenType.MUT);
+        Ident idAST = parseIdent();
+        match(TokenType.COLON);
+        Type tAST = parseType();
+        finish(pos);
+        return new StructElem(tAST, idAST, pos, isMut);
     }
 
     private Type parseType() throws SyntaxError {

@@ -10,7 +10,6 @@ import java.util.HashMap;
 
 public class Checker implements Visitor {
 
-
     private final HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
     private int strCount = 0;
 
@@ -59,7 +58,12 @@ public class Checker implements Visitor {
         "*41: unknown enum key",
         "*42: duplicate keys in enum",
         "*43: no function found with provided parameter types",
-        "*44: type may not be emitted if expression not provided"
+        "*44: type may not be emitted if expression not provided",
+        "*45: duplicate struct members",
+        "*46: struct declared but never used",
+        "*47: duplicate type definitions with same name",
+        "*48: no struct members",
+        "*49: no enum members"
     };
 
     private final SymbolTable idTable;
@@ -100,14 +104,54 @@ public class Checker implements Visitor {
         DeclList L = (DeclList) ((Program) ast).PL;
         while (true) {
             if (L.D instanceof Enum E) {
-                ArrayList<String> duplicates = E.findDuplicates();
-                if (!duplicates.isEmpty()) {
-                    String message = "found keys '" + String.join(", ", duplicates)
-                            + "' in enum '" + E.I.spelling + "'";
-                    handler.reportError(errors[42] + ": %", message, ast.pos);
+                if (E.isEmpty()) {
+                    handler.reportError(errors[49] + ": %", E.I.spelling, E.I.pos);
+                } else {
+                    // Duplicate enum keys
+                    ArrayList<String> duplicates = E.findDuplicates();
+                    if (!duplicates.isEmpty()) {
+                        String message = "found keys '" + String.join(", ", duplicates)
+                                + "' in enum '" + E.I.spelling + "'";
+                        handler.reportError(errors[42] + ": %", message, E.I.pos);
+                    }
+                }
+               // Duplicate type definitions
+                Decl d = idTable.retrieve(E.I.spelling);
+                if (d instanceof Enum) {
+                    String message = "enum '" +E.I.spelling + "' clashes with previously declared enum";
+                    handler.reportError(errors[47] + ": %", message, E.I.pos);
+                } else if (d instanceof Struct) {
+                    String message = "enum '" +E.I.spelling + "' clashes with previously declared struct";
+                    handler.reportError(errors[47] + ": %", message, E.I.pos);
                 }
                 idTable.insert(E.I.spelling, E.isMut, E);
+            } else if (L.D instanceof Struct S) {
+                if (S.isEmpty()) {
+                    handler.reportError(errors[48] + ": %", S.I.spelling, S.I.pos);
+                } else {
+                    ArrayList<String> duplicates = S.findDuplicates();
+                    if (!duplicates.isEmpty()) {
+                        String message = "found members '" + String.join(", ", duplicates)
+                                + "' in struct '" + S.I.spelling + "'";
+                        handler.reportError(errors[45] + ": %", message, S.I.pos);
+                    }
+                }
+
+                // Duplicate type definitions
+                Decl d = idTable.retrieve(S.I.spelling);
+                if (d instanceof Enum) {
+                    String message = "struct '" + S.I.spelling + "' clashes with previously declared enum";
+                    handler.reportError(errors[47] + ": %", message, S.I.pos);
+                } else if (d instanceof Struct) {
+                    String message = "struct '" + S.I.spelling + "' clashes with previously declared struct";
+                    handler.reportError(errors[47] + ": %", message, S.I.pos);
+                }
+
+                // header type is validated here
+                // potential subtypes that are user-created types will be validated when struct's initialised
+                idTable.insert(S.I.spelling, S.isMut, S);
             }
+
             if (L.DL instanceof EmptyDeclList) {
                 break;
             }
@@ -119,6 +163,26 @@ public class Checker implements Visitor {
         while (true) {
             if (L.D instanceof GlobalVar V) {
                 visitVarDecl(V, V.T, V.I, V.E);
+            } else if (L.D instanceof Struct S) {
+                List P = S.SL;
+                // Recalculating struct members for abstract types
+                if (!(P instanceof EmptyStructList)) {
+                    while (true) {
+                        StructElem SE = ((StructList) P).S;
+                        Type T = SE.T;
+                        if (T.isMurky()) {
+                            unMurk(SE);
+                        } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
+                            unMurkArr(SE);
+                        } else if (T.isPointer() && ((PointerType) T).t.isMurky()) {
+                            unMurkPointer(SE);
+                        }
+                        if (((StructList) P).SL instanceof EmptyStructList) {
+                            break;
+                        }
+                        P = ((StructList) P).SL;
+                    }
+                }
             } else if (L.D instanceof Function F) {
                 List P = F.PL;
 
@@ -196,6 +260,11 @@ public class Checker implements Visitor {
                 if (!E.isUsed) {
                     String message = "'" + E.I.spelling + "'";
                     handler.reportMinorError(errors[39] + ": %", message, E.pos);
+                }
+            } else if (L.D instanceof Struct S) {
+                if (!S.isUsed) {
+                    String message = "'" + S.I.spelling + "'";
+                    handler.reportMinorError(errors[46] + ": %", message, S.pos);
                 }
             }
             if (L.DL instanceof EmptyDeclList) {
@@ -293,43 +362,52 @@ public class Checker implements Visitor {
     }
 
     private void unMurk(Decl ast) {
-        String S = ((MurkyType) ast.T).V;
-        Decl D = idTable.retrieve(S);
-        if (!(D instanceof Enum)) {
-            handler.reportError(errors[40] + ": %", "'" + S + "'", ast.T.pos);
-            ast.T = Environment.errorType;
+        String s = ((MurkyType) ast.T).V;
+        Decl D = idTable.retrieve(s);
+        if (D instanceof Enum E) {
+            E.isUsed = true;
+            ast.T = new EnumType(E, E.pos);
+        } else if (D instanceof Struct S) {
+            S.isUsed = true;
+            ast.T = new StructType(S, S.pos);
         } else {
-            ((Enum) D).isUsed = true;
+            handler.reportError(errors[40] + ": %", "'" + s + "'", ast.T.pos);
+            ast.T = Environment.errorType;
         }
-        ast.T = new EnumType((Enum) D, D.pos);
         ast.T.parent = ast;
     }
 
     private void unMurkArr(Decl ast) {
         ArrayType AT = (ArrayType) ast.T;
-        String S = ((MurkyType) AT.t).V;
-        Decl D = idTable.retrieve(S);
-        if (!(D instanceof Enum)) {
-            handler.reportError(errors[40] + ": %", "'" + S + "'", ast.T.pos);
-            ast.T = Environment.errorType;
+        String s = ((MurkyType) AT.t).V;
+        Decl D = idTable.retrieve(s);
+        if (D instanceof Enum E) {
+            E.isUsed = true;
+            ast.T = new ArrayType(AT.pos, new EnumType(E, E.pos), AT.length);
+        } else if (D instanceof Struct S) {
+            S.isUsed = true;
+            ast.T = new ArrayType(AT.pos, new StructType(S, S.pos), AT.length);
         } else {
-            ((Enum) D).isUsed = true;
+            handler.reportError(errors[40] + ": %", "'" + s + "'", ast.T.pos);
+            ast.T = Environment.errorType;
         }
-        ast.T = new ArrayType(AT.pos, new EnumType((Enum) D, D.pos), AT.length);
         ast.T.parent = ast;
     }
 
     private void unMurkPointer(Decl ast) {
         PointerType PT = (PointerType) ast.T;
-        String S = ((MurkyType) PT.t).V;
-        Decl D = idTable.retrieve(S);
-        if (!(D instanceof Enum)) {
-            handler.reportError(errors[40] + ": %", "'" + S + "'", ast.T.pos);
-            ast.T = Environment.errorType;
+        String s = ((MurkyType) PT.t).V;
+        Decl D = idTable.retrieve(s);
+        if (D instanceof Enum E) {
+            E.isUsed = true;
+            ast.T = new PointerType(PT.pos, new EnumType(E, E.pos));
+        } else if (D instanceof Struct S) {
+            S.isUsed = true;
+            ast.T = new PointerType(PT.pos, new StructType(S, S.pos));
         } else {
-            ((Enum) D).isUsed = true;
+            handler.reportError(errors[40] + ": %", "'" + s + "'", ast.T.pos);
+            ast.T = Environment.errorType;
         }
-        ast.T = new PointerType(PT.pos, new EnumType((Enum) D, D.pos));
         ast.T.parent = ast;
     }
 
@@ -1405,6 +1483,31 @@ public class Checker implements Visitor {
     }
 
     public Object visitUnknownType(UnknownType ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructElem(StructElem ast, Object o) {
+        System.out.println("STRUCT ELEM : CHECKER");
+        return null;
+    }
+
+    public Object visitStructList(StructList ast, Object o) {
+        System.out.println("STRUCT LIST : CHECKER");
+        return null;
+    }
+
+    public Object visitStruct(Struct ast, Object o) {
+        System.out.println("STRUCT : CHECKER");
+        return null;
+    }
+
+    public Object visitEmptyStructList(EmptyStructList ast, Object o) {
+        System.out.println("EMPTY STRUCT LIST: CHECKER");
+        return null;
+    }
+
+    public Object visitStructType(StructType ast, Object o) {
+        System.out.println("STRUCT TYPE: CHECKER");
         return null;
     }
 

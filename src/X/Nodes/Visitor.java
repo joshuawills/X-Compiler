@@ -128,4 +128,14 @@ public interface Visitor {
     Object visitEnumExpr(EnumExpr ast, Object o);
 
     Object visitUnknownType(UnknownType ast, Object o);
+
+    Object visitStructElem(StructElem ast, Object o);
+
+    Object visitStructList(StructList ast, Object o);
+
+    Object visitStruct(Struct ast, Object o);
+
+    Object visitEmptyStructList(EmptyStructList ast, Object o);
+
+    Object visitStructType(StructType ast, Object o);
 }

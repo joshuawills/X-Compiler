@@ -8,11 +8,12 @@ defined in other language documentation.
 
 {{< katex display >}}
 \begin{align}
-\textit{program} &\to (\textit{function }|\textit{ global-var}|\textit{ enum})^*  \\ \\
+\textit{program} &\to (\textit{function }|\textit{ global-var }|\textit{ enum }|\textit{ struct})^*  \\ \\
 \textit{global-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
-\textit{enum} &\to \textbf{enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\ \\
+\textit{enum} &\to \textbf{enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\
+\textit{struct} &\to \textbf{struct} \textit{ ident } \textit{"->" "\{ "} \textbf{mut}? \textit{ ident}\text{ ":" type } (\textit{"," \textbf{mut}? \textit{ ident}\text{ ":" type }})^*\textit{ " \}"}\\ \\
 
 \text{compound-stmt} &\to \text{"\\\{" } (\textit{stmt } | \textit{ local-var})^* \text{ "\\\}"} \\
 \text{stmt} &\to
