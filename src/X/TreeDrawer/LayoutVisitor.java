@@ -498,6 +498,18 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("StructType", ast.S.I);
     }
 
+    public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
+        return layoutNullary("EmptyStructArgs");
+    }
+
+    public Object visitStructArgs(StructArgs ast, Object o) {
+        return layoutBinary("StructArgs", ast.E, ast.SL);
+    }
+
+    public Object visitStructExpr(StructExpr ast, Object o) {
+        return layoutBinary("StructExpr", ast.I, ast.SA);
+    }
+
     public Object visitEnumExpr(EnumExpr ast, Object o) {
         return layoutBinary("EnumExpr", ast.Type, ast.Entry);
     }

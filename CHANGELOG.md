@@ -61,7 +61,7 @@
 *09.08.2024*
 
 - char support mostly :)
-- removing strings :()
+- removing strings :(
 
 *10.08.2024*
 
@@ -80,6 +80,19 @@
 - porting logic from emitter to type checker
 - enum Arrays
 
+*14.08.2024*
+
+- made a start on the great structs
+ - can declare types with full validation of types/etc
+ - next up is actually instantiating them :)
+- set up the website
+
+*15.08.2024*
+
+- can instantiate structs!!
+ - structs can contain structs and enums, etc
+ - need to set up reading and writing to struct fields now :)
+ - need a reassessment of my rejection of an assign-expr CFG element now
 
 # TODO
 
@@ -99,9 +112,7 @@
 - errors messages regarding mutability/reassignment w/ pointers
 
 - pointers and dynamic memory
-- structs
 - generics
-- classes
 
 - clean up all the todos
 - set default values for uninitialised

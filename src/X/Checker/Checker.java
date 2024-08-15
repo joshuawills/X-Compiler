@@ -61,9 +61,13 @@ public class Checker implements Visitor {
         "*44: type may not be emitted if expression not provided",
         "*45: duplicate struct members",
         "*46: struct declared but never used",
-        "*47: duplicate type definitions with same name",
+        "*47: multiple type definitions with same name",
         "*48: no struct members",
-        "*49: no enum members"
+        "*49: no enum members",
+        "*50: insufficient arguments to struct declaration",
+        "*51: excess arguments to struct declaration",
+        "*52: incompatible type for struct member",
+        "*53: array in struct definition must have size defined"
     };
 
     private final SymbolTable idTable;
@@ -170,6 +174,11 @@ public class Checker implements Visitor {
                     while (true) {
                         StructElem SE = ((StructList) P).S;
                         Type T = SE.T;
+                        if (T.isArray()) {
+                            if (((ArrayType) T).length == -1) {
+                                handler.reportError(errors[53] + ": %", SE.I.spelling, S.I.pos);
+                            }
+                        }
                         if (T.isMurky()) {
                             unMurk(SE);
                         } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
@@ -505,12 +514,11 @@ public class Checker implements Visitor {
         }
 
         Type tFromAST = t;
-        Type tToAST = expectedT;
         CastExpr E;
         if (parent != null) {
-            E = new CastExpr(expr, tFromAST, tToAST, expr.pos, parent);
+            E = new CastExpr(expr, tFromAST, expectedT, expr.pos, parent);
         } else {
-            E = new CastExpr(expr, tFromAST, tToAST, expr.pos);
+            E = new CastExpr(expr, tFromAST, expectedT, expr.pos);
         }
         E.type = expectedT;
         return E;
@@ -1096,8 +1104,9 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
-        boolean isFnCall = ((VarExpr) ast.parent).parent instanceof Args;
-        if (decl.T.isArray() && !isFnCall) {
+        boolean isFnCall = ast.parent.parent instanceof Args;
+        boolean isStructDecl = ast.parent.parent instanceof StructArgs;
+        if (decl.T.isArray() && !isFnCall && !isStructDecl) {
             handler.reportError(errors[31] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
@@ -1125,7 +1134,7 @@ public class Checker implements Visitor {
         idTable.openScope();
         ast.varName.ifPresent(localVar -> declareVariable(localVar.I, localVar));
         ast.varName.ifPresent(localVar -> localVar.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter));
-        validDollar = !ast.varName.isPresent();
+        validDollar = ast.varName.isEmpty();
         if (ast.I1.isPresent()) {
             T1 = (Type) ast.I1.get().visit(this, o);
             if (!T1.isInt()) {
@@ -1466,11 +1475,10 @@ public class Checker implements Visitor {
     public Object visitEnumExpr(EnumExpr ast, Object o) {
 
         Decl d = idTable.retrieve(ast.Type.spelling);
-        if (!(d instanceof Enum)) {
+        if (!(d instanceof Enum E)) {
             handler.reportError(errors[40] + ": %", ast.Type.spelling, ast.pos);
             return Environment.errorType;
         }
-        Enum E = (Enum) d;
         E.isUsed = true;
         if (!E.containsKey(ast.Entry.spelling)) {
             String message = "'" + ast.Entry.spelling + "' in enum '" + ast.Type.spelling + "'";
@@ -1487,28 +1495,63 @@ public class Checker implements Visitor {
     }
 
     public Object visitStructElem(StructElem ast, Object o) {
-        System.out.println("STRUCT ELEM : CHECKER");
         return null;
     }
 
     public Object visitStructList(StructList ast, Object o) {
-        System.out.println("STRUCT LIST : CHECKER");
         return null;
     }
 
     public Object visitStruct(Struct ast, Object o) {
-        System.out.println("STRUCT : CHECKER");
         return null;
     }
 
     public Object visitEmptyStructList(EmptyStructList ast, Object o) {
-        System.out.println("EMPTY STRUCT LIST: CHECKER");
         return null;
     }
 
     public Object visitStructType(StructType ast, Object o) {
-        System.out.println("STRUCT TYPE: CHECKER");
         return null;
+    }
+
+    public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructArgs(StructArgs ast, Object o) {
+        StructList L = (StructList) o;
+        Type expectedType = L.S.T;
+        Type realType = (Type) ast.E.visit(this, null);
+        ast.E.type = realType;
+        if (!realType.assignable(expectedType)) {
+            String message = "member '" + L.S.I.spelling + "' should be of type " +
+                expectedType + ", but received " + realType;
+            handler.reportError(errors[52] + ": %", message, ast.pos);
+        }
+        ast.SL.visit(this, L.SL);
+        return null;
+    }
+
+    public Object visitStructExpr(StructExpr ast, Object o) {
+        String name = ast.I.spelling;
+        Decl D = idTable.retrieve(name);
+        if (!(D instanceof Struct DS)) {
+            handler.reportError(errors[40] + ": %", "'" + name + "'", ast.I.pos);
+            return Environment.errorType;
+        }
+        DS.isUsed = true;
+        int numExpectedArgs = DS.getLength();
+        int realNumArgs = ast.getLength();
+        String message = "'" + name + "' expects " + numExpectedArgs + " argument/s but received " + realNumArgs;
+        if (realNumArgs < numExpectedArgs) {
+            handler.reportError(errors[50] + ": %" ,message, ast.SA.pos);
+        } else if (realNumArgs > numExpectedArgs) {
+            handler.reportError(errors[51] + ": %" ,message, ast.SA.pos);
+        }
+        ast.SA.visit(this, DS.SL);
+        Type T = new StructType(DS, DS.pos);
+        ast.type = T;
+        return T;
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object o) {

@@ -11,6 +11,9 @@ public class Emitter implements Visitor {
     private ArrayType arrayDetails;
     private String arrName = "";
     private final Position dummyPos = new Position();
+    private boolean seenStructs = false;
+    private String currentStructName = "";
+    private String currentStructType = "";
 
 
     public Emitter(String outputName) {
@@ -18,6 +21,21 @@ public class Emitter implements Visitor {
     }
 
     public final void gen(AST ast) {
+
+        // Probably inefficient, think of a way to hoist structs to top of AST
+        // TODO: will work for now though
+        DeclList L = (DeclList) ((Program) ast).PL;
+        while (true) {
+            if (L.D instanceof Struct S) {
+                S.visit(this, null);
+            }
+            if (L.DL instanceof EmptyDeclList) {
+                break;
+            }
+            L = (DeclList) L.DL;
+        }
+        seenStructs = true;
+
         emitN("declare i32 @printf(i8*, ...)");
         emitN("declare i32 @scanf(i8*, ...)");
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
@@ -123,6 +141,11 @@ public class Emitter implements Visitor {
                 E = new ArrayInitExpr(new EmptyArgList(dummyPos), dummyPos);
             }
             E.visit(this, o);
+            return null;
+        } else if (ast.T.isStruct()) {
+            currentStructName = ast.I.spelling + depth;
+            currentStructType = "struct." + ((StructType) ast.T).S.I.spelling;
+            ast.E.visit(this, o);
             return null;
         }
 
@@ -1206,26 +1229,69 @@ public class Emitter implements Visitor {
     }
 
     public Object visitStructElem(StructElem ast, Object o) {
-        System.out.println("STRUCT ELEM : EMITTER");
+        Type t = ast.T;
+        t.visit(this, o);
         return null;
     }
 
     public Object visitStructList(StructList ast, Object o) {
-        System.out.println("STRUCT LIST : EMITTER");
+        ast.S.visit(this, o);
+        if (ast.SL instanceof StructList) {
+            emit(", ");
+        }
+        ast.SL.visit(this, o);
         return null;
     }
 
     public Object visitStruct(Struct ast, Object o) {
-        System.out.println("STRUCT : EMITTER");
+        if (!ast.isUsed || seenStructs) {
+            return null;
+        }
+        String s = ast.I.spelling;
+        emit("%struct." + s + " = type { ");
+        ast.SL.visit(this, o);
+        emitN(" }");
         return null;
     }
 
     public Object visitEmptyStructList(EmptyStructList ast, Object o) {
-        System.out.println("EMPTY STRUCT LIST: EMITTER");
         return null;
     }
 
     public Object visitStructType(StructType ast, Object o) {
+        emit("%struct." + ast.S.I.spelling);
+        return null;
+    }
+
+    public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructArgs(StructArgs ast, Object o) {
+
+        // Assuming that the struct expr is only mapped to a decl currently
+        String parentName = currentStructName;
+        Frame f = (Frame) o;
+
+        ast.E.visit(this, o);
+        int lastIndex = f.localVarIndex - 1;
+        int ptrIndex = f.getNewIndex();
+        emit("\t%" + ptrIndex + " = getelementptr %");
+        emit(currentStructType);
+        emit(", %");
+        emit(currentStructType);
+        emitN("* %" + parentName + ", i32 0, i32 " + ast.structIndex);
+        emit("\tstore ");
+        ast.E.type.visit(this, o);
+        emit(" %" + lastIndex + ", ");
+        ast.E.type.visit(this, o);
+        emitN("* %" + ptrIndex);
+        ast.SL.visit(this, o);
+        return null;
+    }
+
+    public Object visitStructExpr(StructExpr ast, Object o) {
+        ast.SA.visit(this, o);
         return null;
     }
 

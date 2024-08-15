@@ -138,4 +138,10 @@ public interface Visitor {
     Object visitEmptyStructList(EmptyStructList ast, Object o);
 
     Object visitStructType(StructType ast, Object o);
+
+    Object visitEmptyStructArgs(EmptyStructArgs ast, Object o);
+
+    Object visitStructArgs(StructArgs ast, Object o);
+
+    Object visitStructExpr(StructExpr ast, Object o);
 }

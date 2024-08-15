@@ -21,6 +21,11 @@ public class Parser {
     private Position previousPosition;
     private Token currentToken;
 
+
+    // This is to handle the confusion about struct parsing and conditional expression
+    // evaluation
+    private boolean assigningType = false;
+
     public Parser(ArrayList<Token> tokenStream, ErrorHandler handler) {
         this.tokenStream = tokenStream;
         this.handler = handler;
@@ -142,7 +147,7 @@ public class Parser {
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(S, dlAST2, pos);
-        }else {
+        } else {
             match(TokenType.LET);
             boolean isMut = tryConsume(TokenType.MUT);
             Ident iAST = parseIdent();
@@ -153,7 +158,9 @@ public class Parser {
             }
             Expr eAST = new EmptyExpr(pos);
             if (tryConsume(TokenType.ASSIGN)) {
+                assigningType = true;
                 eAST = parseExpr();
+                assigningType = false;
             }
             finish(pos);
             match(TokenType.SEMI);
@@ -195,7 +202,9 @@ public class Parser {
         finish(pos);
         Expr eAST = new EmptyExpr(pos);
         if (tryConsume(TokenType.ASSIGN)) {
+            assigningType = true;
             eAST = parseExpr();
+            assigningType = false;
         }
         match(TokenType.SEMI);
         return new LocalVar(tAST, iAST, eAST, pos, isMut);
@@ -511,6 +520,31 @@ public class Parser {
         return new StructList(sAST, parseFullStructList(), pos);
     }
 
+    private List parseFullStructArgs() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Expr eAST = parseExpr();
+        if (tryConsume(TokenType.CLOSE_CURLY)) {
+           finish(pos);
+           return new StructArgs(eAST, new EmptyStructArgs(pos), pos);
+        }
+        match(TokenType.COMMA);
+        finish(pos);
+        return new StructArgs(eAST, parseFullStructArgs(), pos);
+    }
+
+    private List parseStructArgs() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        if (tryConsume(TokenType.CLOSE_CURLY)) {
+            finish(pos);
+            return new EmptyStructArgs(pos);
+        } else {
+            return parseFullStructArgs();
+        }
+    }
+
+
     private List parseStructList() throws SyntaxError {
         Position pos = new Position();
         start(pos);
@@ -754,6 +788,10 @@ public class Parser {
                     Ident i2AST = parseIdent();
                     finish(pos);
                     yield new EnumExpr(iAST, i2AST, pos);
+                } else if (assigningType && tryConsume(TokenType.OPEN_CURLY)) {
+                    List saAST = parseStructArgs();
+                    finish(pos);
+                    yield new StructExpr(iAST, saAST, pos);
                 } else {
                     finish(pos);
                     Var simVAST = new SimpleVar(iAST, pos);

@@ -528,6 +528,29 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
+        print(indentString() + "EmptyStructArgs");
+        return null;
+    }
+
+    public Object visitStructArgs(StructArgs ast, Object o) {
+        print(indentString() + "StructArgs");
+        ++indent;
+        ast.E.visit(this, o);
+        ast.SL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitStructExpr(StructExpr ast, Object o) {
+        print(indentString() + "StructExpr");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.SA.visit(this, o);
+        --indent;
+        return null;
+    }
+
     public Object visitEnumExpr(EnumExpr ast, Object o) {
         print(indentString() + ast.Type.spelling + "." + ast.Entry.spelling);
         return null;

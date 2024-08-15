@@ -57,4 +57,8 @@ public abstract class Type extends AST {
     public boolean isUnknown() {
         return this instanceof UnknownType;
     }
+
+    public boolean isStruct() {
+        return this instanceof StructType;
+    }
 }

@@ -67,15 +67,18 @@ stmt})? \\
 \textit{array-init-expr} \\
 \textit{array-index} \\
 \textit{enum-expr} \\
+\textit{struct-expr} \\
 \end{cases} \\
 
 \\
 
 \textit{array-index} &\to \textit{ident } "[" \textit{expr} "]" \\
 \textit{enum-expr} &\to \textit{ident } \text{ "." }\textit{ident} \\
+\textit{struct-expr} &\to \textit{ident } \textit{"\{ " } \textit{struct-args} \textit{ "\} "} \\ 
 \textit{func-call} &\to \textit{ident } "(" \textit{args} ")" \\
 \textit{array-init-expr} &\to \textit{"["} (\textit{expr } (\text{","} \textit{ expr})^*)? \textit{"]"} \\
 \textit{args} &\to \textit{expr } (\text{","} \textit{ expr})^* \text{ | } \epsilon\\
+\textit{struct-args} &\to \textit{expr } (\text{","} \textit{ expr})^* \text{ | } \epsilon\\
 \textit{para-list} &\to \textit{arg } (\textit{"," arg})^*  \text{ | } \epsilon \\ \\
 \textit{arg} &\to \textbf{mut}? \textit{ ident } \text{ ":" } \textit{ type}\\
 

@@ -1,6 +1,5 @@
 package X.Evaluator;
 
-import X.CodeGen.Emitter;
 import X.CodeGen.LLVM;
 import X.Nodes.*;
 import X.Nodes.Enum;
@@ -441,6 +440,19 @@ public class Evaluator implements Visitor {
     }
 
     public Object visitStructType(StructType ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructArgs(StructArgs ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructExpr(StructExpr ast, Object o) {
+        System.out.println("EVALUATOR: STRUCT EXPR");
         return null;
     }
 
