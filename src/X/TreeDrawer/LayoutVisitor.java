@@ -73,10 +73,6 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("L.VarStmt", ast.V);
     }
 
-    public Object visitDeclStmt(DeclStmt ast, Object obj) {
-        return layoutBinary("DeclStmt", ast.I, ast.E);
-    }
-
     public Object visitStmtList(StmtList ast, Object obj) {
         return layoutBinary("StmtList", ast.S, ast.SL);
     }
@@ -132,10 +128,6 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("ArrayIndexExpr", ast.I, ast.index);
     }
 
-    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
-        return layoutTernary("ArrDeclStmt", ast.I, ast.aeAST.get(), ast.E);
-    }
-
     public Object visitCharType(CharType ast, Object o) {
         return layoutNullary("char");
     }
@@ -182,10 +174,6 @@ public class LayoutVisitor implements Visitor {
 
     public Object visitCallExpr(CallExpr ast, Object o) {
         return layoutBinary("CallExpr(" + ast.TypeDef + ")", ast.I, ast.AL);
-    }
-
-    public Object visitCallStmt(CallStmt ast, Object o) {
-        return layoutUnary("CallStmt", ast.E);
     }
 
     public Object visitLoopStmt(LoopStmt ast, Object o) {
@@ -508,6 +496,18 @@ public class LayoutVisitor implements Visitor {
 
     public Object visitStructExpr(StructExpr ast, Object o) {
         return layoutBinary("StructExpr", ast.I, ast.SA);
+    }
+
+    public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
+        return layoutTernary("AssignmentExpr", ast.LHS, ast.O, ast.RHS);
+    }
+
+    public Object visitExprStmt(ExprStmt ast, Object o) {
+        return layoutUnary("ExprStmt", ast.E);
+    }
+
+    public Object visitDerefExpr(DerefExpr ast, Object o) {
+        return layoutUnary("DerefExpr", ast.E);
     }
 
     public Object visitEnumExpr(EnumExpr ast, Object o) {

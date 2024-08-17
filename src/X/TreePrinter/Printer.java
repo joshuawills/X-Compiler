@@ -1,12 +1,9 @@
-package X.TreePrinter;
-
-import X.Nodes.*;
+package X.TreePrinter; import X.Nodes.*;
 import X.Nodes.Enum;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Arrays;
-
 public class Printer implements Visitor {
 
     private int indent;
@@ -196,14 +193,6 @@ public class Printer implements Visitor {
         return null;
     }
 
-    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
-        print(indentString() + "ArrDeclStmt");
-        ast.I.visit(this, o);
-        ast.aeAST.get().visit(this, o);
-        ast.E.visit(this, o);
-        return null;
-    }
-
     public Object visitCharType(CharType ast, Object o) {
         print(indentString() + "char");
         return null;
@@ -252,14 +241,6 @@ public class Printer implements Visitor {
         ++indent;
         ast.E.visit(this, o);
         --indent;
-        return null;
-    }
-
-    @Override
-    public Object visitDeclStmt(DeclStmt ast, Object o) {
-        print(indentString() + "DeclStmt");
-        ast.I.visit(this, o);
-        ast.E.visit(this, o);
         return null;
     }
 
@@ -479,15 +460,6 @@ public class Printer implements Visitor {
         return null;
     }
 
-    @Override
-    public Object visitCallStmt(CallStmt ast, Object o) {
-        print(indentString() + "CallStmt");
-        ++indent;
-        ast.E.visit(this, o);
-        --indent;
-        return null;
-    }
-
     public Object visitLoopStmt(LoopStmt ast, Object o) {
         print(indentString() + "LoopStmt");
         ast.varName.ifPresent(var -> var.visit(this, o));
@@ -547,6 +519,32 @@ public class Printer implements Visitor {
         ++indent;
         ast.I.visit(this, o);
         ast.SA.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
+        print(indentString() + "AssignmentExpr");
+        ++indent;
+        ast.LHS.visit(this, o);
+        ast.O.visit(this, o);
+        ast.RHS.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitExprStmt(ExprStmt ast, Object o) {
+        print(indentString() + "ExprStmt");
+        ++indent;
+        ast.E.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitDerefExpr(DerefExpr ast, Object o) {
+        print(indentString() +"DerefExpr");
+        ++indent;
+        ast.E.visit(this, o);
         --indent;
         return null;
     }

@@ -26,10 +26,8 @@ defined in other language documentation.
 \textit{break-stmt} \\
 \textit{continue-stmt} \\
 \textit{return-stmt} \\
-\textit{decl-stmt} \\
-\textit{math-decl-stmt} \\
-\textit{func-call-stmt} \\
 \textit{loop-stmt} \\
+\textit{expr-stmt} \\
 \end{cases} \\
 \textit{if-stmt} &\to \textbf{if} \textit{ expr stmt } (\textbf{else if } \textit{expr stmt})^* (\textbf{else} \textit{
 stmt})? \\
@@ -39,13 +37,12 @@ stmt})? \\
 \textit{break-stmt} &\to \textbf{break} \text{ ";"} \\
 \textit{continue-stmt} &\to \textbf{continue } \text{ ";"} \\
 \textit{return-stmt} &\to \textbf{return} \textit{ expr}? \text{ ";"} \\
-\textit{math-decl-stmt} &\to \textit(*)? \textit{ ident}  (\textit{ "["} \textit{ expr }\textit{"]" })?(\text{ "+="} | \text{ "-="} | \text{ "/="} | \text{ "*="}) \textit{expr} \text{ ";"} \\
-\textit{decl-stmt} &\to \textit(*)? \textit{ ident} (\textit{ "["} \textit{ expr }\textit{"]" })? \text{ "="} \textit{expr} \text{ ";"} \\
-\textit{func-call-stmt} &\to \textit{func-call} \text{ ";"} \\
+\textit{expr-stmt} &\to \textit{expr} \text{ ";"} \\
 \textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\
 \textit{loop-stmt} &\to \textbf{ loop} \textit{ ident } \textit{ compound-stmt}\\ \\
 
-\textit{expr} &\to \textit{or-expr}\\
+\textit{expr} &\to \textit{assignment-expr}\\
+\textit{assignment-expr} &\to \textit{or-expr } || \textit{unary-expr} \textbf{ ASSIGNMENT-OPERATOR } \textit{assignment-expr}\\  
 \textit{or-expr} &\to \textit{and-expr } (\text{"||" } \textit{and-expr})^* \\
 \textit{and-expr} &\to \textit{equality-expr } (\text{"\\\&\\\&" } \textit{equality-expr})^* \\
 \textit{equality-expr} &\to \textit{relational-expr } ((\text{"==" } | \text{ "!=" }) \textit{ relational-expr})^* \\
@@ -90,6 +87,7 @@ stmt})? \\
 \textit{STRINGLITERAL} &\to \textit{"} \textit{ident} \textit{"} \\
 \textit{BOOLLITERAL} &\to true | false \\
 \textit{CHARLITERAL} &\to \textit{'ident'} \\
+\textit{ASSIGNMENT-OPERATOR} &\to \textbf{ "==" "+=" "-=" "*=" "/=" }\\
 
 \end{align}
 {{< /katex >}}

@@ -28,8 +28,6 @@ public interface Visitor {
 
     Object visitReturnStmt(ReturnStmt ast, Object o);
 
-    Object visitDeclStmt(DeclStmt ast, Object o);
-
     Object visitOperator(Operator ast, Object o);
 
     Object visitBinaryExpr(BinaryExpr ast, Object o);
@@ -85,8 +83,6 @@ public interface Visitor {
 
     Object visitLocalVarStmt(LocalVarStmt ast, Object o);
 
-    Object visitCallStmt(CallStmt ast, Object o);
-
     Object visitLoopStmt(LoopStmt ast, Object o);
 
     Object visitDoWhileStmt(DoWhileStmt ast, Object o);
@@ -104,8 +100,6 @@ public interface Visitor {
     Object visitArrayInitExpr(ArrayInitExpr ast, Object o);
 
     Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o);
-
-    Object visitArrDeclStmt(DeclStmt ast, Object o);
 
     Object visitCharType(CharType ast, Object o);
 
@@ -144,4 +138,10 @@ public interface Visitor {
     Object visitStructArgs(StructArgs ast, Object o);
 
     Object visitStructExpr(StructExpr ast, Object o);
+
+    Object visitAssignmentExpr(AssignmentExpr ast, Object o);
+
+    Object visitExprStmt(ExprStmt ast, Object o);
+
+    Object visitDerefExpr(DerefExpr ast, Object o);
 }

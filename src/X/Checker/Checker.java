@@ -5,6 +5,7 @@ import X.ErrorHandler;
 import X.Lexer.Position;
 import X.Nodes.*;
 import X.Nodes.Enum;
+import X.Nodes.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -43,7 +44,7 @@ public class Checker implements Visitor {
         "*26: do-while conditional is not boolean",
         "*27: address-of operand only applicable to variables",
         "*28: can't get address of a constant variable",
-        "*29: inappropriate deference of variable",
+        "*29: inappropriate dereference of variable",
         "*30: identifier declared void[]",
         "*31: attempt to use an array as a scalar",
         "*32: attempt to use a scalar/function as an array",
@@ -67,7 +68,8 @@ public class Checker implements Visitor {
         "*50: insufficient arguments to struct declaration",
         "*51: excess arguments to struct declaration",
         "*52: incompatible type for struct member",
-        "*53: array in struct definition must have size defined"
+        "*53: array in struct definition must have size defined",
+        "*54: invalid left hand side for assignment expression"
     };
 
     private final SymbolTable idTable;
@@ -166,6 +168,7 @@ public class Checker implements Visitor {
         L = (DeclList) ((Program) ast).PL;
         while (true) {
             if (L.D instanceof GlobalVar V) {
+                V.index = "";
                 visitVarDecl(V, V.T, V.I, V.E);
             } else if (L.D instanceof Struct S) {
                 List P = S.SL;
@@ -704,60 +707,6 @@ public class Checker implements Visitor {
         }
         return null;
     }
-
-    public Object visitDeclStmt(DeclStmt ast, Object o) {
-        Decl decl = idTable.retrieve(ast.I.spelling);
-        if (decl == null) {
-            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
-            return null;
-        }
-
-        if (decl instanceof LocalVar || decl instanceof GlobalVar) {
-            decl.isReassigned = true;
-        }
-        ast.I.decl = decl;
-        if (decl instanceof Function) {
-            handler.reportError(errors[9], "", ast.E.pos);
-            return null;
-        }
-
-        if (!decl.isMut) {
-            String message = "'" + decl.I.spelling + "'";
-            handler.reportError(errors[20] + ": %", message, ast.E.pos);
-            return null;
-        }
-
-        Type existingType = decl.T;
-
-        if (existingType.isArray()) {
-            handler.reportError(errors[36] + ": %", ast.I.spelling, ast.E.pos);
-            return null;
-        }
-
-        if (ast.isDeref) {
-            if (!decl.T.isPointer()) {
-                handler.reportError(errors[29], "", ast.pos);
-                return null;
-            }
-            existingType = ((PointerType) decl.T).t;
-        }
-
-        Type t = (Type) ast.E.visit(this, o);
-        if (!existingType.assignable(t)) {
-            String message = "expected " + existingType + ", received " + t.toString();
-            handler.reportError(errors[5] + ": %", message, ast.E.pos);
-        }
-
-        Expr e2AST;
-        if (ast.opt == DeclOptions.ARRAY_ACC) {
-            e2AST = checkCast(((ArrayType) existingType).t, ast.E, null);
-        } else {
-            e2AST = checkCast(existingType, ast.E, null);
-        }
-        ast.E = e2AST;
-        return null;
-    }
-
     public Object visitOperator(Operator ast, Object o) {
         return null;
     }
@@ -1104,6 +1053,7 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
+        ast.I.decl = decl;
         boolean isFnCall = ast.parent.parent instanceof Args;
         boolean isStructDecl = ast.parent.parent instanceof StructArgs;
         if (decl.T.isArray() && !isFnCall && !isStructDecl) {
@@ -1115,17 +1065,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[9], "", ast.I.pos);
             return Environment.errorType;
         } else if (decl instanceof GlobalVar || decl instanceof LocalVar) {
-            decl.isUsed = true;
+            ((Decl)ast.I.decl).isUsed = true;
         }
 
-        ast.I.decl = decl;
         return decl.T;
-    }
-
-
-    public Object visitCallStmt(CallStmt ast, Object o) {
-        ast.E.visit(this, o);
-        return null;
     }
 
     public Object visitLoopStmt(LoopStmt ast, Object o) {
@@ -1293,7 +1236,16 @@ public class Checker implements Visitor {
             handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
-        binding.isUsed = true;
+        if (binding instanceof Function || !binding.T.isArray()) {
+            handler.reportError(errors[32] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        }
+
+        if (!ast.isLHSOfAssignment) {
+            binding.isUsed = true;
+        } else {
+            binding.isReassigned = true;
+        }
         Type T = (Type) ast.index.visit(this, o);
         if (!T.isInt()) {
             handler.reportError(errors[37] + ": %", ast.I.spelling, ast.I.pos);
@@ -1301,55 +1253,6 @@ public class Checker implements Visitor {
         }
         ast.type = binding.T;
         return ((ArrayType) binding.T).t;
-    }
-
-    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
-        Decl decl = idTable.retrieve(ast.I.spelling);
-        if (decl == null) {
-            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.E.pos);
-            return null;
-        }
-        if (decl instanceof LocalVar || decl instanceof GlobalVar) {
-            decl.isReassigned = true;
-        }
-        ast.I.decl = decl;
-        if (decl instanceof Function || !decl.T.isArray()) {
-            handler.reportError(errors[32] +": %", ast.I.spelling, ast.E.pos);
-            return null;
-        }
-        if (!decl.isMut) {
-            String message = "'" + decl.I.spelling + "'";
-            handler.reportError(errors[20] + ": %", message, ast.E.pos);
-            return null;
-        }
-
-        Type t1 = (Type) ast.aeAST.get().visit(this, o);
-        if (!t1.isInt()) {
-            handler.reportError(errors[37] + ": %", ast.I.spelling, ast.E.pos);
-            return null;
-        }
-
-        Type existingType = decl.T;
-        Type innerType = ((ArrayType) existingType).t;
-        if (ast.isDeref) {
-            if (!innerType.isPointer()) {
-                handler.reportError(errors[29], "", ast.pos);
-                return null;
-            }
-            innerType = ((PointerType) innerType).t;
-        }
-
-        Type t = (Type) ast.E.visit(this, o);
-        if (!innerType.assignable(t)) {
-            String message = "expected " + existingType + ", received " + t.toString();
-            handler.reportError(errors[5] + ": %", message, ast.E.pos);
-        }
-
-        if (t.isInt() && innerType.isFloat()) {
-            Operator op = new Operator("i2f", ast.E.pos);
-            ast.E = new UnaryExpr(op, ast.E, ast.E.pos);
-        }
-        return null;
     }
 
     public Object visitCharType(CharType ast, Object o) {
@@ -1552,6 +1455,82 @@ public class Checker implements Visitor {
         Type T = new StructType(DS, DS.pos);
         ast.type = T;
         return T;
+    }
+
+    private boolean validLHS(Object o) {
+        return o instanceof ArrayIndexExpr || o instanceof VarExpr
+            || o instanceof DerefExpr;
+    }
+
+    public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
+        if (ast.LHS instanceof VarExpr VE) {
+            Decl D = idTable.retrieve(((SimpleVar) VE.V).I.spelling);
+            if (D.T.isArray()) {
+                handler.reportError(errors[36],  "", ast.LHS.pos);
+                return Environment.errorType;
+            }
+        }
+
+        if (!validLHS(ast.LHS)) {
+            String message = "must be a variable or an array index";
+            handler.reportError(errors[54] + ": %", message, ast.LHS.pos);
+            return Environment.errorType;
+        }
+
+        Type realType = (Type) ast.RHS.visit(this, o);
+        Type expectedType = (Type) ast.LHS.visit(this, o);
+
+        if (!realType.assignable(expectedType)) {
+            String message = "expected " + expectedType + ", received " + realType;
+            handler.reportError(errors[5] + ": %", message, ast.LHS.pos);
+            return Environment.errorType;
+        }
+        if (ast.LHS instanceof VarExpr V && !expectedType.isError()) {
+            Decl D = (Decl) ((SimpleVar) V.V).I.decl;
+            if (!D.isMut) {
+                String message = "'" + D.I.spelling + "'";
+                handler.reportError(errors[20] + ": %", message, ast.LHS.pos);
+                return Environment.errorType;
+            }
+        } else if (ast.LHS instanceof ArrayIndexExpr A && !expectedType.isError()) {
+            Decl D = (Decl) A.I.decl;
+            if (!D.isMut) {
+                String message = "'" + D.I.spelling + "'";
+                handler.reportError(errors[20] + ": %", message, ast.LHS.pos);
+                return Environment.errorType;
+            }
+        }
+
+        if (ast.O.spelling.equals("/=") || ast.O.spelling.equals("*=")
+            || ast.O.spelling.equals("-=")|| ast.O.spelling.equals("+=")) {
+            String O = String.valueOf(ast.O.spelling.charAt(0));
+            ast.RHS = new BinaryExpr(ast.LHS, ast.RHS, new Operator(O, ast.RHS.pos), ast.RHS.pos);
+            ast.RHS.visit(this, o);
+        }
+
+
+        ast.RHS = checkCast(expectedType, ast.RHS, ast);
+        ast.type = expectedType;
+        return ast.type;
+    }
+
+    public Object visitDerefExpr(DerefExpr ast, Object o) {
+        Type T = (Type) ast.E.visit(this, o);
+        if (!T.isPointer()) {
+            handler.reportError(errors[29], "", ast.pos);
+            return Environment.errorType;
+        }
+        ast.type = ((PointerType) T).t;
+        return ((PointerType) T).t;
+    }
+
+    public Object visitExprStmt(ExprStmt ast, Object o) {
+        if (!(ast.E instanceof AssignmentExpr || ast.E instanceof CallExpr)) {
+            System.out.println(ast.E);
+            System.out.println("Should never be reached");
+        }
+        ast.E.visit(this, o);
+        return null;
     }
 
     public Object visitStringLiteral(StringLiteral ast, Object o) {

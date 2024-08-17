@@ -67,10 +67,6 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitDeclStmt(DeclStmt ast, Object o) {
-        return null;
-    }
-
     public Object visitOperator(Operator ast, Object o) {
         return null;
     }
@@ -293,10 +289,6 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitCallStmt(CallStmt ast, Object o) {
-        return null;
-    }
-
     public Object visitLoopStmt(LoopStmt ast, Object o) {
         return null;
     }
@@ -377,9 +369,6 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitArrDeclStmt(DeclStmt ast, Object o) {
-        return null;
-    }
 
     public Object visitCharType(CharType ast, Object o) {
         return null;
@@ -453,6 +442,21 @@ public class Evaluator implements Visitor {
 
     public Object visitStructExpr(StructExpr ast, Object o) {
         System.out.println("EVALUATOR: STRUCT EXPR");
+        return null;
+    }
+
+    public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
+        System.out.println("EVALUATOR: ASSIGNMENT EXPR");
+        return null;
+    }
+
+    public Object visitExprStmt(ExprStmt ast, Object o) {
+        System.out.println("EVALUATOR: EXPR STMT");
+        return null;
+    }
+
+    public Object visitDerefExpr(DerefExpr ast, Object o) {
+        System.out.println("EVALUATOR: DEREF EXPR");
         return null;
     }
 
