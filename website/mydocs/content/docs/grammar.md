@@ -60,13 +60,18 @@ stmt})? \\
 "(" \textit{ expr } ")" \\
 \textit{ident} \\
 \textit{(+ | - | ! | * | \&) unary-expr} \\
-\textit{func-call} \\
 \textit{array-init-expr} \\
+\textit{postfix-expression} \\
+\end{cases} \\
+\\
+
+\textit{postfix-expression} &\to
+\begin{cases}
+\textit{func-call} \\
 \textit{array-index} \\
 \textit{enum-expr} \\
 \textit{struct-expr} \\
 \end{cases} \\
-
 \\
 
 \textit{array-index} &\to \textit{ident } "[" \textit{expr} "]" \\

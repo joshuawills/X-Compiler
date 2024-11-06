@@ -514,6 +514,22 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("EnumExpr", ast.Type, ast.Entry);
     }
 
+    public Object visitEmptyStructAccessList(EmptyStructAccessList ast, Object o) {
+        return layoutNullary("EmptyStructAccessList");
+    }
+
+    public Object visitStructAccessList(StructAccessList ast, Object o) {
+        return layoutBinary("StructAccessList", ast.SA, ast.SAL);
+    }
+
+    public Object visitStructAccess(StructAccess ast, Object o) {
+        return layoutBinary("StructAccess", ast.varName, ast.L);
+    }
+
+    public Object visitDotExpr(DotExpr ast, Object o) {
+        return layoutBinary("DotExpr", ast.I, ast.E);
+    }
+
     public Object visitUnknownType(UnknownType ast, Object o) {
         return layoutNullary("UnknownType");
     }

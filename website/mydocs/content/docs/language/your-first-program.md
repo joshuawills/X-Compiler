@@ -125,6 +125,36 @@ fn main() -> int {
 }
 ```
 
+### Structs
+
+Struct types are an experimental feature currently being developed for the X-Compiler. They can be nested,
+and are accessed using a dot notation. An example is below.
+
+```Rust
+struct BoolBox -> {
+    cond: bool
+}
+
+struct Data -> {
+    vals: BoolBox,
+    num: int
+}
+
+fn main() -> int {
+    let a = Data {
+        BoolBox { 
+            false
+        },
+        2
+    };
+
+    if !a.vals.cond {
+        outInt(a.num);
+    }
+}
+
+```
+
 ## Control Flow
 
 X has the standard control flow operators that other languages have, and behave the same semantically.

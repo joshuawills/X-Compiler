@@ -129,7 +129,7 @@ do
 done < <(find "tests/errors" -type f)
 
 
-echo -e "${YELLOW}FAILING TESTS: ${RESET}"
+echo -e "${YELLOW}MINOR TESTS: ${RESET}"
 while IFS= read -r file
 do
 

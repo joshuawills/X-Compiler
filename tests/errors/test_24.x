@@ -1,4 +1,4 @@
-// inappropriate use of the '$' operator:w
+// inappropriate use of the '$' operator
 
 
 fn main() -> int {

@@ -554,6 +554,30 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitEmptyStructAccessList(EmptyStructAccessList ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructAccessList(StructAccessList ast, Object o) {
+        ast.SA.visit(this, o);
+        ast.SAL.visit(this, o);
+        return null;
+    }
+
+    public Object visitStructAccess(StructAccess ast, Object o) {
+        print(indentString() + ast.varName.spelling);
+        ast.L.visit(this, o);
+        return null;
+    }
+
+    public Object visitDotExpr(DotExpr ast, Object o) {
+        print(indentString() + "DotExpr: " + ast.I.spelling);
+        ++indent;
+        ast.E.visit(this, o);
+        --indent;
+        return null;
+    }
+
     public Object visitUnknownType(UnknownType ast, Object o) {
         print(indentString() + "UnknownType");
         return null;

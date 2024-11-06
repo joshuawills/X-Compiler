@@ -4,6 +4,7 @@ import X.Lexer.Position;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class Struct extends Decl {
 
@@ -37,6 +38,41 @@ public class Struct extends Decl {
         }
         length = l;
         return length;
+    }
+
+    public int getNum(String val) {
+        StructList SLL = (StructList) SL;
+        int l = 0;
+        while (true) {
+            String S = SLL.S.I.spelling;
+            if (S.equals(val)) {
+                return l;
+            }
+            if (SLL.SL instanceof EmptyStructList) {
+                break;
+            }
+            l++;
+            SLL = (StructList) SLL.SL;
+        }
+        return -1;
+    }
+
+    public Optional<StructElem> getElem(String val) {
+        if (isEmpty()) {
+            return Optional.empty();
+        }
+        StructList SLL = (StructList) SL;
+        while (true) {
+            String s = SLL.S.I.spelling;
+            if (s.equals(val)) {
+                return Optional.of(SLL.S);
+            }
+            if (SLL.SL instanceof EmptyStructList) {
+                break;
+            }
+            SLL = (StructList) SLL.SL;
+        }
+        return Optional.empty();
     }
 
     public ArrayList<String> findDuplicates() {

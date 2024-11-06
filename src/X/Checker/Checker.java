@@ -5,9 +5,10 @@ import X.ErrorHandler;
 import X.Lexer.Position;
 import X.Nodes.*;
 import X.Nodes.Enum;
-import X.Nodes.List;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class Checker implements Visitor {
 
@@ -69,7 +70,12 @@ public class Checker implements Visitor {
         "*51: excess arguments to struct declaration",
         "*52: incompatible type for struct member",
         "*53: array in struct definition must have size defined",
-        "*54: invalid left hand side for assignment expression"
+        "*54: invalid left hand side for assignment expression",
+        "*55: no nested structure permissible in enum",
+        "*56: dot access impermissible on non variables",
+        "*57: dot access only permissible on struct variables",
+        "*58: non-existent struct member",
+        "*59: subtype is not a struct type"
     };
 
     private final SymbolTable idTable;
@@ -467,7 +473,18 @@ public class Checker implements Visitor {
             return T;
         }
 
-        Type returnType = (Type) E.visit(this, ast);
+        Type returnType = null;
+        if (E instanceof DotExpr) {
+            E = (Expr) E.visit(this, ast);
+            if (ast instanceof LocalVar L) {
+                L.E = E;
+            } else if (ast instanceof GlobalVar G) {
+                G.E = E;
+            }
+            returnType = E.type;
+        } else {
+            returnType = (Type) E.visit(this, ast);
+        }
 
         if (ast.T.isUnknown()) {
            ast.T = returnType;
@@ -689,7 +706,12 @@ public class Checker implements Visitor {
             conditionType = new VoidType(new Position());
             ast.E.type = Environment.voidType;
         } else {
-            conditionType = (Type) ast.E.visit(this, ast);
+            if (ast.E instanceof DotExpr) {
+                ast.E = (Expr) ast.E.visit(this, ast);
+                conditionType= ast.E.type;
+            } else {
+                conditionType= (Type) ast.E.visit(this, ast);
+            }
         }
         if (!this.currentFunctionType.assignable(conditionType) && !seenIncompatible) {
             String message = "expected " + this.currentFunctionType.toString() +
@@ -713,8 +735,21 @@ public class Checker implements Visitor {
 
     public Object visitBinaryExpr(BinaryExpr ast, Object o) {
         ast.O.visit(this, ast);
-        Type t1 = (Type) ast.E1.visit(this, ast);
-        Type t2 = (Type) ast.E2.visit(this, ast);
+        Type t1, t2;
+        if (ast.E1 instanceof DotExpr) {
+            ast.E1 = (Expr) ast.E1.visit(this, o);
+            t1 = ast.E1.type;
+        } else {
+            t1 = (Type) ast.E1.visit(this, o);
+        }
+
+        if (ast.E2 instanceof DotExpr) {
+            ast.E2 = (Expr) ast.E2.visit(this, o);
+            t2 = ast.E2.type;
+        } else {
+            t2 = (Type) ast.E2.visit(this, o);
+        }
+
         boolean v1Numeric = t1.isChar() || t1.isInt() || t1.isFloat() || t1.isEnum() || t1.isError();
         boolean v2Numeric = t2.isChar() || t2.isInt() || t2.isFloat() || t2.isEnum() || t2.isError();
 
@@ -829,7 +864,13 @@ public class Checker implements Visitor {
 
     public Object visitUnaryExpr(UnaryExpr ast, Object o) {
         ast.O.visit(this, ast);
-        Type eT = (Type) ast.E.visit(this, ast);
+        Type eT;
+        if (ast.E instanceof DotExpr) {
+            ast.E = (Expr) ast.E.visit(this, o);
+            eT = ast.E.type;
+        } else {
+            eT = (Type) ast.E.visit(this, o);
+        }
 
         if (eT.isError()) {
             return ast.type;
@@ -963,9 +1004,11 @@ public class Checker implements Visitor {
 
     public Object visitArgList(Args ast, Object o) {
         List PL = (List) o;
-        Type realType = (Type) ast.E.visit(this, null);
-
         Type expectedType = ((ParaList) PL).P.T;
+
+        if (ast.E instanceof DotExpr) {
+            ast.E = (Expr) ast.E.visit(this, o);
+        }
 
         ast.E = checkCast(expectedType, ast.E, ast);
         ast.EL.visit(this, ((ParaList) PL).PL);
@@ -1079,13 +1122,23 @@ public class Checker implements Visitor {
         ast.varName.ifPresent(localVar -> localVar.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter));
         validDollar = ast.varName.isEmpty();
         if (ast.I1.isPresent()) {
-            T1 = (Type) ast.I1.get().visit(this, o);
+            if (ast.I1.get() instanceof DotExpr) {
+                ast.I1 = Optional.of((Expr) ast.I1.get().visit(this, o));
+                T1 = ast.I1.get().type;
+            } else {
+                T1 = (Type) ast.I1.get().visit(this, o);
+            }
             if (!T1.isInt()) {
                 handler.reportError(errors[25], "", ast.pos);
             }
         }
         if (ast.I2.isPresent()) {
-            T2 = (Type) ast.I2.get().visit(this, o);
+            if (ast.I2.get() instanceof DotExpr) {
+                ast.I2 = Optional.of((Expr) ast.I2.get().visit(this, o));
+                T2 = ast.I2.get().type;
+            } else {
+                T2 = (Type) ast.I2.get().visit(this, o);
+            }
             if (!T2.isInt()) {
                 handler.reportError(errors[25], "", ast.pos);
             }
@@ -1147,12 +1200,25 @@ public class Checker implements Visitor {
         }
         int length = 0;
         List args = ast.AL;
-        Type T = (Type) ((Args) args).E.visit(this, o);
+        Type T;
+        if (((Args) args).E instanceof DotExpr) {
+            ((Args) args).E = (Expr) ((Args) args).E.visit(this, o);
+            T = ((Args) args).E.type;
+        } else {
+            T = (Type) ((Args) args).E.visit(this, o);
+        }
 
         length++;
         args = ((Args) args).EL;
         while (!(args instanceof EmptyArgList)) {
-            Type t = (Type) ((Args) args).E.visit(this, o);
+            Type t;
+            if (((Args) args).E instanceof DotExpr) {
+                ((Args) args).E = (Expr) ((Args) args).E.visit(this, o);
+                t = ((Args) args).E.type;
+            } else {
+                t = (Type) ((Args) args).E.visit(this, o);
+            }
+
             if (!t.assignable(T)) {
                 String message = "expected " + T + ", received " + t + " at position " + length;
                 handler.reportError(errors[33] + ": %", message, ast.pos);
@@ -1195,7 +1261,13 @@ public class Checker implements Visitor {
         boolean isError = false;
         boolean seenExcess = false;
         while (true) {
-            Type t = (Type) args.E.visit(this, o);
+            Type t;
+            if (args.E instanceof DotExpr) {
+                args.E = (Expr) args.E.visit(this, o);
+                t = args.E.type;
+            } else {
+                t = (Type) args.E.visit(this, o);
+            }
             if (!t.assignable(iT)) {
                 String message = "expected " + iT + ", received " + t + " at position " + (iterator - 1);
                 handler.reportError(errors[33] + ": %", message, ast.pos);
@@ -1246,11 +1318,19 @@ public class Checker implements Visitor {
         } else {
             binding.isReassigned = true;
         }
-        Type T = (Type) ast.index.visit(this, o);
+        Type T;
+        if (ast.index instanceof DotExpr) {
+            ast.index = (Expr) ast.index.visit(this, o);
+            T = ast.index.type;
+        } else {
+            T = (Type) ast.index.visit(this, o);
+        }
+
         if (!T.isInt()) {
             handler.reportError(errors[37] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
+
         ast.type = binding.T;
         return ((ArrayType) binding.T).t;
     }
@@ -1293,7 +1373,6 @@ public class Checker implements Visitor {
             ast.setTypeDef(TL);
         } else {
             runArgsAgain = true;
-            TL = ast.TypeDef;
         }
 
         Decl type = idTable.retrieve(ast.I.spelling);
@@ -1318,9 +1397,9 @@ public class Checker implements Visitor {
             ast.I.decl = type;
             ((Function) type).setUsed();
         }
-        if (runArgsAgain) {
+        // if (runArgsAgain) {
             ast.AL.visit(this, function.PL);
-        }
+        // }
         ast.type = type.T;
         return type.T;
     }
@@ -1330,7 +1409,14 @@ public class Checker implements Visitor {
         ArrayList<String> options = new ArrayList<>();
         while (!(head instanceof EmptyArgList)) {
             Expr D = ((Args) head).E;
-            options.add(((Type) D.visit(this, o)).getMini());
+            Type t;
+            if (D instanceof DotExpr) {
+                Expr E = (Expr) D.visit(this, o);
+                t = E.type;
+            } else {
+                t = (Type) D.visit(this, o);
+            }
+            options.add(t.getMini());
             head = ((Args) head).EL;
         }
         return String.join("_", options);
@@ -1339,7 +1425,7 @@ public class Checker implements Visitor {
     public Object visitEmptyArgList(EmptyArgList ast, Object o) {
         List PL = (List) o;
         if (!(PL instanceof EmptyParaList)) {
-            System.out.println("UNREACHABLE");
+            // System.err.println("UNREACHABLE");
         }
         return null;
     }
@@ -1393,6 +1479,48 @@ public class Checker implements Visitor {
         return ET;
     }
 
+    public Object visitEmptyStructAccessList(EmptyStructAccessList ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructAccessList(StructAccessList ast, Object o) {
+        Struct ref = (Struct) o;
+        Optional<StructElem> elem = ref.getElem(ast.SA.spelling);
+        if (elem.isEmpty()) {
+            String message = "key " + ast.SA.spelling + " on struct " + ref.I.spelling;
+            handler.reportError(errors[58] + ": %", message, ast.pos);
+            return Environment.errorType;
+        }
+
+        if (ast.SAL instanceof EmptyStructAccessList) {
+            // Reached the end
+            return elem.get().T;
+        }
+
+        // Need to make sure the subtype is a struct itself
+        if (!(elem.get().T instanceof StructType TA)) {
+            String message = "key " + ast.SA.spelling + " on struct " + ref.I.spelling;
+            handler.reportError(errors[59] + ": %", message, ast.pos);
+            return Environment.errorType;
+        } else {
+            ast.ref = TA.S;
+        }
+
+        Struct ref2 = ((StructType) elem.get().T).S;
+        return ast.SAL.visit(this, ref2);
+    }
+
+    // need to do standard verifications
+    // ascertain a type based on the furthest right access
+    // e.g. x.b.z
+    //          ^- that one
+    public Object visitStructAccess(StructAccess ast, Object o) {
+        // Passing through 'o' as the struct ref
+        Type rightMostType = (Type) ast.L.visit(this, ast.ref);
+        ast.type = rightMostType;
+        return rightMostType;
+    }
+
     public Object visitUnknownType(UnknownType ast, Object o) {
         return null;
     }
@@ -1424,7 +1552,14 @@ public class Checker implements Visitor {
     public Object visitStructArgs(StructArgs ast, Object o) {
         StructList L = (StructList) o;
         Type expectedType = L.S.T;
-        Type realType = (Type) ast.E.visit(this, null);
+        Type realType;
+        if (ast.E instanceof DotExpr) {
+            ast.E = (Expr) ast.E.visit(this, o);
+            realType = ast.E.type;
+        } else {
+            realType = (Type) ast.E.visit(this, null);
+        }
+
         ast.E.type = realType;
         if (!realType.assignable(expectedType)) {
             String message = "member '" + L.S.I.spelling + "' should be of type " +
@@ -1477,8 +1612,20 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
-        Type realType = (Type) ast.RHS.visit(this, o);
-        Type expectedType = (Type) ast.LHS.visit(this, o);
+        Type realType, expectedType;
+        if (ast.RHS instanceof DotExpr) {
+            ast.RHS = (Expr) ast.RHS.visit(this, o);
+            realType = ast.RHS.type;
+        } else {
+            realType = (Type) ast.RHS.visit(this, o);
+        }
+
+        if (ast.LHS instanceof DotExpr) {
+            ast.LHS = (Expr) ast.LHS.visit(this, o);
+            expectedType = ast.LHS.type;
+        } else {
+            expectedType = (Type) ast.LHS.visit(this, o);
+        }
 
         if (!realType.assignable(expectedType)) {
             String message = "expected " + expectedType + ", received " + realType;
@@ -1521,8 +1668,54 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
         ast.type = ((PointerType) T).t;
-        return ((PointerType) T).t;
+        return ast.type;
     }
+
+    // Currently operating under the presumption there's no array or pointer accesses
+    public Object visitDotExpr(DotExpr ast, Object o) {
+
+        // First check if the identifier is an enum name
+        Decl d = idTable.retrieve(ast.I.spelling);
+        d.isUsed = true;
+        if (d instanceof Enum E) {
+            DotExpr innerE = (DotExpr) ast.E;
+            if (!(innerE.E instanceof EmptyExpr)) {
+                handler.reportError(errors[55], "", ast.pos);
+                return Environment.errorType;
+            }
+            EnumExpr newEnum = new EnumExpr(ast.I, innerE.I, ast.pos);
+            newEnum.visit(this, o);
+            return newEnum;
+        } else {
+            // Assumption is now we have an attempted struct access
+            if (!(d instanceof LocalVar || d instanceof GlobalVar)) {
+                handler.reportError(errors[56], "", ast.pos);
+                Expr E = new EmptyExpr(ast.pos);
+                E.type = Environment.errorType;
+                return E;
+            }
+            Ident varName = d.I;
+            if (!(d.T instanceof StructType)) {
+                handler.reportError(errors[57] + ": %", varName.spelling, ast.pos);
+                Expr E = new EmptyExpr(ast.pos);
+                E.type = Environment.errorType;
+                return E;
+            }
+            Struct ref = ((StructType) d.T).S;
+            StructAccessList SL = generateStructAccessList((DotExpr) ast.E);
+            StructAccess SA = new StructAccess(ref, varName, SL, ast.pos);
+            SA.visit(this, o);
+            return SA;
+        }
+    }
+
+    public StructAccessList generateStructAccessList(DotExpr ast) {
+        if (ast.E instanceof EmptyExpr) {
+            return new StructAccessList(ast.I, new EmptyStructAccessList(ast.pos), ast.pos);
+        }
+        return new StructAccessList(ast.I, generateStructAccessList((DotExpr) ast.E), ast.pos);
+    }
+
 
     public Object visitExprStmt(ExprStmt ast, Object o) {
         if (!(ast.E instanceof AssignmentExpr || ast.E instanceof CallExpr)) {

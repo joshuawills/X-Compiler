@@ -1,5 +1,7 @@
 package X.CodeGen;
 
+import java.util.Stack;
+
 import X.Evaluator.Evaluator;
 import X.Lexer.Position;
 import X.Nodes.*;
@@ -12,9 +14,6 @@ public class Emitter implements Visitor {
     private String arrName = "";
     private final Position dummyPos = new Position();
     private boolean seenStructs = false;
-    private String currentStructName = "";
-    private String currentStructType = "";
-
 
     public Emitter(String outputName) {
         this.outputName = outputName;
@@ -143,8 +142,13 @@ public class Emitter implements Visitor {
             E.visit(this, o);
             return null;
         } else if (ast.T.isStruct()) {
-            currentStructName = ast.I.spelling + depth;
-            currentStructType = "struct." + ((StructType) ast.T).S.I.spelling;
+            int v = f.getNewIndex();
+            emit("\t%" + v + " = bitcast ");
+            ast.T.visit(this, o);
+            emit("* %" + ast.I.spelling + depth + " to ");
+            ast.T.visit(this, o);
+            emitN("*");
+           
             ast.E.visit(this, o);
             return null;
         }
@@ -1083,6 +1087,10 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitDotExpr(DotExpr ast, Object o) {
+        return null;
+    }
+
     public Object visitUnknownType(UnknownType ast, Object o) {
         return null;
     }
@@ -1136,38 +1144,49 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitStructArgs(StructArgs ast, Object o) {
+    private Stack<Integer> exprDepthValues = new Stack<>();
+    private Stack<String> currentStructName = new Stack<>(); 
+    private Stack<Integer> currentStructPointers = new Stack<>();
 
-        // Assuming that the struct expr is only mapped to a decl currently
-        String parentName = currentStructName;
+    public Object visitStructArgs(StructArgs ast, Object o) {
         Frame f = (Frame) o;
 
+        // Getting the corresponding pointer
+        int originalPointer = currentStructPointers.peek();
+        int v = f.getNewIndex();
+        emitN("\t%" + v + " = getelementptr %" + currentStructName.peek() + ", %" + currentStructName.peek() +
+            "* %" + originalPointer + ", i32 0, i32 " + exprDepthValues.peek());
+        int oldExprDepth = exprDepthValues.pop();
+        exprDepthValues.push(oldExprDepth + 1);
+
         ast.E.visit(this, o);
-        int lastIndex = f.localVarIndex - 1;
-        int ptrIndex = f.getNewIndex();
-        emit("\t%" + ptrIndex + " = getelementptr %");
-        emit(currentStructType);
-        emit(", %");
-        emit(currentStructType);
-        emitN("* %" + parentName + ", i32 0, i32 " + ast.structIndex);
-        emit("\tstore ");
-        ast.E.type.visit(this, o);
-        emit(" %" + lastIndex + ", ");
-        ast.E.type.visit(this, o);
-        emitN("* %" + ptrIndex);
+        if (!(ast.E instanceof StructExpr)) {
+            emitN(";" + ast.E);
+            int v2 = f.localVarIndex - 1;
+            emit("\tstore ");
+            ast.E.type.visit(this, o);
+            emit(" %" + v2 + ", ");
+            ast.E.type.visit(this, o);
+            emitN("* %" + v);
+        }
+
         ast.SL.visit(this, o);
         return null;
     }
 
     public Object visitStructExpr(StructExpr ast, Object o) {
+        Frame f = (Frame) o;
+
+        exprDepthValues.push(0);
+        currentStructName.push("struct." + ast.I.spelling);
+        currentStructPointers.push(f.localVarIndex - 1);
+
         ast.SA.visit(this, o);
+
+        currentStructName.pop();
+        currentStructPointers.pop();
+        exprDepthValues.pop();
         return null;
-    }
-
-    private void handleStandardDeclaration(AssignmentExpr ast, Object o) {
-    }
-
-    private void handleArrayDeclaration(AssignmentExpr ast, Object o) {
     }
 
     public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
@@ -1211,9 +1230,57 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitEmptyStructAccessList(EmptyStructAccessList ast, Object o) {
+        return null;
+    }
+
+    public Object visitStructAccessList(StructAccessList ast, Object o) {
+        Frame f = (Frame) o;
+        if (ast.SAL instanceof EmptyStructAccessList) {
+            return null;
+        }
+        int prevIndex = f.localVarIndex - 1;
+        Struct ref = ast.ref;
+        String structName = "struct." + ref.I.spelling;
+        int newV = f.getNewIndex();
+        int index = ast.ref.getNum(((StructAccessList)ast.SAL).SA.spelling);
+        emit("\t%" + newV + " = getelementptr %" + structName + ", %" + structName + "* %" + prevIndex);
+        emitN(", i32 0, i32 " + index);
+        ast.SAL.visit(this, o);
+        return null;
+    }
+
+    public Object visitStructAccess(StructAccess ast, Object o) {
+        Frame f = (Frame) o;
+        String structName = "struct." + ast.ref.I.spelling;
+
+        int v = f.getNewIndex();
+        if (ast.varName.decl instanceof LocalVar L) {
+            String localRef = L.I.spelling + L.index;
+            String currentVal = ast.L.SA.spelling;
+            int index = ast.ref.getNum(currentVal);
+            emit("\t%" + v + " = getelementptr %" + structName + ", %" + structName + "* %" + localRef);
+            emitN(", i32 0, i32 " + index);
+            ast.L.visit(this, o);
+
+            int oldV = f.localVarIndex - 1;
+            int v2 = f.getNewIndex();
+            emit("\t%" + v2 + " = load ");
+            ast.type.visit(this, o);
+            emit(", ");
+            ast.type.visit(this, o);
+            emitN("* %" + oldV);
+
+            ast.tempIndex = v2;
+        } else if (ast.varName.decl instanceof GlobalVar G) {
+
+        }
+
+        return null;
+    }
+
     public Object visitDerefExpr(DerefExpr ast, Object o) {
         Frame f = (Frame) o;
-        emitN("; A");
         if (ast.E instanceof VarExpr V) {
             SimpleVar VS = (SimpleVar) V.V;
             int v = f.getNewIndex();

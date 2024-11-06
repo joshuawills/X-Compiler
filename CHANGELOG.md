@@ -94,7 +94,16 @@
  - need to set up reading and writing to struct fields now :)
  - need a reassessment of my rejection of an assign-expr CFG element now
 
+*06.11.2024*
+
+- can instantiate nested structs
+- can access structs
+
 # TODO
+
+- arrays of structs
+- arrays in structs
+- pointers in structs!
 
 - float support
   - fix it so it works for them all! 

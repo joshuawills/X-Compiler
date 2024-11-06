@@ -403,9 +403,9 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitEnumExpr(EnumExpr ast, Object o) {
-        EnumType T = (EnumType) ast.type;
-        return T.E.getValue(ast.Entry.spelling);
+    public Object visitDotExpr(DotExpr ast, Object o) {
+        System.out.println("EVALUATOR: DOTEXPR");
+        return null;
     }
 
     public Object visitUnknownType(UnknownType ast, Object o) {
@@ -434,6 +434,26 @@ public class Evaluator implements Visitor {
 
     public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
         return null;
+    }
+
+    public Object visitEmptyStructAccessList(EmptyStructAccessList ast, Object o) {
+        System.out.println("EVALUATOR: EMPTY STRUCT ACCESS LIST");
+        return null;
+    }
+
+    public Object visitStructAccessList(StructAccessList ast, Object o) {
+        System.out.println("EVALUATOR: STRUCT ACCESS LIST");
+        return null;
+    }
+
+    public Object visitStructAccess(StructAccess ast, Object o) {
+        System.out.println("EVALUATOR: STRUCT ACCESS");
+        return null;
+    }
+
+    public Object visitEnumExpr(EnumExpr ast, Object o) {
+        EnumType T = (EnumType) ast.type;
+        return T.E.getValue(ast.Entry.spelling);
     }
 
     public Object visitStructArgs(StructArgs ast, Object o) {

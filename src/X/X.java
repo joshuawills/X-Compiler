@@ -2,9 +2,7 @@ package X;
 
 import X.Checker.Checker;
 import X.CodeGen.Emitter;
-import X.Lexer.File;
-import X.Lexer.Lex;
-import X.Lexer.Token;
+import X.Lexer.*;
 import X.Nodes.AST;
 import X.Parser.Parser;
 import X.Parser.SyntaxError;

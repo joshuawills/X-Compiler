@@ -707,12 +707,6 @@ public class Parser {
                 finish(pos);
                 yield new DerefExpr(eAST, pos);
             }
-            case PLUS, DASH, NEGATE, AMPERSAND -> {
-                Operator opAST = acceptOperator();
-                Expr eAST = parseUnaryExpr();
-                finish(pos);
-                yield new UnaryExpr(opAST, eAST, pos);
-            }
             case LEFT_SQUARE -> {
                 match(TokenType.LEFT_SQUARE);
                 List aList;
@@ -726,45 +720,79 @@ public class Parser {
                 finish(pos);
                 yield new ArrayInitExpr(aList, pos);
             }
-            case IDENT, DOLLAR -> {
-                Ident iAST = parseIdent();
-                if (tryConsume(TokenType.OPEN_PAREN)) {
-                    // Function call
-                    List aLIST;
-                    if (tryConsume(TokenType.CLOSE_PAREN)) {
-                        finish(pos);
-                        aLIST = new EmptyArgList(pos);
-                    } else {
-                        aLIST = parseArgList();
-                        match(TokenType.CLOSE_PAREN);
-                    }
-                    finish(pos);
-                    yield new CallExpr(iAST, aLIST, pos);
-                } else if (tryConsume(TokenType.LEFT_SQUARE)) {
-                    Expr eAST = parseExpr();
-                    match(TokenType.RIGHT_SQUARE);
-                    finish(pos);
-                    yield new ArrayIndexExpr(iAST, eAST, pos);
-                } else if (tryConsume(TokenType.PERIOD)) {
-                    Ident i2AST = parseIdent();
-                    finish(pos);
-                    yield new EnumExpr(iAST, i2AST, pos);
-                } else if (assigningType && tryConsume(TokenType.OPEN_CURLY)) {
-                    List saAST = parseStructArgs();
-                    finish(pos);
-                    yield new StructExpr(iAST, saAST, pos);
-                } else {
-                    finish(pos);
-                    Var simVAST = new SimpleVar(iAST, pos);
-                    yield new VarExpr(simVAST, pos);
-                }
+            case PLUS, DASH, NEGATE, AMPERSAND -> {
+                Operator opAST = acceptOperator();
+                Expr eAST = parseUnaryExpr();
+                finish(pos);
+                yield new UnaryExpr(opAST, eAST, pos);
+            }
+            default -> parsePostFixExpression();
+       };
+    }
+
+    private Expr parsePostFixExpression() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        AST E = parsePrimaryExpr();
+        if (!(E instanceof Ident)) {
+            return (Expr) E;
+        }
+        return switch(currentToken.kind) {
+            case PERIOD -> {
+                // Assumes E is an Ident, may come back to bite me
+                finish(pos);
+                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos);
             }
             case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);
-                Expr exprAST = parseExpr();
-                match(TokenType.CLOSE_PAREN);
-                yield exprAST;
+                List aLIST;
+                if (tryConsume(TokenType.CLOSE_PAREN)) {
+                    finish(pos);
+                    aLIST = new EmptyArgList(pos);
+                } else {
+                    aLIST = parseArgList();
+                    match(TokenType.CLOSE_PAREN);
+                }
+                finish(pos);
+                yield new CallExpr((Ident) E, aLIST, pos);
             }
+            case LEFT_SQUARE -> {
+                match(TokenType.LEFT_SQUARE);
+                Expr eAST = parseExpr();
+                match(TokenType.RIGHT_SQUARE);
+                finish(pos);
+                yield new ArrayIndexExpr((Ident) E, eAST, pos);
+            }
+            default -> {
+                if (assigningType && tryConsume(TokenType.OPEN_CURLY)) {
+                    List saAST = parseStructArgs();
+                    finish(pos);
+                    yield new StructExpr((Ident) E, saAST, pos);
+                }
+                finish(pos);
+                Var simVAST = new SimpleVar((Ident) E, pos);
+                yield new VarExpr(simVAST, pos);
+            }
+        };
+    }
+
+    private Expr parsePostFixExpressionTwo() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        if (tryConsume(TokenType.PERIOD)) {
+            Ident I = parseIdent();
+            finish(pos);
+            return new DotExpr(I, parsePostFixExpressionTwo(), pos);
+        }
+        finish(pos);
+        return new EmptyExpr(pos);
+    }
+
+
+    private AST parsePrimaryExpr() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        return switch (currentToken.kind) {
             case INT_LIT -> {
                 IntLiteral ilAST = parseIntLiteral();
                 finish(pos);
@@ -790,12 +818,18 @@ public class Parser {
                 finish(pos);
                 yield new CharExpr(clAST, pos);
             }
+            case OPEN_PAREN -> {
+                match(TokenType.OPEN_PAREN);
+                Expr exprAST = parseExpr();
+                match(TokenType.CLOSE_PAREN);
+                yield exprAST;
+            }
+            case IDENT, DOLLAR -> parseIdent();
             default -> {
-                System.out.println("currentToken: " + currentToken);
-                syntacticError("Illegal primary expression", "");
+                System.out.println("Unrecognised primary expression: " + currentToken);
                 yield null;
             }
-       };
+        };
     }
 
     private FloatLiteral parseFloatLiteral() throws SyntaxError {
