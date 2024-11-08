@@ -135,6 +135,7 @@ public class X {
         try {
             checker.check(ast);
         } catch (Exception s) {
+            s.printStackTrace();
             System.out.println(s);
             System.exit(1);
         }

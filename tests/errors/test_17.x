@@ -1,4 +1,4 @@
-// Main function may not call itself:w
+// Main function may not call itself
 
 
 fn main() -> int {

@@ -77,7 +77,7 @@ public class Emitter implements Visitor {
 
         // Bind mutable variables to a local variable
         List PL = ast.PL;
-        while (!(PL instanceof EmptyParaList)) {
+        while (!PL.isEmptyParaList()) {
             ParaDecl P = ((ParaList) PL).P;
             Type t = P.T;
             if ((P.isMut && !t.isArray()) || t.isPointer()) {
@@ -135,8 +135,16 @@ public class Emitter implements Visitor {
         if (ast.T.isArray()) {
             arrayDetails = (ArrayType) ast.T;
             arrName = ast.I.spelling + depth;
+
+            int v = f.getNewIndex();
+            emit("\t%" + v +  " = bitcast ");
+            ast.T.visit(this, o);
+            emit("* %" + arrName +" to ");
+            ast.T.visit(this, o);
+            emitN("*");
+
             Expr E = ast.E;
-            if (E instanceof EmptyExpr) {
+            if (E.isEmptyExpr()) {
                 E = new ArrayInitExpr(new EmptyArgList(dummyPos), dummyPos);
             }
             E.visit(this, o);
@@ -148,21 +156,22 @@ public class Emitter implements Visitor {
             emit("* %" + ast.I.spelling + depth + " to ");
             ast.T.visit(this, o);
             emitN("*");
-           
+
             ast.E.visit(this, o);
             return null;
         }
 
-        if (ast.E instanceof EmptyExpr) {
+        if (ast.E.isEmptyExpr()) {
             // TODO: assign default values
             return null;
         }
 
         // Declare a 'char *'
-        if (ast.T.isPointer() && ((PointerType) ast.T).t.isChar() && ast.E instanceof StringExpr) {
+        if (ast.T.isPointer() && ((PointerType) ast.T).t.isChar() && ast.E.isStringExpr()) {
+            StringExpr E = (StringExpr) ast.E;
             ast.E.visit(this, o);
-            int l = ((StringExpr) ast.E).SL.spelling.length() + 1;
-            int n = ((StringExpr) ast.E).index;
+            int l = E.SL.spelling.length() + 1;
+            int n = E.index;
             emitN("\tstore i8 * getelementptr inbounds ([" + l + " x i8], [" + l + " x i8]* @..str" + n +
                     " , i64 0, i64 0), i8** %" + ast.I.spelling + depth);
             return null;
@@ -242,7 +251,7 @@ public class Emitter implements Visitor {
         emitN("\tbr label %" + top);
         emitN("\n" + top + ":");
         ast.E2.visit(this, o);
-        if (!(ast.E2 instanceof EmptyExpr)) {
+        if (!ast.E2.isEmptyExpr()) {
             int index = ast.E2.tempIndex;
             emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + bottom);
         } else {
@@ -490,13 +499,14 @@ public class Emitter implements Visitor {
     public Object visitStmtList(StmtList ast, Object o) {
         List SL = ast;
         while (true) {
-            ((StmtList) SL).S.visit(this, o);
-            if (((StmtList) SL).SL instanceof EmptyStmtList) {
+            StmtList stmtList = (StmtList) SL;
+            stmtList.S.visit(this, o);
+            if (stmtList.SL.isEmptyStmtList()) {
                 break;
-            } else if (((StmtList) SL).S instanceof ReturnStmt) {
+            } else if (stmtList.S.isReturnStmt()) {
                 break;
             } else {
-                SL = ((StmtList) SL).SL;
+                SL = stmtList.SL;
             }
         }
         return null;
@@ -619,49 +629,52 @@ public class Emitter implements Visitor {
         }
 
         AST d = ast.I.decl;
-        if (d instanceof LocalVar) {
+        if (d.isLocalVar()) {
+            LocalVar l = (LocalVar) d;
             int newIndex = f.getNewIndex();
-            if (((LocalVar) d).T.isArray()) {
-                ArrayType t = (ArrayType) ((LocalVar) d).T;
+            if (l.T.isArray()) {
+                ArrayType t = (ArrayType) l.T;
                 emit("\t%" + newIndex + " = getelementptr inbounds ");
                 int length = t.length;
-                ((LocalVar) d).T.visit(this, length);
+                l.T.visit(this, length);
                 emit(", ");
-                ((LocalVar) d).T.visit(this, length);
-                emitN("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index + ", i32 0, i32 0");
+                l.T.visit(this, length);
+                emitN("* %" + ast.I.spelling + l.index + ", i32 0, i32 0");
                 return null;
             }
             emit("\t%" + newIndex + " = load ");
-            ((LocalVar) d).T.visit(this, o);
+            l.T.visit(this, o);
             emit(", ");
-            ((LocalVar) d).T.visit(this, o);
-            emitN("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
-        } else if (d instanceof ParaDecl) {
-            if (((ParaDecl) d).isMut) {
+            l.T.visit(this, o);
+            emitN("* %" + ast.I.spelling + l.index);
+        } else if (d.isParaDecl()) {
+            ParaDecl p = (ParaDecl) d;
+            if (p.isMut) {
                 int newIndex = f.getNewIndex();
                 emit("\t%" + newIndex + " = load ");
-                ((ParaDecl) d).T.visit(this, o);
+                p.T.visit(this, o);
                 emit(", ");
-                ((ParaDecl) d).T.visit(this, o);
-                emitN("* %" + ast.I.spelling + ((ParaDecl) ast.I.decl).index);
+                p.T.visit(this, o);
+                emitN("* %" + ast.I.spelling + p.index);
                 return null;
             }
 
             int newIndex = f.getNewIndex();
             emit("\t%" + newIndex + " = ");
-            Type T = ((ParaDecl) d).T;
+            Type T = p.T;
             if (T.isInt() || T.isBoolean() || T.isChar() || T.isEnum()) {
                 emit("add ");
                 T.visit(this, o);
                 emit(" 0, ");
             }
             emitN(" %" + ast.I.spelling + "0");
-        } else if (d instanceof GlobalVar) {
+        } else if (d.isGlobalVar()) {
+            GlobalVar g = (GlobalVar) d;
             int newIndex = f.getNewIndex();
             emit("\t%" + newIndex + " = load ");
-            ((GlobalVar) d).T.visit(this, o);
+            g.T.visit(this, o);
             emit(", ");
-            ((GlobalVar) d).T.visit(this, o);
+            g.T.visit(this, o);
             emitN("* @" + ast.I.spelling);
         }
         return null;
@@ -719,11 +732,11 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
 
         // Evaluate all the expressions
-        if (!(ast.AL instanceof EmptyArgList)) {
+        if (!ast.AL.isEmptyArgList()) {
             Args AL = (Args) ast.AL;
             while (true) {
                 AL.E.visit(this, o);
-                if (AL.EL instanceof EmptyArgList) {
+                if (AL.EL.isEmptyArgList()) {
                     break;
                 }
                 AL = (Args) AL.EL;
@@ -742,14 +755,14 @@ public class Emitter implements Visitor {
         emit(" @" + ast.I.spelling + "." + ast.TypeDef);
 
         emit("(");
-        if (!(ast.AL instanceof EmptyArgList)) {
+        if (!ast.AL.isEmptyArgList()) {
             Args AL = (Args) ast.AL;
             while (true) {
                 Expr E = AL.E;
                 int index = E.tempIndex;
                 // pass arrays by ref, not val
                 if (E.type.isArray()) {
-                    if (E instanceof ArrayIndexExpr) {
+                    if (E.isArrayIndexExpr()) {
                         Type T = ((ArrayType) E.type).t;
                         T.visit(this, o);
                     } else {
@@ -760,7 +773,7 @@ public class Emitter implements Visitor {
                     E.type.visit(this, o);
                 }
                 emit(" %" + index);
-                if (AL.EL instanceof EmptyArgList) {
+                if (AL.EL.isEmptyArgList()) {
                     break;
                 } else {
                     emit(", ");
@@ -922,7 +935,8 @@ public class Emitter implements Visitor {
         Type innerType = arrayDetails.t;
         int index = 0;
 
-        if (ast.AL instanceof EmptyArgList) {
+        // handling the empty array case
+        if (ast.AL.isEmptyArgList()) {
             while (index < eLength) {
                 emitBase(innerType, o);
                 int lastIndex = f.localVarIndex - 1;
@@ -945,33 +959,59 @@ public class Emitter implements Visitor {
         boolean isEmpty = false;
         Args args = (Args) ast.AL;
         Expr finalArg = null;
+
+        currentStructPointerBase.clear();
+
         while (index < eLength) {
+
+            if (args.E.isStructExpr()) {
+                int tempIndex = f.getNewIndex();
+                emit("\t%" + tempIndex + " = getelementptr inbounds ");
+                arrayDetails.visit(this, o);
+                emit(", ");
+                arrayDetails.visit(this, o);
+                emitN("* %" + arrName + ", i32 0, i32 " + index);
+            }
+            
             if (isEmpty) {
                 finalArg.visit(this, o);
             } else {
                 args.E.visit(this, o);
             }
-            int lastIndex = f.localVarIndex - 1;
-            int tempIndex = f.getNewIndex();
-            emit("\t%" + tempIndex + " = getelementptr inbounds ");
-            arrayDetails.visit(this, o);
-            emit(", ");
-            arrayDetails.visit(this, o);
-            emitN("* %" + arrName + ", i32 0, i32 " + index);
-            emit("\tstore ");
-            innerType.visit(this, o);
-            emit(" %" + lastIndex + ", ");
-            innerType.visit(this, o);
-            emitN("* %" + tempIndex);
+
+            int lastIndex;
+            if (currentStructPointerBase.isEmpty()) {
+                lastIndex = f.localVarIndex - 1;
+            } else {
+                lastIndex = currentStructPointerBase.peek();
+            }
+            
+            if (!args.E.isStructExpr()) {
+                int tempIndex = f.getNewIndex();
+                emit("\t%" + tempIndex + " = getelementptr inbounds ");
+                arrayDetails.visit(this, o);
+                emit(", ");
+                arrayDetails.visit(this, o);
+                emitN("* %" + arrName + ", i32 0, i32 " + index);
+                emit("\tstore ");
+                innerType.visit(this, o);
+                emit(" %" + lastIndex + ", ");
+                innerType.visit(this, o);
+                emitN("* %" + tempIndex);
+            }
+
             index += 1;
 
-            if (args.EL instanceof EmptyArgList) {
+            if (args.EL.isEmptyArgList()) {
                 isEmpty = true;
                 finalArg = args.E;
             } else {
                 args = (Args) args.EL;
             }
         }
+
+        currentStructPointerBase.clear();
+
         return null;
     }
 
@@ -983,30 +1023,32 @@ public class Emitter implements Visitor {
         int index = f.localVarIndex - 1;
         int newIndex = f.getNewIndex();
         emit("\t%" + newIndex + " = getelementptr ");
-        if (!(ast.I.decl instanceof ParaDecl)) {
+        if (!ast.I.decl.isParaDecl()) {
             emit("inbounds ");
         }
         Type bT = null;
-        if (ast.I.decl instanceof ParaDecl) {
+        if (ast.I.decl.isParaDecl()) {
             bT = ((ArrayType) t).t;
             bT.visit(this, o);
         } else {
             t.visit(this, o);
         }
         emit(", ");
-        if (ast.I.decl instanceof ParaDecl) {
+        if (ast.I.decl.isParaDecl()) {
             bT.visit(this, o);
         } else {
             t.visit(this, o);
         }
-        if (ast.I.decl instanceof LocalVar) {
-            emit("* %" + ast.I.spelling + ((LocalVar) ast.I.decl).index);
-        } else if (ast.I.decl instanceof GlobalVar) {
+
+        if (ast.I.decl instanceof LocalVar L) {
+            emit("* %" + ast.I.spelling + L.index);
+        } else if (ast.I.decl.isGlobalVar()) {
             emit("* @" + ast.I.spelling);
-        } else if (ast.I.decl instanceof ParaDecl) {
+        } else if (ast.I.decl.isParaDecl()) {
             emit("* %" + ast.I.spelling);
         }
-        if (!(ast.I.decl instanceof ParaDecl)) {
+
+        if (!ast.I.decl.isParaDecl()) {
             emit(", i32 0");
         }
         emitN(", i32 %" + index);
@@ -1113,7 +1155,7 @@ public class Emitter implements Visitor {
 
     public Object visitStructList(StructList ast, Object o) {
         ast.S.visit(this, o);
-        if (ast.SL instanceof StructList) {
+        if (ast.SL.isStructList()) {
             emit(", ");
         }
         ast.SL.visit(this, o);
@@ -1147,6 +1189,7 @@ public class Emitter implements Visitor {
     private Stack<Integer> exprDepthValues = new Stack<>();
     private Stack<String> currentStructName = new Stack<>(); 
     private Stack<Integer> currentStructPointers = new Stack<>();
+    private Stack<Integer> currentStructPointerBase = new Stack<>();
 
     public Object visitStructArgs(StructArgs ast, Object o) {
         Frame f = (Frame) o;
@@ -1154,14 +1197,14 @@ public class Emitter implements Visitor {
         // Getting the corresponding pointer
         int originalPointer = currentStructPointers.peek();
         int v = f.getNewIndex();
+        currentStructPointerBase.push(v);
         emitN("\t%" + v + " = getelementptr %" + currentStructName.peek() + ", %" + currentStructName.peek() +
             "* %" + originalPointer + ", i32 0, i32 " + exprDepthValues.peek());
         int oldExprDepth = exprDepthValues.pop();
         exprDepthValues.push(oldExprDepth + 1);
 
         ast.E.visit(this, o);
-        if (!(ast.E instanceof StructExpr)) {
-            emitN(";" + ast.E);
+        if (!ast.E.isStructExpr()) {
             int v2 = f.localVarIndex - 1;
             emit("\tstore ");
             ast.E.type.visit(this, o);
@@ -1194,12 +1237,12 @@ public class Emitter implements Visitor {
         ast.RHS.visit(this, o);
         int rhsIndex = ast.RHS.tempIndex;
         boolean isGlobal = false;
-        if (!(ast.LHS instanceof VarExpr)) {
+        if (!ast.LHS.isVarExpr()) {
             ast.LHS.visit(this, o);
         }
         int lhsIndex = f.localVarIndex - 1;
         String val = "";
-        if (ast.LHS instanceof ArrayIndexExpr) {
+        if (ast.LHS.isArrayIndexExpr()) {
             lhsIndex--;
         } else if (ast.LHS instanceof VarExpr V) {
             SimpleVar VS = (SimpleVar) V.V;
@@ -1236,7 +1279,7 @@ public class Emitter implements Visitor {
 
     public Object visitStructAccessList(StructAccessList ast, Object o) {
         Frame f = (Frame) o;
-        if (ast.SAL instanceof EmptyStructAccessList) {
+        if (ast.SAL.isEmptyStructAccessList()) {
             return null;
         }
         int prevIndex = f.localVarIndex - 1;
@@ -1289,11 +1332,11 @@ public class Emitter implements Visitor {
             ast.E.type.visit(this, o);
             emit(", ");
             ast.E.type.visit(this, o);
-            if (VS.I.decl instanceof LocalVar) {
-                emitN("* %" + VS.I.spelling + ((LocalVar) VS.I.decl).index);
-            } else if (VS.I.decl instanceof GlobalVar) {
+            if (VS.I.decl instanceof LocalVar L) {
+                emitN("* %" + VS.I.spelling + L.index);
+            } else if (VS.I.decl.isGlobalVar()) {
                 emitN("* @" + VS.I.spelling);
-            } else if (VS.I.decl instanceof ParaDecl) {
+            } else if (VS.I.decl.isParaDecl()) {
                 emitN("* %" + VS.I.spelling + "0");
             }
             // Need to load the actual value;

@@ -9,4 +9,12 @@ public abstract class Stmt extends AST {
         super(pos);
     }
 
+    public boolean isReturnStmt() {
+        return this instanceof ReturnStmt;
+    }
+
+    public boolean isCompoundStmt() {
+        return this instanceof CompoundStmt;
+    }
+
 }

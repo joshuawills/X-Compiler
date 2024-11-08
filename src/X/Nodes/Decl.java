@@ -18,4 +18,8 @@ public abstract class Decl extends AST {
         this.isMut = isMut;
     }
 
+    public boolean isFunction() {
+        return this instanceof Function;
+    }
+
 }

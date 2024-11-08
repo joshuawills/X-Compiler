@@ -99,6 +99,11 @@
 - can instantiate nested structs
 - can access structs
 
+*08.11.2024*
+
+- declare arrays of structs
+- code improvements
+
 # TODO
 
 - arrays of structs

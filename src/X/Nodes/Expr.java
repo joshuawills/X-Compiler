@@ -13,4 +13,28 @@ public abstract class Expr extends AST {
         type = null;
     }
 
+    public boolean isEmptyExpr() {
+        return this instanceof EmptyExpr;
+    }
+
+    public boolean isArrayIndexExpr() {
+        return this instanceof ArrayIndexExpr;
+    }
+
+    public boolean isStructExpr() {
+        return this instanceof StructExpr;
+    }
+
+    public boolean isStringExpr() {
+        return this instanceof StringExpr;
+    }
+
+    public boolean isVarExpr() {
+        return this instanceof VarExpr;
+    }
+
+    public boolean isDotExpr() {
+        return this instanceof DotExpr;
+    }
+
 }
