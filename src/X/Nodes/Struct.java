@@ -11,12 +11,13 @@ public class Struct extends Decl {
     public List SL;
     public Ident I;
     public boolean subTypesVisited = false;
-    public int length = -1;
+    private int length = -1;
 
     public Struct(List slAST, Ident iAST, Position pos) {
         super(pos, false);
         I = iAST;
         SL = slAST;
+        length = -1;
         I.parent = SL.parent = this;
     }
 
@@ -25,7 +26,7 @@ public class Struct extends Decl {
             return length;
         }
         if (isEmpty()) {
-            return length;
+            return 0;
         }
         int l = 0;
         StructList SLL = (StructList) SL;
@@ -103,7 +104,6 @@ public class Struct extends Decl {
     }
 
     public boolean isEmpty() {
-        length = 0;
         return SL instanceof EmptyStructList;
     }
 

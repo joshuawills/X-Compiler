@@ -476,7 +476,11 @@ public class Checker implements Visitor {
 
         Type returnType = null;
         if (E.isDotExpr()) {
-            E = (Expr) E.visit(this, ast);
+            try {
+                E = (Expr) E.visit(this, ast);
+            } catch (Exception e) {
+                return Environment.errorType;
+            }
             if (ast instanceof LocalVar L) {
                 L.E = E;
             } else if (ast instanceof GlobalVar G) {
@@ -589,7 +593,14 @@ public class Checker implements Visitor {
     }
 
     public Object visitIfStmt(IfStmt ast, Object o) {
-        Type condT = (Type) ast.E.visit(this, ast);
+        Type condT;
+        if (ast.E.isDotExpr()) {
+            Expr e1 = (Expr) ast.E.visit(this, ast);
+            condT = e1.type;
+        } else {
+            condT = (Type) ast.E.visit(this, ast);
+        }
+       
         if (!condT.isBoolean()) {
             handler.reportError(errors[11], "", ast.E.pos);
         }
@@ -1329,6 +1340,8 @@ public class Checker implements Visitor {
         } else {
             binding.isReassigned = true;
         }
+
+        // make sure that the index is of int type
         Type T;
         if (ast.index.isDotExpr()) {
             ast.index = (Expr) ast.index.visit(this, o);
@@ -1336,7 +1349,6 @@ public class Checker implements Visitor {
         } else {
             T = (Type) ast.index.visit(this, o);
         }
-
         if (!T.isInt()) {
             handler.reportError(errors[37] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
@@ -1574,7 +1586,9 @@ public class Checker implements Visitor {
                 expectedType + ", but received " + realType;
             handler.reportError(errors[52] + ": %", message, ast.pos);
         }
-        ast.SL.visit(this, L.SL);
+        if (L.SL.isStructList()) {
+            ast.SL.visit(this, L.SL);
+        }
         return null;
     }
 
@@ -1602,7 +1616,7 @@ public class Checker implements Visitor {
 
     private boolean validLHS(Object o) {
         return o instanceof ArrayIndexExpr || o instanceof VarExpr
-            || o instanceof DerefExpr;
+            || o instanceof DerefExpr || o instanceof DotExpr;
     }
 
     public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
@@ -1616,7 +1630,7 @@ public class Checker implements Visitor {
         }
 
         if (!validLHS(ast.LHS)) {
-            String message = "must be a variable or an array index";
+            String message = "must be a variable, struct access or an array index";
             handler.reportError(errors[54] + ": %", message, ast.LHS.pos);
             return Environment.errorType;
         }
@@ -1713,6 +1727,8 @@ public class Checker implements Visitor {
             Struct ref = ((StructType) d.T).S;
             StructAccessList SL = generateStructAccessList((DotExpr) ast.E);
             StructAccess SA = new StructAccess(ref, varName, SL, ast.pos);
+            SA.parent = ast.parent;
+            SA.isLHSOfAssignment = ast.isLHSOfAssignment;
             SA.visit(this, o);
             return SA;
         }

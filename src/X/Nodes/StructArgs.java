@@ -8,6 +8,8 @@ public class StructArgs extends List {
     public int structIndex;
     public List SL;
 
+    public int parentIndex; // for struct specialties
+
     public StructArgs(Expr eAST, List slAST, Position pos) {
         super(pos);
         E = eAST;

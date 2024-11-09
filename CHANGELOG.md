@@ -104,6 +104,10 @@
 - declare arrays of structs
 - code improvements
 
+*09.11.2024*
+
+- more work on arrays...
+
 # TODO
 
 - arrays of structs

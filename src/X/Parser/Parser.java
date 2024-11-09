@@ -24,7 +24,7 @@ public class Parser {
 
     // This is to handle the confusion about struct parsing and conditional expression
     // evaluation
-    private boolean assigningType = false;
+    private boolean inConditionalCheck = false;
 
     public Parser(ArrayList<Token> tokenStream, ErrorHandler handler) {
         this.tokenStream = tokenStream;
@@ -159,9 +159,7 @@ public class Parser {
             }
             Expr eAST = new EmptyExpr(pos);
             if (tryConsume(TokenType.ASSIGN)) {
-                assigningType = true;
                 eAST = parseExpr();
-                assigningType = false;
             }
             finish(pos);
             match(TokenType.SEMI);
@@ -203,9 +201,7 @@ public class Parser {
         finish(pos);
         Expr eAST = new EmptyExpr(pos);
         if (tryConsume(TokenType.ASSIGN)) {
-            assigningType = true;
             eAST = parseExpr();
-            assigningType = false;
         }
         match(TokenType.SEMI);
         return new LocalVar(tAST, iAST, eAST, pos, isMut);
@@ -260,7 +256,9 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         match(TokenType.IF);
+        inConditionalCheck = true;
         Expr eAST = parseExpr();
+        inConditionalCheck = false;
         Stmt s1AST = parseCompoundStmt();
 
         finish(pos);
@@ -283,7 +281,9 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         match(TokenType.ELIF);
+        inConditionalCheck = true;
         Expr eAST = parseExpr();
+        inConditionalCheck = false;
         Stmt s1AST = parseCompoundStmt();
 
         finish(pos);
@@ -311,6 +311,7 @@ public class Parser {
         }
 
         if (currentToken.kind != TokenType.OPEN_CURLY) {
+            inConditionalCheck = true;
             Expr L1 = parseExpr();
             finish(pos);
             I1 = Optional.of(L1);
@@ -319,6 +320,7 @@ public class Parser {
                 finish(pos);
                 I2 = Optional.of(L2);
             }
+            inConditionalCheck = false;
         }
         Stmt S = parseCompoundStmt();
         finish(pos);
@@ -340,7 +342,9 @@ public class Parser {
         finish(pos);
         Expr e2AST = new EmptyExpr(pos);
         if (currentToken.kind != TokenType.SEMI) {
+            inConditionalCheck = true;
             e2AST = parseExpr();
+            inConditionalCheck = false;
         }
         match(TokenType.SEMI);
         finish(pos);
@@ -364,7 +368,9 @@ public class Parser {
         match(TokenType.DO);
         Stmt sAST = parseCompoundStmt();
         match(TokenType.WHILE);
+        inConditionalCheck = true;
         Expr eAST = parseExpr();
+        inConditionalCheck = false;
         match(TokenType.SEMI);
         finish(pos);
         return new DoWhileStmt(eAST, sAST, pos);
@@ -764,7 +770,7 @@ public class Parser {
                 yield new ArrayIndexExpr((Ident) E, eAST, pos);
             }
             default -> {
-                if (assigningType && tryConsume(TokenType.OPEN_CURLY)) {
+                if (!inConditionalCheck && tryConsume(TokenType.OPEN_CURLY)) {
                     List saAST = parseStructArgs();
                     finish(pos);
                     yield new StructExpr((Ident) E, saAST, pos);

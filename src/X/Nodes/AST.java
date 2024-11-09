@@ -49,6 +49,10 @@ public abstract class AST {
         return this instanceof EmptyStructAccessList;
     }
 
+    public boolean isEmptyStructArgs() {
+        return this instanceof EmptyStructArgs;
+    }
+
     public boolean isStmtList() {
         return this instanceof StmtList;
     }
