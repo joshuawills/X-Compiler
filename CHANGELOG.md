@@ -108,6 +108,12 @@
 
 - more work on arrays...
 
+*10.11.2024*
+
+- more work on structs
+  - arrays of structs
+  - arrays in structs
+
 # TODO
 
 - arrays of structs

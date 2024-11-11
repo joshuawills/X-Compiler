@@ -747,7 +747,7 @@ public class Parser {
             case PERIOD -> {
                 // Assumes E is an Ident, may come back to bite me
                 finish(pos);
-                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos);
+                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.empty());
             }
             case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);
@@ -766,6 +766,10 @@ public class Parser {
                 match(TokenType.LEFT_SQUARE);
                 Expr eAST = parseExpr();
                 match(TokenType.RIGHT_SQUARE);
+                if (currentToken.kind == TokenType.PERIOD) {
+                    finish(pos);
+                    yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.of(eAST));
+                }
                 finish(pos);
                 yield new ArrayIndexExpr((Ident) E, eAST, pos);
             }
@@ -787,8 +791,13 @@ public class Parser {
         start(pos);
         if (tryConsume(TokenType.PERIOD)) {
             Ident I = parseIdent();
+            Optional<Expr> E = Optional.empty();
+            if (tryConsume(TokenType.LEFT_SQUARE)) {
+                E = Optional.of(parseExpr());
+                match(TokenType.RIGHT_SQUARE);
+            }
             finish(pos);
-            return new DotExpr(I, parsePostFixExpressionTwo(), pos);
+            return new DotExpr(I, parsePostFixExpressionTwo(), pos, E);
         }
         finish(pos);
         return new EmptyExpr(pos);

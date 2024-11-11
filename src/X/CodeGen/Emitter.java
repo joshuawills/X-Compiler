@@ -1,5 +1,6 @@
 package X.CodeGen;
 
+import java.util.Optional;
 import java.util.Stack;
 
 import X.Evaluator.Evaluator;
@@ -152,6 +153,10 @@ public class Emitter implements Visitor {
             E.visit(this, o);
             return null;
         } else if (ast.T.isStruct()) {
+            if (ast.E.isEmptyExpr()) {
+                return null;
+            }
+
             int v = f.getNewIndex();
             emit("\t%" + v + " = bitcast ");
             ast.T.visit(this, o);
@@ -1235,7 +1240,7 @@ public class Emitter implements Visitor {
     }
 
     private Stack<Integer> exprDepthValues = new Stack<>();
-    private Stack<String> currentStructName = new Stack<>(); 
+    private Stack<String> currentStructName = new Stack<>();
     private Stack<Integer> currentStructPointers = new Stack<>();
     private Stack<Integer> currentStructPointerBase = new Stack<>();
 
@@ -1251,8 +1256,13 @@ public class Emitter implements Visitor {
         int oldExprDepth = exprDepthValues.pop();
         exprDepthValues.push(oldExprDepth + 1);
 
+        if (ast.E.type.isArray()) {
+            arrName = String.valueOf(v);
+            arrayDetails = (ArrayType) ast.E.type;
+        }
+
         ast.E.visit(this, o);
-        if (!ast.E.isStructExpr() && ast.E.type.isStruct()) {
+        if ((!ast.E.isStructExpr() && ast.E.type.isStruct()) || (!ast.E.isArrayInitExpr() && ast.E.type.isArray())) {
             int srcIndex = ast.E.tempIndex;
 
             int v3 = f.getNewIndex();
@@ -1270,7 +1280,7 @@ public class Emitter implements Visitor {
             emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + v + ", ptr %" + srcIndex
                 + ", i64 %" + v4 + ", i1 false)");
         }
-        else if (!ast.E.isStructExpr()) {
+        else if (!(ast.E.isStructExpr() || ast.E.isArrayInitExpr())) {
             int v2 = f.localVarIndex - 1;
             emit("\tstore ");
             ast.E.type.visit(this, o);
@@ -1300,7 +1310,9 @@ public class Emitter implements Visitor {
 
     public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
         Frame f = (Frame) o;
+        declaringLocalVar = true;
         ast.RHS.visit(this, o);
+        declaringLocalVar = false;
         int rhsIndex = ast.RHS.tempIndex;
         boolean isGlobal = false;
         if (!ast.LHS.isVarExpr()) {
@@ -1308,6 +1320,45 @@ public class Emitter implements Visitor {
         }
 
         int lhsIndex = f.localVarIndex - 1;
+        if (ast.RHS.type.isStruct() || (ast.RHS.isArrayIndexExpr() && 
+            ((ArrayType) ast.RHS.type).t.isStruct())) {
+               
+            Type t;
+            if (ast.RHS.type.isStruct()) {
+                t = ast.RHS.type;
+            } else {
+                t = ((ArrayType) ast.RHS.type).t;
+            }
+
+            int v3 = f.getNewIndex();
+            int v4 = f.getNewIndex();
+
+            emit("\t%" + v3 + " = getelementptr ");
+            t.visit(this, o);
+            emit(", ");
+            t.visit(this, o);
+            emitN("* null, i32 1");
+            emit("\t%" + v4 + " = ptrtoint ");
+            t.visit(this, o);
+            emitN("* %" + v3 + " to i64");
+
+            String src;
+            if (ast.LHS instanceof VarExpr V) {
+                SimpleVar VS = (SimpleVar) V.V;
+                src = VS.I.spelling + ((Decl) VS.I.decl).index;
+            } else {
+                if (ast.LHS.isArrayIndexExpr()) {
+                    lhsIndex--;
+                }
+                src = String.valueOf(lhsIndex);
+            }
+            
+            emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + src + ", ptr %" + rhsIndex 
+            + ", i64 %" + v4 + ", i1 false)");
+            ast.tempIndex = rhsIndex;
+            return null;
+        }
+
         String val = "";
         if (ast.LHS.isArrayIndexExpr()) {
             lhsIndex--;
@@ -1346,10 +1397,33 @@ public class Emitter implements Visitor {
 
     public Object visitStructAccessList(StructAccessList ast, Object o) {
         Frame f = (Frame) o;
+        int prevIndex = f.localVarIndex - 1;
         if (ast.SAL.isEmptyStructAccessList()) {
+
+            if (ast.arrayIndex.isPresent()) {
+
+                ast.arrayIndex.get().visit(this, o);
+                int arrayV = f.localVarIndex - 1;
+
+                int v = f.getNewIndex();
+                Optional <StructElem> elem = null;
+                if (ast.parent.isStructAccess()) {
+                    Struct ref = ((StructAccess) ast.parent).ref;
+                    elem = ref.getElem(ast.SA.spelling);
+                } else if (ast.parent.isStructAccessList()) {
+                    Struct ref = ((StructAccessList) ast.parent).ref;
+                    elem = ref.getElem(ast.SA.spelling);
+                }
+
+                emit("\t%" + v + " = getelementptr inbounds");
+                elem.get().T.visit(this, o);
+                emit(", ");
+                elem.get().T.visit(this, o);
+                emitN("* %" + prevIndex + ", i32 0, i32 %" + arrayV);
+            }
+
             return null;
         }
-        int prevIndex = f.localVarIndex - 1;
         Struct ref = ast.ref;
         String structName = "struct." + ref.I.spelling;
         int newV = f.getNewIndex();
@@ -1364,13 +1438,31 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         String structName = "struct." + ast.ref.I.spelling;
 
+        int arrayIndexNum = -1;
+        if (ast.arrayIndex.isPresent()) {
+            ast.arrayIndex.get().visit(this, o);
+            arrayIndexNum = f.localVarIndex - 1;
+        }
+
         int v = f.getNewIndex();
         if (ast.varName.decl instanceof LocalVar L) {
+
             String localRef = L.I.spelling + L.index;
+            if (ast.sourceType.isArray()) {
+                emit("\t%" + v + " = getelementptr ");
+                ast.sourceType.visit(this, o);
+                emit(", ");
+                ast.sourceType.visit(this, o);
+                emitN("* %" + localRef + ", i32 0, i32 %" + arrayIndexNum);
+                localRef = String.valueOf(v);
+                v = f.getNewIndex();
+            }
+
             String currentVal = ast.L.SA.spelling;
             int index = ast.ref.getNum(currentVal);
             emit("\t%" + v + " = getelementptr %" + structName + ", %" + structName + "* %" + localRef);
             emitN(", i32 0, i32 " + index);
+
             ast.L.visit(this, o);
             ast.tempIndex = v;
 
@@ -1423,7 +1515,6 @@ public class Emitter implements Visitor {
         } else {
             System.out.println("handle more advanced derefs...");
         }
-        emitN("; A");
         return null;
     }
 

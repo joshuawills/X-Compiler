@@ -49,6 +49,10 @@ public abstract class AST {
         return this instanceof EmptyStructAccessList;
     }
 
+    public boolean isStructAccessList() {
+        return this instanceof StructAccessList;
+    }
+
     public boolean isEmptyStructArgs() {
         return this instanceof EmptyStructArgs;
     }
@@ -83,6 +87,14 @@ public abstract class AST {
 
     public boolean isEmptyDeclList() {
         return this instanceof EmptyDeclList;
+    }
+
+    public boolean isArrayInitExpr() {
+        return this instanceof ArrayInitExpr;
+    }
+
+    public boolean isStructAccess() {
+        return this instanceof StructAccess;
     }
 
 }
