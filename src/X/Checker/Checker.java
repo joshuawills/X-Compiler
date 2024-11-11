@@ -14,6 +14,7 @@ public class Checker implements Visitor {
 
     private final HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
     private int strCount = 0;
+    private boolean isStructLHS = false;
 
     private final String[] errors = {
         "*0: main function is missing",
@@ -75,7 +76,8 @@ public class Checker implements Visitor {
         "*56: dot access impermissible on non variables",
         "*57: dot access only permissible on struct variables",
         "*58: non-existent struct member",
-        "*59: subtype is not a struct type"
+        "*59: subtype is not a struct type",
+        "*60: struct field is not mutable"
     };
 
     private final SymbolTable idTable;
@@ -1517,6 +1519,12 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
+        if (!elem.get().isMut && isStructLHS) {
+            String message = "field '" + ast.SA.spelling + "'";
+            handler.reportError(errors[60] + ": %", message, ast.pos);
+            return Environment.errorType;
+        }
+
         if (ast.arrayIndex.isPresent()) {
             if (!elem.get().T.isArray()) {
                 String message = "key " + ast.SA.spelling + " on struct " + ref.I.spelling;
@@ -1667,8 +1675,13 @@ public class Checker implements Visitor {
         }
 
         if (ast.LHS.isDotExpr()) {
+            isStructLHS = true;
             ast.LHS = (Expr) ast.LHS.visit(this, o);
+            isStructLHS = false;
             expectedType = ast.LHS.type;
+            if (expectedType.isError()) {
+                return expectedType;
+            }
         } else {
             expectedType = (Type) ast.LHS.visit(this, o);
         }
@@ -1685,6 +1698,7 @@ public class Checker implements Visitor {
                 handler.reportError(errors[20] + ": %", message, ast.LHS.pos);
                 return Environment.errorType;
             }
+
         } else if (ast.LHS instanceof ArrayIndexExpr A && !expectedType.isError()) {
             Decl D = (Decl) A.I.decl;
             if (!D.isMut) {
@@ -1745,6 +1759,12 @@ public class Checker implements Visitor {
                 handler.reportError(errors[56], "", ast.pos);
                 return errorExpr;
             }
+
+            if (!d.isMut && isStructLHS) {
+                handler.reportError(errors[20] + ": %", "'" + ast.I.spelling + "'", ast.pos);
+                return errorExpr;
+            }
+
             Ident varName = d.I;
             Struct ref = null;
             if (d.T.isArray()) {

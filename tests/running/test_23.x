@@ -1,7 +1,7 @@
 // Struct values are correctly duplicated
 
 struct A -> {
-	v: int
+	mut v: int
 }
 
 fn main() -> int {

@@ -1316,6 +1316,7 @@ public class Emitter implements Visitor {
         int rhsIndex = ast.RHS.tempIndex;
         boolean isGlobal = false;
         if (!ast.LHS.isVarExpr()) {
+            ast.LHS.parent = ast;
             ast.LHS.visit(this, o);
         }
 

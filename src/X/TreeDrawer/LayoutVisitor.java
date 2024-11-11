@@ -535,7 +535,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitStructElem(StructElem ast, Object o) {
-        return layoutBinary("StructElem", ast.T, ast.I);
+        return layoutBinary("StructElem: " + ast.isMut, ast.T, ast.I);
     }
 
     public Object visitStructList(StructList ast, Object o) {
