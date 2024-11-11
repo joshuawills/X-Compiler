@@ -327,6 +327,7 @@ public class Lex {
                 case "do" -> TokenType.DO;
                 case "true", "false" -> TokenType.BOOL_LIT;
                 case "mut" -> TokenType.MUT;
+                case "size" -> TokenType.SIZE_OF;
                 default -> TokenType.IDENT;
             };
         }

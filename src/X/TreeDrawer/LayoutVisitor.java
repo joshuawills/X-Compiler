@@ -549,4 +549,11 @@ public class LayoutVisitor implements Visitor {
     public Object visitStringLiteral(StringLiteral ast, Object obj) {
         return layoutNullary("\"" + ast.spelling + "\"");
     }
+
+    public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
+        if (ast.typeV.isPresent()) {
+            return layoutUnary("SizeOfExpr", ast.typeV.get());
+        }
+        return layoutUnary("SizeOfExpr", ast.varExpr.get());
+    }
 }

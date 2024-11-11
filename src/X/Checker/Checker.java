@@ -1831,4 +1831,66 @@ public class Checker implements Visitor {
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         return new PointerType(ast.pos, new CharType(ast.pos));
     }
+
+    public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
+        if (ast.varExpr.isPresent()) {
+            // Make sure the variable exists
+            String name = ((SimpleVar) ast.varExpr.get().V).I.spelling;
+            Decl d = idTable.retrieve(name);
+
+            if (d == null) {
+                handler.reportError(errors[4] + ": %", name, ast.pos);
+                return Environment.errorType;
+            }
+
+            if (d instanceof Enum E) {
+                E.isUsed = true;
+                ast.varExpr = Optional.empty();
+                ast.typeV = Optional.of(new EnumType(E, E.pos));
+            } else if (d instanceof Struct S) {
+                S.isUsed = true;
+                ast.varExpr = Optional.empty();
+                ast.typeV = Optional.of(new StructType(S, S.pos));
+            } else {
+                ast.varType = d.T;
+            }
+
+        } else {
+            assert(ast.typeV.isPresent());
+            Type T = ast.typeV.get();
+            
+            if (T.isMurky()) {
+                MurkyType MT = (MurkyType) T;
+                Decl d = idTable.retrieve(MT.V);
+                if (d instanceof Enum E) {
+                    E.isUsed = true;
+                    ast.typeV = Optional.of(new EnumType(E, E.pos));
+                } else if (d instanceof Struct S) {
+                    S.isUsed = true;
+                    ast.typeV = Optional.of(new StructType(S, S.pos));
+                } else {
+                    handler.reportError(errors[40] + ": %", "'" + d + "'", ast.pos);
+                    ast.typeV = Optional.of(Environment.errorType);
+                }
+            } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
+                MurkyType MT = (MurkyType) ((ArrayType)T).t;
+                Type T2;
+                Decl d = idTable.retrieve(MT.V);
+                if (d instanceof Enum E) {
+                    E.isUsed = true;
+                    T2 = new EnumType(E, E.pos);
+                } else if (d instanceof Struct S) {
+                    S.isUsed = true;
+                    T2 = new StructType(S, S.pos);
+                } else {
+                    handler.reportError(errors[40] + ": %", "'" + d + "'", ast.pos);
+                    T2 = Environment.errorType;
+                }
+                ((ArrayType) T).t = T2;
+            }
+
+        }
+
+        return ast.type;
+    }
 }

@@ -15,6 +15,7 @@ public class Emitter implements Visitor {
     private String arrName = "";
     private final Position dummyPos = new Position();
     private boolean seenStructs = false;
+    private boolean inDynamicStringRef = false;
 
     public Emitter(String outputName) {
         this.outputName = outputName;
@@ -95,7 +96,7 @@ public class Emitter implements Visitor {
 
         ast.S.visit(this, f);
         if (ast.I.spelling.equals("main")) {
-           emitN("\tret i32 0");
+           emitN("\tret i64 0");
         }
 
         if (!ast.S.containsExit && ast.T.isVoid()) {
@@ -195,17 +196,9 @@ public class Emitter implements Visitor {
             return null;
         }
 
-        // Declare a 'char *'
-        if (ast.T.isPointer() && ((PointerType) ast.T).t.isChar() && ast.E.isStringExpr()) {
-            StringExpr E = (StringExpr) ast.E;
-            ast.E.visit(this, o);
-            int l = E.SL.spelling.length() + 1;
-            int n = E.index;
-            emitN("\tstore i8 * getelementptr inbounds ([" + l + " x i8], [" + l + " x i8]* @..str" + n +
-                    " , i64 0, i64 0), i8** %" + ast.I.spelling + depth);
-            return null;
-        }
+        inDynamicStringRef = true;
         ast.E.visit(this, o);
+        inDynamicStringRef = true;
         emit("\tstore ");
         ast.T.visit(this, o);
         int value = f.localVarIndex - 1;
@@ -370,7 +363,7 @@ public class Emitter implements Visitor {
                     if (ast.spelling.equals("c-")) {
                         emitN("\t%" + newNum + " = sub i8 %" + numOne + ", %" + numTwo);
                     } else {
-                        emitN("\t%" + newNum + " = sub i32 %" + numOne + ", %" + numTwo);
+                        emitN("\t%" + newNum + " = sub i64 %" + numOne + ", %" + numTwo);
                     }
                 } else if (ast.parent instanceof UnaryExpr parent) {
                     int numOne = parent.E.tempIndex;
@@ -379,7 +372,7 @@ public class Emitter implements Visitor {
                     if (ast.spelling.equals("c-")) {
                         emitN("\t%" + newNum + " = sub i8 0, %" + numOne);
                     } else {
-                        emitN("\t%" + newNum + " = sub i32 0, %" + numOne);
+                        emitN("\t%" + newNum + " = sub i64 0, %" + numOne);
                     }
                 }
             }
@@ -409,35 +402,35 @@ public class Emitter implements Visitor {
 
     public String opToCommand(String input) {
         return switch (input)  {
-            case "i+" ->  "add i32";
+            case "i+" ->  "add i64";
             case "c+" ->  "add i8";
             case "f+" ->  "fadd float";
-            case "i*" -> "mul i32";
+            case "i*" -> "mul i64";
             case "c*" -> "mul i8";
             case "f*" -> "fmul float";
-            case "i%", "ii%" -> "srem i32";
+            case "i%", "ii%" -> "srem i64";
             case "c%" -> "srem i8";
-            case "i/" -> "sdiv i32";
+            case "i/" -> "sdiv i64";
             case "c/" -> "sdiv i8";
             case "f/" -> "fdiv float";
-            case "i==" -> "icmp eq i32";
+            case "i==" -> "icmp eq i64";
             case "c==" -> "icmp eq i8";
             case "f==" -> "fcmp eq float";
             case "b==" -> "icmp eq i1";
-            case "i!=" -> "icmp ne i32";
+            case "i!=" -> "icmp ne i64";
             case "c!=" -> "icmp ne i8";
             case "f!=" -> "fcmp ne float";
             case "b!=" -> "icmp ne i1";
-            case "i<=" -> "icmp sle i32";
+            case "i<=" -> "icmp sle i64";
             case "c<=" -> "icmp sle i8";
             case "f<=" -> "fcmp sle float";
-            case "i<" -> "icmp slt i32";
+            case "i<" -> "icmp slt i64";
             case "c<" -> "icmp slt i8";
             case "f<" -> "fcmp slt float";
-            case "i>" -> "icmp sgt i32";
+            case "i>" -> "icmp sgt i64";
             case "c>" -> "icmp sgt i8";
             case "f>" -> "fcmp sgt float";
-            case "i>=" -> "icmp sge i32";
+            case "i>=" -> "icmp sge i64";
             case "c>=" -> "icmp sge i8";
             case "f>=" -> "fcmp sge float";
             default -> {
@@ -576,7 +569,7 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         String value = ast.IL.spelling;
         int num = f.getNewIndex();
-        emitN("\t%" + num + " = add i32 0, " + value);
+        emitN("\t%" + num + " = add i64 0, " + value);
         ast.tempIndex = num;
         return null;
     }
@@ -653,7 +646,7 @@ public class Emitter implements Visitor {
 
         if (ast.I.spelling.equals("$")) {
             int newIndex = f.getNewIndex();
-            emitN("\t%" + newIndex + " = load i32, i32* %" + "$".repeat(f.getDollarDepth()));
+            emitN("\t%" + newIndex + " = load i64, i64* %" + "$".repeat(f.getDollarDepth()));
             return null;
         }
 
@@ -734,7 +727,7 @@ public class Emitter implements Visitor {
         int indexStr = f.getNewIndex();
         int newIndex = f.getNewIndex();
         emitN("\t%" + indexStr + " = getelementptr [4 x i8], [4 x i8]* @.Istr, i32 0, i32 0");
-        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i32 %" + index + ")");
+        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i64 %" + index + ")");
     }
 
     public void handleOutChar(CallExpr ast, Object o) {
@@ -762,7 +755,9 @@ public class Emitter implements Visitor {
     public void handleOutStr(CallExpr ast, Object o) {
         Frame f = (Frame) o;
         Expr arg = ((Args) ast.AL).E;
+        inDynamicStringRef = true;
         arg.visit(this, o);
+        inDynamicStringRef = false;
         int index = arg.tempIndex;
         emitN("\tcall i32 (i8*, ...) @printf(i8* %" + index + ")");
         f.getNewIndex();
@@ -873,17 +868,17 @@ public class Emitter implements Visitor {
 
         if (ast.I1.isPresent()) {
             // bounded on upper end
-            emitN("\t%" + dollars + " = alloca i32");
+            emitN("\t%" + dollars + " = alloca i64");
             if (ast.I2.isPresent()) {
                 ast.I1.get().visit(this, o);
                 int lowerIndex = ast.I1.get().tempIndex;
                 newIndex = f.getNewIndex();
-                emitN("\t%" + newIndex + " = add i32 0, %" + lowerIndex);
+                emitN("\t%" + newIndex + " = add i64 0, %" + lowerIndex);
             } else {
                 newIndex = f.getNewIndex();
-                emitN("\t%" + newIndex + " = add i32 0, 0");
+                emitN("\t%" + newIndex + " = add i64 0, 0");
             }
-            emitN("\tstore i32 %" + newIndex + ", i32* %" + dollars);
+            emitN("\tstore i64 %" + newIndex + ", i64* %" + dollars);
             emitN("\tbr label %" + topLabel);
             emitN(topLabel + ":");
 
@@ -896,9 +891,9 @@ public class Emitter implements Visitor {
                 tempIndex = ast.I1.get().tempIndex;
             }
             int dolIndex = f.getNewIndex();
-            emitN("\t%" + dolIndex + " = load i32, i32* %" + dollars);
+            emitN("\t%" + dolIndex + " = load i64, i64* %" + dollars);
             int boolIndex = f.getNewIndex();
-            emitN("\t%" + boolIndex + " = icmp sge i32 %" + dolIndex + ", %" + tempIndex);
+            emitN("\t%" + boolIndex + " = icmp sge i64 %" + dolIndex + ", %" + tempIndex);
             emitN("\tbr i1 %" + boolIndex + ", label %" + bottomLabel + ", label %" + midLabel);
             emitN(midLabel + ":");
 
@@ -908,17 +903,17 @@ public class Emitter implements Visitor {
 
             emitN("\tbr label %" + iterateLabel);
             emitN(iterateLabel + ":");
-            emitN("\t%" + dol2Index + " = load i32, i32* %" + dollars);
-            emitN("\t%" + newIndexTwo + " = add i32 1, %" + dol2Index);
-            emitN("\tstore i32 %" + newIndexTwo +", i32* %" + dollars);
+            emitN("\t%" + dol2Index + " = load i64, i64* %" + dollars);
+            emitN("\t%" + newIndexTwo + " = add i64 1, %" + dol2Index);
+            emitN("\tstore i64 %" + newIndexTwo +", i64* %" + dollars);
             emitN("\tbr label %" + topLabel);
             emitN(bottomLabel + ":");
         } else {
             // no bounds
             newIndex = f.getNewIndex();
-            emitN("\t%" + dollars + " = alloca i32");
-            emitN("\t%" + newIndex + " = add i32 0, 0");
-            emitN("\tstore i32 %" + newIndex + ", i32* %" + dollars);
+            emitN("\t%" + dollars + " = alloca i64");
+            emitN("\t%" + newIndex + " = add i64 0, 0");
+            emitN("\tstore i64 %" + newIndex + ", i64* %" + dollars);
             emitN("\tbr label %" + topLabel);
             emitN(topLabel + ":");
             ast.S.visit(this, o);
@@ -926,10 +921,10 @@ public class Emitter implements Visitor {
 
             emitN("\tbr label %" + iterateLabel);
             emitN(iterateLabel + ":");
-            emitN("\t%" + dol2Index + " = load i32, i32* %" + dollars);
+            emitN("\t%" + dol2Index + " = load i64, i64* %" + dollars);
             int newIndexTwo = f.getNewIndex();
-            emitN("\t%" + newIndexTwo + " = add i32 1, %" + dol2Index);
-            emitN("\tstore i32 %" + newIndexTwo +", i32* %" + dollars);
+            emitN("\t%" + newIndexTwo + " = add i64 1, %" + dol2Index);
+            emitN("\tstore i64 %" + newIndexTwo +", i64* %" + dollars);
             emitN("\tbr label %" + topLabel);
             emitN(bottomLabel + ":");
         }
@@ -1082,6 +1077,8 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         ast.index.visit(this, o);
         int index = f.localVarIndex - 1;
+        int newV = f.getNewIndex();
+        emitN("\t%" + newV + " = trunc i64 %" + index + " to i32");
         int newIndex = f.getNewIndex();
         emit("\t%" + newIndex + " = getelementptr ");
         if (!ast.I.decl.isParaDecl()) {
@@ -1112,7 +1109,8 @@ public class Emitter implements Visitor {
         if (!ast.I.decl.isParaDecl()) {
             emit(", i32 0");
         }
-        emitN(", i32 %" + index);
+ 
+        emitN(", i32 %" + newV);
 
         ast.tempIndex = newIndex;
         Type innerT = ((ArrayType) ast.type).t;
@@ -1158,13 +1156,13 @@ public class Emitter implements Visitor {
         Type from = ast.tFrom, to = ast.tTo;
         emit("\t%" + temp+ " = ");
         if (from.isInt() && to.isFloat()) {
-            emitN("sitofp i32 %" + numOne + " to float");
+            emitN("sitofp i64 %" + numOne + " to float");
         }
         if (from.isChar() && to.isInt()) {
-            emitN("sext i8 %" + numOne + " to i32");
+            emitN("sext i8 %" + numOne + " to i64");
         }
         if (from.isInt() && to.isChar()) {
-            emitN("trunc i32 %" + numOne + " to i8");
+            emitN("trunc i64 %" + numOne + " to i8");
         }
         return null;
     }
@@ -1191,7 +1189,7 @@ public class Emitter implements Visitor {
         EnumType T = (EnumType) ast.type;
         int value = T.E.getValue(ast.Entry.spelling);
         int num = f.getNewIndex();
-        emitN("\t%" + num + " = add i32 0, " + value);
+        emitN("\t%" + num + " = add i64 0, " + value);
         ast.tempIndex = num;
         return null;
     }
@@ -1205,11 +1203,19 @@ public class Emitter implements Visitor {
     }
 
     public Object visitStringExpr(StringExpr ast, Object o) {
+        int l = ast.SL.spelling.length() + 1;
+
+        if (inDynamicStringRef) {
+            Frame f = (Frame) o;
+            int v = f.getNewIndex();
+            ast.tempIndex = v;
+            emitN("\t%" + v + " = getelementptr [" + l + " x i8], [" + l + " x i8]* @..str" + ast.index + ", i32 0, i32 0");
+        }
+
         if (!ast.needToEmit) {
             return  null;
         }
 
-        int l = ast.SL.spelling.length() + 1;
         emitNConst("@..str" + ast.index + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
         return null;
     }
@@ -1325,7 +1331,9 @@ public class Emitter implements Visitor {
     public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
         Frame f = (Frame) o;
         declaringLocalVar = true;
+        inDynamicStringRef = true;
         ast.RHS.visit(this, o);
+        inDynamicStringRef = false;
         declaringLocalVar = false;
         int rhsIndex = ast.RHS.tempIndex;
         boolean isGlobal = false;
@@ -1419,6 +1427,8 @@ public class Emitter implements Visitor {
 
                 ast.arrayIndex.get().visit(this, o);
                 int arrayV = f.localVarIndex - 1;
+                int newV = f.getNewIndex();
+                emitN("\t%" + newV + " = trunc i64 %" + arrayV + " to i32");
 
                 int v = f.getNewIndex();
                 Optional <StructElem> elem = null;
@@ -1434,7 +1444,7 @@ public class Emitter implements Visitor {
                 elem.get().T.visit(this, o);
                 emit(", ");
                 elem.get().T.visit(this, o);
-                emitN("* %" + prevIndex + ", i32 0, i32 %" + arrayV);
+                emitN("* %" + prevIndex + ", i32 0, i32 %" + newV);
             }
 
             return null;
@@ -1454,10 +1464,14 @@ public class Emitter implements Visitor {
         String structName = "struct." + ast.ref.I.spelling;
 
         int arrayIndexNum = -1;
+        int newV = -1;
         if (ast.arrayIndex.isPresent()) {
             ast.arrayIndex.get().visit(this, o);
             arrayIndexNum = f.localVarIndex - 1;
+            newV = f.getNewIndex();
+            emitN("\t%" + newV + " = trunc i64 %" + arrayIndexNum + " to i32");
         }
+
 
         int v = f.getNewIndex();
         if (ast.varName.decl instanceof LocalVar L) {
@@ -1468,7 +1482,7 @@ public class Emitter implements Visitor {
                 ast.sourceType.visit(this, o);
                 emit(", ");
                 ast.sourceType.visit(this, o);
-                emitN("* %" + localRef + ", i32 0, i32 %" + arrayIndexNum);
+                emitN("* %" + localRef + ", i32 0, i32 %" + newV);
                 localRef = String.valueOf(v);
                 v = f.getNewIndex();
             }
@@ -1562,4 +1576,63 @@ public class Emitter implements Visitor {
     public void emitNConst(String s) {
         LLVM.appendConstant(new Instruction(s + "\n"));
     }
+
+    public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
+        
+        Type t;
+        if (ast.typeV.isPresent()) {
+            t = ast.typeV.get();
+        } else {
+            t = ast.varType;
+        }
+
+        int v =handleSizeOfExpr(t, o);
+        ast.tempIndex = v;
+
+        return null;
+    }
+
+    private int handleSizeOfExpr(Type t, Object o) {
+        Frame f = (Frame) o;
+        int size = -1;
+
+        if (t.isInt() || t.isEnum() || t.isFloat()) {
+            size = 8;
+        } else if (t.isFloat()) {
+            size = 4;
+        }else if (t.isChar() || t.isBoolean()) {
+            size = 1;
+        } else if (t.isPointer()) {
+            size = 8;
+        } else if (t.isStruct()) {
+            StructType T = (StructType) t;
+
+            int v = f.getNewIndex();
+            int v4 = f.getNewIndex();
+
+            emit("\t%" + v + " = getelementptr ");
+            T.visit(this, o);
+            emit(", ");
+            T.visit(this, o);
+            emitN("* null, i32 1");
+            emit("\t%" + v4 + " = ptrtoint ");
+            T.visit(this, o);
+            emitN("* %" + v + " to i64");
+
+            return v4;
+
+        } else if (t.isArray()) {
+            Type innerT = ((ArrayType) t).t;
+            int v2 = handleSizeOfExpr(innerT, o);
+            int v = f.getNewIndex();
+            emitN("\t%" + v + " = mul i64 %" + v2 + ", " + ((ArrayType) t).length);
+            return v;
+        }
+
+        int v = f.getNewIndex();
+        emit("\t%" + v + " = ");
+        emitN("add i64 0, " + size);
+        return v; 
+    }
+
 }

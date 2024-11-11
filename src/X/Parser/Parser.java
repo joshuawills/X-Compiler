@@ -607,8 +607,40 @@ public class Parser {
     }
 
     private Expr parseExpr() throws SyntaxError {
+
+        if (currentToken.kind == TokenType.SIZE_OF) {
+            return parseSizeOf();
+        }
+
         return parseAssignmentExpr();
     }
+
+    private Expr parseSizeOf() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        match(TokenType.SIZE_OF);
+        match(TokenType.OPEN_PAREN);
+
+        Optional<VarExpr> varExprAST = Optional.empty();
+        Optional<Type> typeAST = Optional.empty();
+
+        if(lookAhead().kind == TokenType.CLOSE_PAREN && currentToken.kind != TokenType.TYPE) {
+            Ident ID = parseIdent();
+            finish(pos);
+            Var simVAST = new SimpleVar(ID, pos);
+            varExprAST = Optional.of(new VarExpr(simVAST, pos));
+        } else {
+            // Assume type parsing
+            Type T = parseType();
+            finish(pos);
+            typeAST = Optional.of(T);
+        }
+
+        match(TokenType.CLOSE_PAREN);
+        finish(pos);
+        return new SizeOfExpr(varExprAST, typeAST, pos);
+    }
+
 
     private Expr parseAssignmentExpr() throws SyntaxError {
         Position pos = new Position();

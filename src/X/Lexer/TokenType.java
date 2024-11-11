@@ -61,5 +61,6 @@ public enum TokenType {
     LET,
     COLON,
     PERIOD,
-    STRUCT
+    STRUCT,
+    SIZE_OF
 }

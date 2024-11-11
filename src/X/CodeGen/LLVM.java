@@ -49,7 +49,7 @@ public class LLVM {
         }
     }
 
-    public static final String INT_TYPE = "i32";
+    public static final String INT_TYPE = "i64";
     public static final String CHAR_TYPE = "i8";
     public static final String FLOAT_TYPE = "float";
     public static final String BOOL_TYPE = "i1";

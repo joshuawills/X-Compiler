@@ -319,3 +319,6 @@ Although quite primitive, we have some basic IO functions as a standard library.
 `outFloat` takes in a float and prints it to stdout, followed by a newline.
 
 `outStr` takes in a string constant and prints it to stdout.
+
+`size` can take in a type (primitive or constructed) or a variable and return its size
+in bytes as an integer

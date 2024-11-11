@@ -41,7 +41,8 @@ stmt})? \\
 \textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\
 \textit{loop-stmt} &\to \textbf{ loop} \textit{ ident } \textit{ compound-stmt}\\ \\
 
-\textit{expr} &\to \textit{assignment-expr}\\
+\textit{expr} &\to \textit{assignment-expr} || \textit{size-of-expr}\\
+\textit{size-of-expr} &\to \textbf{size} ( \textit{type | IDENT} ) \\ 
 \textit{assignment-expr} &\to \textit{or-expr } || \textit{unary-expr} \textbf{ ASSIGNMENT-OPERATOR } \textit{assignment-expr}\\  
 \textit{or-expr} &\to \textit{and-expr } (\text{"||" } \textit{and-expr})^* \\
 \textit{and-expr} &\to \textit{equality-expr } (\text{"\\\&\\\&" } \textit{equality-expr})^* \\

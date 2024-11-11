@@ -152,4 +152,6 @@ public interface Visitor {
     Object visitStructAccessList(StructAccessList ast, Object o);
 
     Object visitStructAccess(StructAccess ast, Object o);
+
+    Object visitSizeOfExpr(SizeOfExpr ast, Object o);
 }

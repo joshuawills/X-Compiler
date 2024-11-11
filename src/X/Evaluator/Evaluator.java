@@ -483,4 +483,10 @@ public class Evaluator implements Visitor {
     public Object visitStringLiteral(StringLiteral ast, Object o) {
         return null;
     }
+
+    @Override
+    public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitSizeOfExpr'");
+    }
 }

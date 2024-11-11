@@ -615,4 +615,16 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
+        print(indentString() + "SizeOf");
+        ++indent;
+        if (ast.typeV.isPresent()) {
+            ast.typeV.get().visit(this, o);
+        } else {
+            ast.varExpr.get().visit(this, o);
+        }
+        --indent;
+        return null;
+    }
+
 }
