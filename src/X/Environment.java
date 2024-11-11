@@ -5,7 +5,7 @@ import X.Nodes.Type;
 
 public class Environment {
 
-    public static Type booleanType, intType, strType, voidType, errorType, floatType, charType;
-    public static Function outInt, outFloat, outChar;
+    public static Type booleanType, intType, strType, voidType, errorType, floatType, charType, charPointerType;
+    public static Function outInt, outFloat, outChar, outStr;
 
 }

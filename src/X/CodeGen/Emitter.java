@@ -759,6 +759,15 @@ public class Emitter implements Visitor {
         emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", double %" + valIndex + ")");
     }
 
+    public void handleOutStr(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+        Expr arg = ((Args) ast.AL).E;
+        arg.visit(this, o);
+        int index = arg.tempIndex;
+        emitN("\tcall i32 (i8*, ...) @printf(i8* %" + index + ")");
+        f.getNewIndex();
+    }
+
     public Object visitCallExpr(CallExpr ast, Object o) {
 
         if (ast.I.spelling.equals("outInt")) {
@@ -768,6 +777,11 @@ public class Emitter implements Visitor {
 
         if (ast.I.spelling.equals("outChar")) {
             handleOutChar(ast, o);
+            return null;
+        }
+
+        if (ast.I.spelling.equals("outStr")) {
+            handleOutStr(ast, o);
             return null;
         }
 

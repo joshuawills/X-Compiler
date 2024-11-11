@@ -307,12 +307,17 @@ public class Checker implements Visitor {
         Environment.floatType = new FloatType(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
         Environment.errorType = new ErrorType(dummyPos);
+        Environment.charPointerType = new PointerType(dummyPos, Environment.charType);
         Environment.outInt = stdFunction(Environment.voidType, "outInt", new ParaList(
                 new ParaDecl(Environment.intType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.outChar = stdFunction(Environment.voidType, "outChar", new ParaList(
                 new ParaDecl(Environment.charType, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.outStr= stdFunction(Environment.voidType, "outStr", new ParaList(
+                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.outFloat = stdFunction(Environment.voidType, "outFloat", new ParaList(

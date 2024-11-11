@@ -1,6 +1,9 @@
 # The X-Compiler
 
-https://x-compiler.com/
+
+<img src="assets/example.png" style="width: 100%; max-width: 300px;; display: block; margin-left: auto; margin-right: auto;">
+
+<h2 style="text-align: center;">https://x-compiler.com</h2>
 
 This is a revamped version of the [old XY Compiler](https://github.com/joshuawills/XY-Compiler) that I decided to 
 rewrite after learning more formal compiler development theory.
