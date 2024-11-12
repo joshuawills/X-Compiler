@@ -3,6 +3,7 @@ package X.TreeDrawer;
 import X.Lexer.Position;
 import X.Nodes.*;
 import X.Nodes.Enum;
+import X.Nodes.Module;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -555,5 +556,11 @@ public class LayoutVisitor implements Visitor {
             return layoutUnary("SizeOfExpr", ast.typeV.get());
         }
         return layoutUnary("SizeOfExpr", ast.varExpr.get());
+    }
+
+    @Override
+    public Object visitModule(Module ast, Object o) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
     }
 }

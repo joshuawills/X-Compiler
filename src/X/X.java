@@ -4,6 +4,7 @@ import X.Checker.Checker;
 import X.CodeGen.Emitter;
 import X.Lexer.*;
 import X.Nodes.AST;
+import X.Nodes.Module;
 import X.Parser.Parser;
 import X.Parser.SyntaxError;
 import X.TreeDrawer.Drawer;
@@ -132,8 +133,9 @@ public class X {
 
         Instant cStart = Instant.now();
         Checker checker = new Checker(handler);
+        ArrayList<Module> modules = new ArrayList<>();
         try {
-            checker.check(ast);
+            modules = checker.check(ast, file_name);
         } catch (Exception s) {
             s.printStackTrace();
             System.out.println(s);
@@ -161,7 +163,7 @@ public class X {
                     System.out.println("IR file must end with '.ll' file suffix");
                 }
                 Emitter emitter = new Emitter(file_name_format);
-                emitter.gen(ast);
+                emitter.gen(modules);
             }
             Instant eEnd = Instant.now();
 

@@ -1,5 +1,7 @@
 package X.CodeGen;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -7,6 +9,7 @@ import X.Evaluator.Evaluator;
 import X.Lexer.Position;
 import X.Nodes.*;
 import X.Nodes.Enum;
+import X.Nodes.Module;
 
 public class Emitter implements Visitor {
 
@@ -21,41 +24,40 @@ public class Emitter implements Visitor {
         this.outputName = outputName;
     }
 
-    public final void gen(AST ast) {
+    public final void gen(ArrayList<Module> modules) {
 
-        // Probably inefficient, think of a way to hoist structs to top of AST
-        // TODO: will work for now though
-        DeclList L = (DeclList) ((Program) ast).PL;
-        while (true) {
-            if (L.D instanceof Struct S) {
-                S.visit(this, null);
-            }
-            if (L.DL instanceof EmptyDeclList) {
-                break;
-            }
-            L = (DeclList) L.DL;
-        }
-        seenStructs = true;
+        Module mainModule = modules.get(0);
 
+        HashMap<String, Struct> structs = mainModule.getStructs();
+ 
         emitN("declare i32 @printf(i8*, ...)");
         emitN("declare i32 @scanf(i8*, ...)");
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
         emitN("@.Cstr = constant [4 x i8] c\"%c\\0A\\00\"");
         emitN("@.IFstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
-        emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");
-        ast.visit(this, null);
+        emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");       
+
+        // Visiting all the structs
+        for (Struct s: structs.values()) {
+            s.visit(this, null);
+        }
+
+        // Visiting all the global vars
+        HashMap<String, GlobalVar> vars = mainModule.getVars();
+        for (GlobalVar v: vars.values()) {
+            v.visit(this, null);
+        }
+
+        // Visiting all the functions
+        HashMap<String, Function> functions = mainModule.getFunctions();
+        for (Function f: functions.values()) {
+            f.visit(this, null);
+        }
+
         LLVM.dump(outputName);
     }
 
     public Object visitProgram(Program ast, Object o) {
-        DeclList l = (DeclList) ast.PL;
-        while (true) {
-            l.D.visit(this, o);
-            if (l.DL instanceof EmptyDeclList) {
-                break;
-            }
-            l = (DeclList) l.DL;
-        }
         return null;
     }
 
@@ -1236,7 +1238,7 @@ public class Emitter implements Visitor {
     }
 
     public Object visitStruct(Struct ast, Object o) {
-        if (!ast.isUsed || seenStructs) {
+        if (!ast.isUsed) {
             return null;
         }
         String s = ast.I.spelling;
@@ -1633,6 +1635,12 @@ public class Emitter implements Visitor {
         emit("\t%" + v + " = ");
         emitN("add i64 0, " + size);
         return v; 
+    }
+
+    @Override
+    public Object visitModule(Module ast, Object o) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
     }
 
 }

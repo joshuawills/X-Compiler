@@ -30,7 +30,10 @@ public class Function extends Decl {
         PL = fplAST;
         S = cAST;
         setTypeDef();
-        T.parent = I.parent = PL.parent = S.parent = this;
+        T.parent = I.parent = PL.parent = this;
+        if (S != null) {
+            S.parent = this;
+        }
     }
 
     public void setUsed() {

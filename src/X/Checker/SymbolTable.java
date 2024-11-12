@@ -14,10 +14,9 @@ public class SymbolTable {
 
     public void closeScope() {
         IdEntry entry = this.latest;
-        while (entry.level == this.level) {
+        while (entry != null && entry.level == this.level) {
             entry = entry.previousEntry;
         }
-        this.level -= 1;
         this.latest = entry;
     }
 

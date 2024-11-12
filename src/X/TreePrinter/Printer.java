@@ -1,5 +1,6 @@
 package X.TreePrinter; import X.Nodes.*;
 import X.Nodes.Enum;
+import X.Nodes.Module;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -625,6 +626,12 @@ public class Printer implements Visitor {
         }
         --indent;
         return null;
+    }
+
+    @Override
+    public Object visitModule(Module ast, Object o) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
     }
 
 }

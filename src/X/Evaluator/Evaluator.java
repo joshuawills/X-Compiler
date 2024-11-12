@@ -3,6 +3,7 @@ package X.Evaluator;
 import X.CodeGen.LLVM;
 import X.Nodes.*;
 import X.Nodes.Enum;
+import X.Nodes.Module;
 
 public class Evaluator implements Visitor {
 
@@ -488,5 +489,11 @@ public class Evaluator implements Visitor {
     public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visitSizeOfExpr'");
+    }
+
+    @Override
+    public Object visitModule(Module ast, Object o) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
     }
 }

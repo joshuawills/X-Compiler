@@ -5,6 +5,7 @@ import X.ErrorHandler;
 import X.Lexer.Position;
 import X.Nodes.*;
 import X.Nodes.Enum;
+import X.Nodes.Module;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,20 +105,28 @@ public class Checker implements Visitor {
     public Checker(ErrorHandler handler) {
         this.handler = handler;
         this.idTable = new SymbolTable();
-        establishEnv();
     }
 
-    public void check(AST ast) {
+    private ArrayList<Module> modules = new ArrayList<>();
+    private Module mainModule;
+
+    public ArrayList<Module> check(AST ast, String filename) {
+
+        
+        mainModule = new Module(filename);
+        modules.add(mainModule);
+        establishEnv();
 
         if (((Program) ast).PL instanceof EmptyDeclList) {
             handler.reportError(errors[0], "", ast.pos);
-            return;
+            return null;
         }
 
         // Load  in all unique types
         DeclList L = (DeclList) ((Program) ast).PL;
         while (true) {
             if (L.D instanceof Enum E) {
+
                 if (E.isEmpty()) {
                     handler.reportError(errors[49] + ": %", E.I.spelling, E.I.pos);
                 } else {
@@ -129,18 +138,20 @@ public class Checker implements Visitor {
                         handler.reportError(errors[42] + ": %", message, E.I.pos);
                     }
                 }
-               // Duplicate type definitions
-                Decl d = idTable.retrieve(E.I.spelling);
-                if (d == null) {}
-                else if (d.isEnum()) {
+
+                // Duplicate type definitions
+                if (mainModule.enumExists(E.I.spelling)) {
                     String message = "enum '" +E.I.spelling + "' clashes with previously declared enum";
                     handler.reportError(errors[47] + ": %", message, E.I.pos);
-                } else if (d instanceof Struct) {
+                } else if (mainModule.structExists(E.I.spelling)) {
                     String message = "enum '" +E.I.spelling + "' clashes with previously declared struct";
                     handler.reportError(errors[47] + ": %", message, E.I.pos);
                 }
-                idTable.insert(E.I.spelling, E.isMut, E);
+
+                mainModule.addEnum(E);
+
             } else if (L.D instanceof Struct S) {
+
                 if (S.isEmpty()) {
                     handler.reportError(errors[48] + ": %", S.I.spelling, S.I.pos);
                 } else {
@@ -153,19 +164,17 @@ public class Checker implements Visitor {
                 }
 
                 // Duplicate type definitions
-                Decl d = idTable.retrieve(S.I.spelling);
-                if (d == null) {}
-                else if (d.isEnum()) {
+                if (mainModule.enumExists(S.I.spelling)) {
                     String message = "struct '" + S.I.spelling + "' clashes with previously declared enum";
                     handler.reportError(errors[47] + ": %", message, S.I.pos);
-                } else if (d instanceof Struct) {
+                } else if (mainModule.structExists(S.I.spelling)) {
                     String message = "struct '" + S.I.spelling + "' clashes with previously declared struct";
                     handler.reportError(errors[47] + ": %", message, S.I.pos);
                 }
 
                 // header type is validated here
                 // potential subtypes that are user-created types will be validated when struct's initialised
-                idTable.insert(S.I.spelling, S.isMut, S);
+                mainModule.addStruct(S);
             }
 
             if (L.DL instanceof EmptyDeclList) {
@@ -238,8 +247,8 @@ public class Checker implements Visitor {
                     F.T.parent = ast;
                 }
 
-                Decl e = idTable.retrieve(F.I.spelling);
-                if (e != null) {
+                if (mainModule.functionExists(F.I.spelling)) {
+                    Function e = mainModule.getFunction(F.I.spelling + "." + F.TypeDef);
                     String tOne = F.TypeDef;
                     String tTwo = ((Function) e).TypeDef;
                     if (tOne.equals(tTwo)) {
@@ -297,6 +306,8 @@ public class Checker implements Visitor {
         if (!hasMain) {
             handler.reportError(errors[0], "", ast.pos);
         }
+
+        return modules;
     }
 
     private void establishEnv() {
@@ -329,12 +340,13 @@ public class Checker implements Visitor {
     private Function stdFunction(Type resultType, String id, List pl) {
         Function binding = new Function(resultType, new Ident(id, dummyPos),
             pl, new EmptyStmt(dummyPos), dummyPos);
-        idTable.insert(id + "." + binding.TypeDef, false, binding);
+        binding.setTypeDef();
+        mainModule.addFunction(binding);
         return binding;
     }
 
     private void stdFunction(Function funct) {
-        idTable.insert(funct.I.spelling + "." + funct.TypeDef, funct.isMut, funct);
+        mainModule.addFunction(funct);
     }
 
     public Object visitProgram(Program ast, Object o) {
@@ -346,6 +358,11 @@ public class Checker implements Visitor {
         Decl binding = idTable.retrieve(ast.spelling);
         if (binding != null) {
             ast.decl = binding;
+        } else {
+            if (mainModule.varExists(ast.spelling)) {
+                binding = mainModule.getVar(ast.spelling);
+                ast.decl = binding;
+            }
         }
         return binding;
     }
@@ -367,6 +384,7 @@ public class Checker implements Visitor {
         } else if (ast.I.spelling.equals("$")) {
             handler.reportError(errors[24] + ": %", "can't be used as function name", ast.I.pos);
         }
+
         idTable.openScope();
         ast.PL.visit(this, null);
         ast.S.visit(this, ast);
@@ -389,17 +407,19 @@ public class Checker implements Visitor {
 
     private void unMurk(Decl ast) {
         String s = ((MurkyType) ast.T).V;
-        Decl D = idTable.retrieve(s);
-        if (D instanceof Enum E) {
+        if (mainModule.enumExists(s)) {
+            Enum E = mainModule.getEnum(s);
             E.isUsed = true;
             ast.T = new EnumType(E, E.pos);
-        } else if (D instanceof Struct S) {
+        } else if (mainModule.structExists(s)) {
+            Struct S = mainModule.getStruct(s);
             S.isUsed = true;
             ast.T = new StructType(S, S.pos);
         } else {
             handler.reportError(errors[40] + ": %", "'" + s + "'", ast.T.pos);
             ast.T = Environment.errorType;
         }
+
         ast.T.parent = ast;
     }
 
@@ -407,10 +427,12 @@ public class Checker implements Visitor {
         ArrayType AT = (ArrayType) ast.T;
         String s = ((MurkyType) AT.t).V;
         Decl D = idTable.retrieve(s);
-        if (D instanceof Enum E) {
+        if (mainModule.enumExists(s)) {
+            Enum E = mainModule.getEnum(s);
             E.isUsed = true;
             ast.T = new ArrayType(AT.pos, new EnumType(E, E.pos), AT.length);
-        } else if (D instanceof Struct S) {
+        } else if (mainModule.structExists(s)) {
+            Struct S = mainModule.getStruct(s);
             S.isUsed = true;
             ast.T = new ArrayType(AT.pos, new StructType(S, S.pos), AT.length);
         } else {
@@ -423,11 +445,12 @@ public class Checker implements Visitor {
     private void unMurkPointer(Decl ast) {
         PointerType PT = (PointerType) ast.T;
         String s = ((MurkyType) PT.t).V;
-        Decl D = idTable.retrieve(s);
-        if (D instanceof Enum E) {
+        if (mainModule.enumExists(s)) {
+            Enum E = mainModule.getEnum(s);
             E.isUsed = true;
             ast.T = new PointerType(PT.pos, new EnumType(E, E.pos));
-        } else if (D instanceof Struct S) {
+        } else if (mainModule.structExists(s)) {
+            Struct S = mainModule.getStruct(s);
             S.isUsed = true;
             ast.T = new PointerType(PT.pos, new StructType(S, S.pos));
         } else {
@@ -942,6 +965,9 @@ public class Checker implements Visitor {
                 VarExpr VE = (VarExpr) ast.E;
                 SimpleVar SV = (SimpleVar) VE.V;
                 Decl decl = idTable.retrieve(SV.I.spelling);
+                if (decl == null) {
+                    decl = mainModule.getVar(SV.I.spelling);
+                }
                 if (!decl.isMut) {
                     handler.reportError(errors[28], "", ast.O.pos);
                     break;
@@ -1076,7 +1102,16 @@ public class Checker implements Visitor {
                 entry.attr.pos.lineStart);
             handler.reportError(errors[2] +": %", message, ident.pos);
         }
-        idTable.insert(ident.spelling, decl.isMut, decl);
+
+        if (decl.isGlobalVar()) {
+            if (mainModule.varExists(ident.spelling)) {
+                handler.reportError(errors[2] + ": %", ident.spelling, ident.pos);
+            }
+            mainModule.addGlobalVar((GlobalVar) decl);
+        } else {
+            idTable.insert(ident.spelling, decl.isMut, decl);
+        }
+
         ident.visit(this, null);
     }
 
@@ -1092,10 +1127,20 @@ public class Checker implements Visitor {
         // Assumes that when a function parameter is declared mutable
         // It actually is mutated
         Var V = ast.V;
-        Decl decl = idTable.retrieve(((SimpleVar) ast.V).I.spelling);
+        String s = ((SimpleVar) V).I.spelling;
+        
+        // If it's local
+        Decl decl = idTable.retrieve(s);
         if (decl != null) {
             decl.isReassigned = true;
         }
+
+        // If it's global
+        decl = mainModule.getVar(s);
+        if (decl != null) {
+            decl.isReassigned = true;
+        }
+
         ast.type = (Type) ast.V.visit(this, o);
         return ast.type;
     }
@@ -1111,8 +1156,15 @@ public class Checker implements Visitor {
 
         Decl decl = idTable.retrieve(ast.I.spelling);
         if (decl == null) {
-            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
-            return Environment.errorType;
+            decl = mainModule.getVar(ast.I.spelling);
+            if (decl == null) {
+                if (mainModule.functionWithNameExists(ast.I.spelling)) {
+                    handler.reportError(errors[9], "", ast.I.pos);
+                } else {
+                    handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+                }
+                return Environment.errorType;
+            }
         }
 
         ast.I.decl = decl;
@@ -1340,9 +1392,15 @@ public class Checker implements Visitor {
     public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
         Decl binding = (Decl) ast.I.visit(this, o);
         if (binding == null) {
-            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+            if (idTable.retrieve(ast.I.spelling) != null || mainModule.varExists(ast.I.spelling)
+                || mainModule.functionWithNameExists(ast.I.spelling)) {
+                handler.reportError(errors[32] + ": %", ast.I.spelling, ast.I.pos);
+            } else {
+                handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+            }
             return Environment.errorType;
         }
+
         if (binding.isFunction() || !binding.T.isArray()) {
             handler.reportError(errors[32] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
@@ -1403,39 +1461,31 @@ public class Checker implements Visitor {
 
         // Check function exists
         String TL;
-        boolean runArgsAgain = false;
         if (ast.TypeDef == null) {
             TL = genTypes(ast.AL, o);
             ast.setTypeDef(TL);
-        } else {
-            runArgsAgain = true;
         }
-        Decl type = idTable.retrieve(ast.I.spelling);
-        if (type == null) {
-            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+
+        
+        if (!mainModule.functionExists(ast.I.spelling + "." + ast.TypeDef)) {
+
+            if (idTable.retrieve(ast.I.spelling) != null || mainModule.varExists(ast.I.spelling)) {
+                handler.reportError(errors[10] + ": %", ast.I.spelling, ast.I.pos);
+            } else if (mainModule.functionWithNameExists(ast.I.spelling)) {
+                handler.reportError(errors[43] + ": %", ast.I.spelling, ast.I.pos);
+            } else {
+                handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+            }
             ast.type = Environment.errorType;
             return ast.type;
         }
 
-        // Check function is actually a function
-        if (!type.isFunction()) {    
-            handler.reportError(errors[10], "", ast.I.pos);
-            return Environment.errorType;
-        } else {
-            // Need to get the right one
-            type = idTable.retrieveFunc(ast.I.spelling + "." + ast.TypeDef);
-            if (type == null) {
-                handler.reportError(errors[43] + ": %", ast.I.spelling, ast.I.pos);
-                ast.type = Environment.errorType;
-                return ast.type;
-            }
-            ast.I.decl = type;
-            ((Function) type).setUsed();
-        }
-        Function function = (Function) type;
+        Function function = mainModule.getFunction(ast.I.spelling + "." + ast.TypeDef);
+        ast.I.decl = function;
+        function.setUsed();
         ast.AL.visit(this, function.PL);
-        ast.type = type.T;
-        return type.T;
+        ast.type = function.T;
+        return function.T;
     }
 
     private String genTypes(List PL, Object o) {
@@ -1457,7 +1507,6 @@ public class Checker implements Visitor {
     }
 
     public Object visitEmptyArgList(EmptyArgList ast, Object o) {
-        List PL = (List) o;
         return null;
     }
 
@@ -1494,12 +1543,12 @@ public class Checker implements Visitor {
 
     public Object visitEnumExpr(EnumExpr ast, Object o) {
 
-        Decl d = idTable.retrieve(ast.Type.spelling);
-        if (!d.isEnum()) {
+        if (!mainModule.enumExists(ast.Type.spelling)) {
             handler.reportError(errors[40] + ": %", ast.Type.spelling, ast.pos);
             return Environment.errorType;
         }
-        Enum E = (Enum) d;
+
+        Enum E = mainModule.getEnum(ast.Type.spelling);
         E.isUsed = true;
         if (!E.containsKey(ast.Entry.spelling)) {
             String message = "'" + ast.Entry.spelling + "' in enum '" + ast.Type.spelling + "'";
@@ -1630,11 +1679,11 @@ public class Checker implements Visitor {
 
     public Object visitStructExpr(StructExpr ast, Object o) {
         String name = ast.I.spelling;
-        Decl D = idTable.retrieve(name);
-        if (!(D instanceof Struct DS)) {
+        if (!mainModule.structExists(name)) {
             handler.reportError(errors[40] + ": %", "'" + name + "'", ast.I.pos);
             return Environment.errorType;
         }
+        Struct DS = mainModule.getStruct(name);
         DS.isUsed = true;
         int numExpectedArgs = DS.getLength();
         int realNumArgs = ast.getLength();
@@ -1659,6 +1708,17 @@ public class Checker implements Visitor {
         if (ast.LHS.isVarExpr()) {
             VarExpr VE = (VarExpr) ast.LHS;
             Decl D = idTable.retrieve(((SimpleVar) VE.V).I.spelling);
+
+            if (D == null) {
+                if (mainModule.varExists(((SimpleVar) VE.V).I.spelling)) {
+                    D = mainModule.getVar(((SimpleVar) VE.V).I.spelling);
+                    if (D.T.isArray()) {
+                        handler.reportError(errors[36],  "", ast.LHS.pos);
+                        return Environment.errorType;
+                    }
+                }
+            }
+
             if (D.T.isArray()) {
                 handler.reportError(errors[36],  "", ast.LHS.pos);
                 return Environment.errorType;
@@ -1743,11 +1803,12 @@ public class Checker implements Visitor {
         errorExpr.type = Environment.errorType;
 
         // First check if the identifier is an enum name
-        Decl d = idTable.retrieve(ast.I.spelling);
-        d.isUsed = true;
-        if (d.isEnum()) {
+        if (mainModule.enumExists(ast.I.spelling)) {
+            Enum d = mainModule.getEnum(ast.I.spelling);
+            d.isUsed = true;
+
             DotExpr innerE = (DotExpr) ast.E;
-            if (!(innerE.E instanceof EmptyExpr)) {
+            if (!innerE.E.isEmptyExpr()) {
                 handler.reportError(errors[55], "", ast.pos);
                 return Environment.errorType;
             }
@@ -1760,9 +1821,18 @@ public class Checker implements Visitor {
             return newEnum;
         } else {
             // Assumption is now we have an attempted struct access
-            if (!(d.isLocalVar() || d.isGlobalVar())) {
+            Decl d;
+            boolean isGlobalVar = mainModule.varExists(ast.I.spelling);
+            boolean isLocalVar = idTable.retrieve(ast.I.spelling) != null;
+            if (!(isLocalVar || isGlobalVar)) {
                 handler.reportError(errors[56], "", ast.pos);
                 return errorExpr;
+            }
+
+            if (isLocalVar) {
+                d = idTable.retrieve(ast.I.spelling);
+            } else {
+                d = mainModule.getVar(ast.I.spelling);
             }
 
             if (!d.isMut && isStructLHS) {
@@ -1836,22 +1906,27 @@ public class Checker implements Visitor {
         if (ast.varExpr.isPresent()) {
             // Make sure the variable exists
             String name = ((SimpleVar) ast.varExpr.get().V).I.spelling;
-            Decl d = idTable.retrieve(name);
 
-            if (d == null) {
-                handler.reportError(errors[4] + ": %", name, ast.pos);
-                return Environment.errorType;
-            }
-
-            if (d instanceof Enum E) {
+            if (mainModule.enumExists(name)) {
+                Enum E = mainModule.getEnum(name);
                 E.isUsed = true;
                 ast.varExpr = Optional.empty();
                 ast.typeV = Optional.of(new EnumType(E, E.pos));
-            } else if (d instanceof Struct S) {
+            } else if (mainModule.structExists(name)) {
+                Struct S = mainModule.getStruct(name);
                 S.isUsed = true;
                 ast.varExpr = Optional.empty();
                 ast.typeV = Optional.of(new StructType(S, S.pos));
             } else {
+                Decl d = idTable.retrieve(name);
+
+                if (d == null) {
+                    d = mainModule.getVar(name);
+                    if (d == null) {
+                        handler.reportError(errors[4] + ": %", name, ast.pos);
+                        return Environment.errorType;
+                    }
+                }
                 ast.varType = d.T;
             }
 
@@ -1861,29 +1936,32 @@ public class Checker implements Visitor {
             
             if (T.isMurky()) {
                 MurkyType MT = (MurkyType) T;
-                Decl d = idTable.retrieve(MT.V);
-                if (d instanceof Enum E) {
+                if (mainModule.enumExists(MT.V)) {
+                    Enum E = mainModule.getEnum(MT.V);
                     E.isUsed = true;
                     ast.typeV = Optional.of(new EnumType(E, E.pos));
-                } else if (d instanceof Struct S) {
+                } else if (mainModule.structExists(MT.V)) {
+                    Struct S = mainModule.getStruct(MT.V);
                     S.isUsed = true;
                     ast.typeV = Optional.of(new StructType(S, S.pos));
                 } else {
-                    handler.reportError(errors[40] + ": %", "'" + d + "'", ast.pos);
+                    handler.reportError(errors[40] + ": %", "'" + MT.V + "'", ast.pos);
                     ast.typeV = Optional.of(Environment.errorType);
                 }
+
             } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
                 MurkyType MT = (MurkyType) ((ArrayType)T).t;
                 Type T2;
-                Decl d = idTable.retrieve(MT.V);
-                if (d instanceof Enum E) {
+                if (mainModule.enumExists(MT.V)) {
+                    Enum E = mainModule.getEnum(MT.V);
                     E.isUsed = true;
                     T2 = new EnumType(E, E.pos);
-                } else if (d instanceof Struct S) {
+                } else if (mainModule.structExists(MT.V)) {
+                    Struct S = mainModule.getStruct(MT.V);
                     S.isUsed = true;
                     T2 = new StructType(S, S.pos);
                 } else {
-                    handler.reportError(errors[40] + ": %", "'" + d + "'", ast.pos);
+                    handler.reportError(errors[40] + ": %", "'" + MT.V + "'", ast.pos);
                     T2 = Environment.errorType;
                 }
                 ((ArrayType) T).t = T2;
@@ -1892,5 +1970,11 @@ public class Checker implements Visitor {
         }
 
         return ast.type;
+    }
+
+    @Override
+    public Object visitModule(Module ast, Object o) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
     }
 }

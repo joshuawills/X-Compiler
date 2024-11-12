@@ -154,4 +154,6 @@ public interface Visitor {
     Object visitStructAccess(StructAccess ast, Object o);
 
     Object visitSizeOfExpr(SizeOfExpr ast, Object o);
+
+    Object visitModule(Module ast, Object o);
 }
