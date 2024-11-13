@@ -91,7 +91,7 @@ public class Checker implements Visitor {
         "*61: imported file does not exist",
         "*62: imported file already imported",
         "*63: alias does not exist for module access",
-        "*64: can't access variable/function that is not exported",
+        "*64: can't access variable/function/type that is not exported",
         "*65: no such function in module",
         "*66: no such variable in module",
         "*67: no such type in module",
@@ -126,13 +126,11 @@ public class Checker implements Visitor {
     private AllModules modules = AllModules.getInstance();
     private Module mainModule;
 
-    private boolean isMain;
     private String currentFileName;
 
-    public ArrayList<Module> check(AST ast, String filename, boolean isMainV) {
+    public ArrayList<Module> check(AST ast, String filename, boolean isMain) {
 
         currentFileName = filename;
-        isMain = isMainV;
         
         mainModule = new Module(filename, isMain);
         mainModule.thisHandler = handler;
@@ -447,9 +445,7 @@ public class Checker implements Visitor {
         if (type.V.isModuleAccess) {
             String moduleRef = type.V.module.get();
             if (!mainModule.aliasExists(moduleRef)) {
-                System.out.println("A");
                 handler.reportError(errors[63] + ": %", "'" + moduleRef + "'", type.pos);
-                System.out.println("B");
                 T = Environment.errorType;
             }
             M = mainModule.getModuleFromAlias(moduleRef);
@@ -553,6 +549,10 @@ public class Checker implements Visitor {
         } else {
             returnType = (Type) E.visit(this, ast);
         }
+
+        if (returnType == null || returnType.isError()) {
+            return returnType;
+        }   
 
         if (ast.T.isUnknown()) {
            ast.T = returnType;
@@ -1588,6 +1588,23 @@ public class Checker implements Visitor {
 
     public Object visitEnumExpr(EnumExpr ast, Object o) {
 
+        if (ast.Type.isModuleAccess) {
+            // Assert at this point to know the alias is already valid
+            String alias = ast.Type.module.get();
+            String message = "";
+            Module M = mainModule.getModuleFromAlias(alias);
+            Enum E = M.getEnum(ast.Type.spelling);
+            if (!E.isExported) {
+                message = "enum '" + ast.Type.spelling + "' in module '" + alias + "'";
+                handler.reportError(errors[64] + ": %", message, ast.Type.pos);
+                return Environment.errorType;
+            }
+
+            EnumType ET = new EnumType(E, E.pos);
+            ast.type = ET;
+            return ET;
+        }
+
         if (!mainModule.enumExists(ast.Type.spelling)) {
             handler.reportError(errors[40] + ": %", ast.Type.spelling, ast.pos);
             return Environment.errorType;
@@ -1704,7 +1721,7 @@ public class Checker implements Visitor {
 
             Module specificModule = mainModule.getModuleFromAlias(moduleAlias);
             if (!specificModule.structExists(name)) {
-                message = "struct'" + ast.I.spelling + "' in module '" + moduleAlias + "'";
+                message = "struct '" + ast.I.spelling + "' in module '" + moduleAlias + "'";
                 handler.reportError(errors[67] + ": %", message, ast.I.pos);
                 return Environment.errorType;
             }
@@ -1830,16 +1847,30 @@ public class Checker implements Visitor {
         return ast.type;
     }
 
-    // Currently operating under the presumption there's no array or pointer accesses
+    // Currently operating under the presumption there's no pointer accesses
     public Object visitDotExpr(DotExpr ast, Object o) {
 
         Expr errorExpr = new EmptyExpr(ast.pos);
         errorExpr.type = Environment.errorType;
+        Module M = mainModule;
+        boolean isExternalModule = false;
+        String message = "";
+
+        if (ast.I.isModuleAccess) {
+            String alias = ast.I.module.get();
+            if (!mainModule.aliasExists(alias)) {
+                handler.reportError(errors[63] + ": %", "'" + alias + "'", ast.I.pos);
+                return errorExpr;
+            }
+            M = mainModule.getModuleFromAlias(alias);
+            isExternalModule = true;
+        }
+
 
         // First check if the identifier is an enum name
-        if (mainModule.enumExists(ast.I.spelling)) {
-            Enum d = mainModule.getEnum(ast.I.spelling);
-            d.isUsed = true;
+        if (M.enumExists(ast.I.spelling)) {
+            Enum E = M.getEnum(ast.I.spelling);
+            E.isUsed = true;
 
             DotExpr innerE = (DotExpr) ast.E;
             if (!innerE.E.isEmptyExpr()) {
@@ -1850,23 +1881,40 @@ public class Checker implements Visitor {
                 handler.reportError(errors[32], "", ast.pos);
                 return Environment.errorType;
             }
+
             EnumExpr newEnum = new EnumExpr(ast.I, innerE.I, ast.pos);
             newEnum.visit(this, o);
             return newEnum;
         } else {
             // Assumption is now we have an attempted struct access
             Decl d;
-            boolean isGlobalVar = mainModule.varExists(ast.I.spelling);
-            boolean isLocalVar = idTable.retrieve(ast.I.spelling) != null;
-            if (!(isLocalVar || isGlobalVar)) {
-                handler.reportError(errors[56], "", ast.pos);
-                return errorExpr;
-            }
+            if (!isExternalModule) {
+                boolean isGlobalVar = M.varExists(ast.I.spelling);
+                boolean isLocalVar = idTable.retrieve(ast.I.spelling) != null;
+                if (!(isLocalVar || isGlobalVar)) {
+                    handler.reportError(errors[56], "", ast.pos);
+                    return errorExpr;
+                }
 
-            if (isLocalVar) {
-                d = idTable.retrieve(ast.I.spelling);
+                if (isLocalVar) {
+                    d = idTable.retrieve(ast.I.spelling);
+                } else {
+                    d = M.getVar(ast.I.spelling);
+                }
             } else {
-                d = mainModule.getVar(ast.I.spelling);
+                // Needs to be a global variable
+                if (!M.varExists(ast.I.spelling)) {
+                    message = ast.I.module.get() + "::" + ast.I.spelling;
+                    handler.reportError(errors[66] + ": %", message, ast.I.pos);
+                    return errorExpr;
+                }
+                GlobalVar G = M.getVar(ast.I.spelling);
+                if (!G.isExported) {
+                    message = "variable '" + ast.I.spelling + "' in module '" + ast.I.module.get() + "'";
+                    handler.reportError(errors[64] + ": %", message, ast.I.pos);
+                    return Environment.errorType;
+                }
+                d = G;
             }
 
             if (!d.isMut && isStructLHS) {

@@ -7,4 +7,6 @@ fn main() -> int {
 
     std::hello_world = "what!";
 
+	let v = std::A.HELLO;
+
 }

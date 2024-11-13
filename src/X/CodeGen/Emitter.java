@@ -242,8 +242,8 @@ public class Emitter implements Visitor {
             emitN("\tbr label %" + bottom);
         }
 
-        ast.S2.visit(this, o);
         emitN("\n" + elseC + ":");
+        ast.S2.visit(this, o);
         ast.S3.visit(this, o);
         if (!ast.S3.containsExit) {
             emitN("\tbr label %" + bottom);

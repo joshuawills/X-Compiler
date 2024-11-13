@@ -43,7 +43,11 @@ public class Printer implements Visitor {
 
     @Override
     public Object visitIdent(Ident ast, Object o) {
-        print(indentString() + ast.spelling);
+        if (ast.isModuleAccess) {
+            print(indentString() + ast.module.get() + "::" + ast.spelling);
+        } else {
+            print(indentString() + ast.spelling);
+        }
         return null;
     }
 
@@ -572,7 +576,8 @@ public class Printer implements Visitor {
     }
 
     public Object visitDotExpr(DotExpr ast, Object o) {
-        print(indentString() + "DotExpr: " + ast.I.spelling);
+        print(indentString() + "DotExpr: ");
+        ast.I.visit(this, o);
         ++indent;
         ast.E.visit(this, o);
         --indent;

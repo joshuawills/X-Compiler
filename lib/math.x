@@ -3,6 +3,10 @@ export struct Vec2 -> {
     mut y: int
 }
 
+export enum Boolean -> {
+	TRUE, FALSE
+}
+
 export let Zero: int = 0;
 
 export fn add(x: int, y: int) -> int {

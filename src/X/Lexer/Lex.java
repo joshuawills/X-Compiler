@@ -371,8 +371,8 @@ public class Lex {
     }
 
     private boolean nextCharElIf() {
-        return file.inspectChar(1) == ' ' && file.inspectChar(2) == 'i'
-                && file.inspectChar(3) == 'f';
+        return currChar == ' ' && file.inspectChar(1) == 'i'
+                && file.inspectChar(2) == 'f';
     }
 
     private boolean isValidEscape() {
