@@ -498,4 +498,8 @@ public class Evaluator implements Visitor {
     public Object visitImportStmt(ImportStmt ast, Object o) {
         return null;
     }
+
+    public Object visitAnyType(AnyType ast, Object o) {
+        return null;
+    }
 }

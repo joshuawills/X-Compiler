@@ -320,5 +320,9 @@ Although quite primitive, we have some basic IO functions as a standard library.
 
 `outStr` takes in a string constant and prints it to stdout.
 
+`malloc` takes in an integer and returns a pointer to newly allocated memory
+
+`free` takes in a pointer and deallocates that memory
+
 `size` can take in a type (primitive or constructed) or a variable and return its size
 in bytes as an integer

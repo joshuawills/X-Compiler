@@ -61,4 +61,8 @@ public abstract class Type extends AST {
     public boolean isStruct() {
         return this instanceof StructType;
     }
+
+    public boolean isAny() {
+        return this instanceof AnyType;
+    }
 }

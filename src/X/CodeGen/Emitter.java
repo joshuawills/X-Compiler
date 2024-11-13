@@ -39,6 +39,8 @@ public class Emitter implements Visitor {
 
         emitN("declare i32 @printf(i8*, ...)");
         emitN("declare i32 @scanf(i8*, ...)");
+        emitN("declare ptr @malloc(i64)");
+        emitN("declare void @free(ptr)");
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
         emitN("@.Cstr = constant [4 x i8] c\"%c\\0A\\00\"");
         emitN("@.IFstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
@@ -762,7 +764,32 @@ public class Emitter implements Visitor {
         f.getNewIndex();
     }
 
+    public void handleMalloc(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+        ((Args) ast.AL).E.visit(this, o);
+        int index = ((Args) ast.AL).E.tempIndex;
+        int indexStr = f.getNewIndex();
+        emitN("\t%" + indexStr + " = call i8* @malloc(i64 %" + index + ")");
+        ast.tempIndex = indexStr;
+    }
+
+    public void handleFree(CallExpr ast, Object o) {
+        ((Args) ast.AL).E.visit(this, o);
+        int index = ((Args) ast.AL).E.tempIndex;
+        emitN("\tcall void @free(ptr %" + index + ")");
+    }
+
     public Object visitCallExpr(CallExpr ast, Object o) {
+
+        if (ast.I.spelling.equals("malloc")) {
+            handleMalloc(ast, o);
+            return null;
+        }
+
+        if (ast.I.spelling.equals("free")) {
+            handleFree(ast, o);
+            return null;
+        }
 
         if (ast.I.spelling.equals("outInt")) {
             handleOutInt(ast, o);
@@ -1732,6 +1759,10 @@ public class Emitter implements Visitor {
     }
 
     public Object visitImportStmt(ImportStmt ast, Object o) {
+        return null;
+    }
+
+    public Object visitAnyType(AnyType ast, Object o) {
         return null;
     }
 

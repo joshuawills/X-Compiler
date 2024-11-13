@@ -158,4 +158,6 @@ public interface Visitor {
     Object visitModule(Module ast, Object o);
 
     Object visitImportStmt(ImportStmt ast, Object o);
+
+    Object visitAnyType(AnyType ast, Object o);
 }

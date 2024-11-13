@@ -11,8 +11,8 @@ import X.Nodes.Type;
 public class Environment {
 
     public static Type booleanType, intType, strType, voidType, errorType, floatType, charType, charPointerType;
-    public static Function outInt, outFloat, outChar, outStr;
+    public static Function outInt, outFloat, outChar, outStr, malloc, free;
 
-    public static List<String> functionNames = new ArrayList<>(Arrays.asList("outInt", "outFloat", "outChar", "outStr"));
+    public static List<String> functionNames = new ArrayList<>(Arrays.asList("outInt", "outFloat", "outChar", "outStr", "malloc", "free"));
 
 }

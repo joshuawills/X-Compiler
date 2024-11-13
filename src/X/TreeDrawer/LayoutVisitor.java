@@ -230,6 +230,10 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("int");
     }
 
+    public Object visitAnyType(AnyType ast, Object obj) {
+        return layoutNullary("any");
+    }
+
     public Object visitVoidType(VoidType ast, Object obj) {
         return layoutNullary("void");
     }

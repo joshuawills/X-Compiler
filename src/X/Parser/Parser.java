@@ -790,6 +790,9 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         return switch (currentToken.kind) {
+            case SIZE_OF -> {
+                yield parseSizeOf();
+            }
             case STAR -> {
                 match(TokenType.STAR);
                 Expr eAST = parseUnaryExpr();

@@ -369,6 +369,12 @@ public class Printer implements Visitor {
     }
 
     @Override
+    public Object visitAnyType(AnyType ast, Object o) {
+        print(indentString() + "any");
+        return null;
+    }
+
+    @Override
     public Object visitArgList(Args ast, Object o) {
         print(indentString() + "ArgList");
         ++indent;

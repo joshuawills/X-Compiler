@@ -135,6 +135,7 @@ public class Checker implements Visitor {
         mainModule = new Module(filename, isMain);
         mainModule.thisHandler = handler;
         modules.addModule(mainModule);
+
         establishEnv();
 
         if (((Program) ast).PL instanceof EmptyDeclList) {
@@ -344,6 +345,8 @@ public class Checker implements Visitor {
 
     private void establishEnv() {
         Ident i = new Ident("x", dummyPos);
+        AnyType anyType = new AnyType(dummyPos);
+        PointerType voidPointerType = new PointerType(dummyPos, anyType);
         Environment.booleanType = new BooleanType(dummyPos);
         Environment.charType= new CharType(dummyPos);
         Environment.intType = new IntType(dummyPos);
@@ -365,6 +368,14 @@ public class Checker implements Visitor {
         ));
         Environment.outFloat = stdFunction(Environment.voidType, "outFloat", new ParaList(
                 new ParaDecl(Environment.floatType, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.malloc = stdFunction(voidPointerType, "malloc", new ParaList(
+                new ParaDecl(Environment.intType, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.free = stdFunction(Environment.voidType, "free", new ParaList(
+                new ParaDecl(voidPointerType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
    }
@@ -550,6 +561,13 @@ public class Checker implements Visitor {
             returnType = (Type) E.visit(this, ast);
         }
 
+        if (E.isCallExpr()) {
+            CallExpr CE = (CallExpr) E;
+            if (CE.I.spelling.equals("malloc")) {
+                E.type = T;
+            }
+        }
+
         if (returnType == null || returnType.isError()) {
             return returnType;
         }   
@@ -578,6 +596,12 @@ public class Checker implements Visitor {
     }
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
+
+        if (expectedT.isPointer()) {
+            if (((PointerType) expectedT).t.isAny()) {
+                return expr;
+            }
+        }
 
         // TODO: fix this, so lazy
         if (expectedT instanceof CharType && expr.type instanceof IntType) {
@@ -1485,6 +1509,8 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
+        boolean isFreeCall = !ast.I.isModuleAccess && ast.I.spelling.equals("free");
+
         String TL;
         if (ast.TypeDef == null) {
             TL = genTypes(ast.AL, o);
@@ -1527,7 +1553,7 @@ public class Checker implements Visitor {
                 }
             }
         }
-        else if (!mainModule.functionExists(ast.I.spelling + "." + ast.TypeDef)) {
+        else if (!mainModule.functionExists(ast.I.spelling + "." + ast.TypeDef) && !isFreeCall) {
 
             if (idTable.retrieve(ast.I.spelling) != null || mainModule.varExists(ast.I.spelling)) {
                 handler.reportError(errors[10] + ": %", ast.I.spelling, ast.I.pos);
@@ -1540,7 +1566,12 @@ public class Checker implements Visitor {
             return ast.type;
         }
 
-        Function function = mainModule.getFunction(ast.I.spelling + "." + ast.TypeDef);
+        Function function;
+        if (isFreeCall) {
+            function = mainModule.getFunction("free.PA");
+        } else {
+            function = mainModule.getFunction(ast.I.spelling + "." + ast.TypeDef);
+        }
         ast.I.decl = function;
         function.setUsed();
         ast.AL.visit(this, function.PL);
@@ -1800,6 +1831,13 @@ public class Checker implements Visitor {
             }
         } else {
             expectedType = (Type) ast.LHS.visit(this, o);
+        }
+
+        if (ast.RHS.isCallExpr()) {
+            CallExpr CE = (CallExpr) ast.RHS;   
+            if (CE.I.spelling.equals("malloc")) {
+                ast.RHS.type = ast.LHS.type;
+            }
         }
 
         if (!realType.assignable(expectedType)) {
@@ -2150,6 +2188,10 @@ public class Checker implements Visitor {
         mainModule.addImportedFile(referencedModule, ast.ident.spelling);
 
 
+        return null;
+    }
+
+    public Object visitAnyType(AnyType ast, Object o) {
         return null;
     }
 }
