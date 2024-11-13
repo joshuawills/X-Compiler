@@ -12,6 +12,7 @@ public class Struct extends Decl {
     public Ident I;
     public boolean subTypesVisited = false;
     private int length = -1;
+    public String fileName;
 
     public Struct(List slAST, Ident iAST, Position pos) {
         super(pos, false);

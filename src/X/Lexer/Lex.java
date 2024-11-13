@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Lex {
 
-    private final File file;
+    private final MyFile file;
     private int line = 1;
     private int col = 1;
     private char currChar;
@@ -12,7 +12,7 @@ public class Lex {
 
     private static final int tabSize = 8;
 
-    public Lex(File file) {
+    public Lex(MyFile file) {
         this.file = file;
         currChar = file.getNextChar();
     }
@@ -52,7 +52,7 @@ public class Lex {
         loopWhiteSpace();
         if (currChar == '/' && file.inspectChar(1) == '/') {
             while (currChar != '\n') {
-                if (currChar == File.EOF) {
+                if (currChar == MyFile.EOF) {
                     break;
                 }
                accept();
@@ -60,7 +60,7 @@ public class Lex {
             accept();
         } else if (currChar == '/' && file.inspectChar(1) == '*') {
             while (!(currChar == '*' && file.inspectChar(1) == '/')) {
-                if (currChar == File.EOF) {
+                if (currChar == MyFile.EOF) {
                     System.out.printf("ERROR: %d(%d)..%d(%d): : unterminated comment\n", line, col, line, col);
                     return;
                 }
@@ -77,7 +77,7 @@ public class Lex {
     }
 
     private void acceptWithSpelling() {
-        if (currChar == File.EOF) {
+        if (currChar == MyFile.EOF) {
             spelling.append('$');
         } else {
             spelling.append(currChar);
@@ -108,10 +108,6 @@ public class Lex {
                     acceptWithSpelling();
                 }
                 yield TokenType.FLOAT_LIT;
-            }
-            case ':' -> {
-                acceptWithSpelling();
-                yield TokenType.COLON;
             }
             case '(' -> {
                 acceptWithSpelling();
@@ -148,6 +144,15 @@ public class Lex {
             case '%' -> {
                 acceptWithSpelling();
                 yield TokenType.MOD;
+            }
+            case ':' -> {
+                acceptWithSpelling();
+                if (currChar == ':') {
+                    acceptWithSpelling();
+                    yield TokenType.DOUBLE_COLON;
+                } else {
+                    yield TokenType.COLON;
+                }
             }
             case '&' -> {
                 acceptWithSpelling();
@@ -256,7 +261,7 @@ public class Lex {
         if (currChar == '\'') {
             accept();
             while (currChar != '\'') {
-                if (currChar == '\n' || currChar == File.EOF) {
+                if (currChar == '\n' || currChar == MyFile.EOF) {
                     System.err.println("ERROR: Unterminated character");
                     return TokenType.CHAR_LIT;
                 }
@@ -281,7 +286,7 @@ public class Lex {
         if (currChar == '"') {
             accept();
             while (currChar != '"') {
-                if (currChar == '\n' || currChar == File.EOF) {
+                if (currChar == '\n' || currChar == MyFile.EOF) {
                     System.err.println("ERROR: Unterminated string");
                     return TokenType.STRING_LIT;
                 }
@@ -328,6 +333,9 @@ public class Lex {
                 case "true", "false" -> TokenType.BOOL_LIT;
                 case "mut" -> TokenType.MUT;
                 case "size" -> TokenType.SIZE_OF;
+                case "export" -> TokenType.EXPORT;
+                case "import" -> TokenType.IMPORT;
+                case "as" -> TokenType.AS;
                 default -> TokenType.IDENT;
             };
         }

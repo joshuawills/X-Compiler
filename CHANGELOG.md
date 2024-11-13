@@ -114,6 +114,14 @@
   - arrays of structs
   - arrays in structs
 
+*11.11.2024*
+
+- begin working with modules and file imports
+  - working for functions!
+- size of operator
+- return of outStr
+- more work on arrays and struct types
+
 # TODO
 
 - arrays of structs

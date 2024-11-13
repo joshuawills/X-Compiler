@@ -12,6 +12,7 @@ public abstract class Decl extends AST {
     public boolean isReassigned = false;
 
     public boolean isMut;
+    public boolean isExported = false;
 
     public Decl(Position pos, boolean isMut) {
         super(pos);
@@ -20,6 +21,10 @@ public abstract class Decl extends AST {
 
     public boolean isFunction() {
         return this instanceof Function;
+    }
+
+    public void setExported() {
+        isExported = true;
     }
 
 }

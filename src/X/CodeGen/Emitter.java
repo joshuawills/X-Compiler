@@ -1,10 +1,10 @@
 package X.CodeGen;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 
+import X.AllModules;
 import X.Evaluator.Evaluator;
 import X.Lexer.Position;
 import X.Nodes.*;
@@ -17,19 +17,26 @@ public class Emitter implements Visitor {
     private ArrayType arrayDetails;
     private String arrName = "";
     private final Position dummyPos = new Position();
-    private boolean seenStructs = false;
     private boolean inDynamicStringRef = false;
+
+    public boolean declaringLocalVar = false;
+    public boolean inCallExpr = false;
+
+    String formattedCurrentPath;
+    boolean inMainModule = true;
 
     public Emitter(String outputName) {
         this.outputName = outputName;
     }
 
-    public final void gen(ArrayList<Module> modules) {
+    public AllModules modules;
+    public Module currentModule;
 
-        Module mainModule = modules.get(0);
+    public final void gen() {
 
-        HashMap<String, Struct> structs = mainModule.getStructs();
- 
+        modules = AllModules.getInstance();
+        ArrayList<Module> mainModule = modules.getModules();
+
         emitN("declare i32 @printf(i8*, ...)");
         emitN("declare i32 @scanf(i8*, ...)");
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
@@ -38,31 +45,36 @@ public class Emitter implements Visitor {
         emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");       
 
         // Visiting all the structs
-        for (Struct s: structs.values()) {
-            s.visit(this, null);
+        for (Module m: mainModule) {
+            formattedCurrentPath = m.fileName.replace("/", ".");
+            for (Struct s: m.getStructs().values()) {
+                s.visit(this, null);
+            }
+            inMainModule = false;
         }
 
         // Visiting all the global vars
-        HashMap<String, GlobalVar> vars = mainModule.getVars();
-        for (GlobalVar v: vars.values()) {
-            v.visit(this, null);
+        inMainModule = true;
+        for (Module m: mainModule) {
+            formattedCurrentPath = m.fileName.replace("/", ".");
+            for (GlobalVar v: m.getVars().values()) {
+                v.visit(this, null);
+            }
+            inMainModule = false;
         }
-
+        
         // Visiting all the functions
-        HashMap<String, Function> functions = mainModule.getFunctions();
-        for (Function f: functions.values()) {
-            f.visit(this, null);
+        inMainModule = true;
+        for (Module m: mainModule) {
+            currentModule = m;
+            formattedCurrentPath = m.fileName.replace("/", ".");
+            for (Function f: m.getFunctionsBarStandard().values()) {
+                f.visit(this, null);
+            }
+            inMainModule = false;
         }
 
         LLVM.dump(outputName);
-    }
-
-    public Object visitProgram(Program ast, Object o) {
-        return null;
-    }
-
-    public Object visitIdent(Ident ast, Object o) {
-        return null;
     }
 
     public Object visitFunction(Function ast, Object o) {
@@ -72,7 +84,11 @@ public class Emitter implements Visitor {
         Frame f = new Frame(ast.I.spelling.equals("main"));
         emit("define ");
         ast.T.visit(this, f);
-        emit(" @" + ast.I.spelling);
+        if (inMainModule) {
+            emit(" @" + ast.I.spelling);
+        } else {
+            emit(" @" + formattedCurrentPath + ast.I.spelling);
+        }
         if (!ast.I.spelling.equals("main")) {
             emit("." + ast.TypeDef);
         }
@@ -128,8 +144,6 @@ public class Emitter implements Visitor {
         ast.SL.visit(this, o);
         return null;
     }
-
-    public boolean declaringLocalVar = false;
 
     public Object visitLocalVar(LocalVar ast, Object o) {
         String depth = ast.index;
@@ -508,18 +522,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitEmptyExpr(EmptyExpr ast, Object o) {
-        return null;
-    }
-
-    public Object visitEmptyStmt(EmptyStmt ast, Object o) {
-        return null;
-    }
-
-    public Object visitDeclList(DeclList ast, Object o) {
-        return null;
-    }
-
     public Object visitStmtList(StmtList ast, Object o) {
         List SL = ast;
         while (true) {
@@ -536,20 +538,12 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitEmptyStmtList(EmptyStmtList ast, Object o) {
-        return null;
-    }
-
     public Object visitBooleanExpr(BooleanExpr ast, Object o) {
         Frame f = (Frame) o;
         int value = ast.BL.spelling.equals("true") ? 1 : 0;
         int num = f.getNewIndex();
         emitN("\t%" + num + " = add i1 0, " + value);
         ast.tempIndex = num;
-        return null;
-    }
-
-    public Object visitBooleanLiteral(BooleanLiteral ast, Object o) {
         return null;
     }
 
@@ -563,10 +557,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitErrorType(ErrorType ast, Object o) {
-        return null;
-    }
-
     public Object visitIntExpr(IntExpr ast, Object o) {
         Frame f = (Frame) o;
         String value = ast.IL.spelling;
@@ -576,19 +566,11 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitIntLiteral(IntLiteral ast, Object o) {
-        return null;
-    }
-
     public Object visitIntType(IntType ast, Object o) {
         emit(LLVM.INT_TYPE);
         return null;
     }
-
-    public Object visitArgList(Args ast, Object o) {
-        return null;
-    }
-
+    
     public Object visitParaList(ParaList ast, Object o) {
         emit("(");
         List list = ast;
@@ -629,14 +611,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitEmptyCompStmt(EmptyCompStmt ast, Object o) {
-        return null;
-    }
-
-    public Object visitEmptyDeclList(EmptyDeclList ast, Object o) {
-        return null;
-    }
-
     public Object visitVarExpr(VarExpr ast, Object o) {
         ast.V.visit(this, o);
         ast.tempIndex = ((Frame) o).localVarIndex - 1;
@@ -666,6 +640,7 @@ public class Emitter implements Visitor {
                 emitN("* %" + ast.I.spelling + l.index + ", i32 0, i32 0");
                 return null;
             } else if (l.T.isStruct()) {
+
                 emit("\t%" + newIndex + " = bitcast ");
                 l.T.visit(this, o);
                 emit("* %" + ast.I.spelling + l.index + " to ");
@@ -691,6 +666,28 @@ public class Emitter implements Visitor {
             emitN("* %" + ast.I.spelling + l.index);
         } else if (d.isParaDecl()) {
             ParaDecl p = (ParaDecl) d;
+
+            if (p.T.isStruct()) {
+                int newIndex = f.getNewIndex();
+                emit("\t%" + newIndex + " = bitcast ");
+                
+                p.T.visit(this, o);
+                emit("* %" + ast.I.spelling + 0 + " to ");
+                p.T.visit(this, o);
+                emitN("*");
+
+                if (!declaringLocalVar) {
+                    int v2 = f.getNewIndex();
+                    emit("\t%" + v2 + " = load ");
+                    p.T.visit(this, o);
+                    emit(", ");
+                    p.T.visit(this, o);
+                    emitN("* %" + newIndex);
+                }
+
+                return null;
+            }
+
             if (p.isMut) {
                 int newIndex = f.getNewIndex();
                 emit("\t%" + newIndex + " = load ");
@@ -790,6 +787,7 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
 
         // Evaluate all the expressions
+        inCallExpr = true;
         if (!ast.AL.isEmptyArgList()) {
             Args AL = (Args) ast.AL;
             while (true) {
@@ -800,6 +798,7 @@ public class Emitter implements Visitor {
                 AL = (Args) AL.EL;
             }
         }
+        inCallExpr = false;
 
         Function functionRef = (Function) ast.I.decl;
         if (functionRef.T.isVoid()) {
@@ -810,7 +809,13 @@ public class Emitter implements Visitor {
             emit("\t%" + num + " = call ");
         }
         functionRef.T.visit(this, o);
-        emit(" @" + ast.I.spelling + "." + ast.TypeDef);
+        if (ast.I.isModuleAccess) {
+            Module refMod = currentModule.getModuleFromAlias(ast.I.module.get());
+            String path = refMod.fileName.replace("/", ".");
+            emit(" @" + path + ast.I.spelling + "." + ast.TypeDef);
+        } else {
+            emit(" @" + ast.I.spelling + "." + ast.TypeDef);
+        }
 
         emit("(");
         if (!ast.AL.isEmptyArgList()) {
@@ -1134,10 +1139,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitCharLiteral(CharLiteral ast, Object o) {
-        return null;
-    }
-
     public Object visitCharExpr(CharExpr ast, Object o) {
         Frame f = (Frame) o;
         String value = ast.CL.spelling;
@@ -1147,7 +1148,6 @@ public class Emitter implements Visitor {
         ast.tempIndex = num;
         return null;
     }
-
 
     public Object visitCastExpr(CastExpr ast, Object o) {
         Frame f = (Frame) o;
@@ -1169,18 +1169,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitStringLiteral(StringLiteral ast, Object o) {
-        return null;
-    }
-
-    public Object visitEnum(Enum ast, Object o) {
-        return null;
-    }
-
-    public Object visitMurkyType(MurkyType ast, Object o) {
-        return null;
-    }
-
     public Object visitEnumType(EnumType ast, Object o) {
         emit(LLVM.INT_TYPE);
         return null;
@@ -1196,14 +1184,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitDotExpr(DotExpr ast, Object o) {
-        return null;
-    }
-
-    public Object visitUnknownType(UnknownType ast, Object o) {
-        return null;
-    }
-
     public Object visitStringExpr(StringExpr ast, Object o) {
         int l = ast.SL.spelling.length() + 1;
 
@@ -1214,11 +1194,10 @@ public class Emitter implements Visitor {
             emitN("\t%" + v + " = getelementptr [" + l + " x i8], [" + l + " x i8]* @..str" + ast.index + ", i32 0, i32 0");
         }
 
-        if (!ast.needToEmit) {
-            return  null;
+        if (ast.needToEmit) {
+            emitNConst("@..str" + ast.index + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
         }
 
-        emitNConst("@..str" + ast.index + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
         return null;
     }
 
@@ -1241,23 +1220,17 @@ public class Emitter implements Visitor {
         if (!ast.isUsed) {
             return null;
         }
-        String s = ast.I.spelling;
+        String s;
+        s = formattedCurrentPath + "." + ast.I.spelling;
         emit("%struct." + s + " = type { ");
         ast.SL.visit(this, o);
         emitN(" }");
         return null;
     }
 
-    public Object visitEmptyStructList(EmptyStructList ast, Object o) {
-        return null;
-    }
-
     public Object visitStructType(StructType ast, Object o) {
-        emit("%struct." + ast.S.I.spelling);
-        return null;
-    }
-
-    public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
+        String name = ast.S.fileName.replace("/", ".");
+        emit("%struct." + name + "." + ast.S.I.spelling);
         return null;
     }
 
@@ -1317,9 +1290,11 @@ public class Emitter implements Visitor {
 
     public Object visitStructExpr(StructExpr ast, Object o) {
         Frame f = (Frame) o;
+        Struct ref = ((StructType) ast.type).S;
 
         exprDepthValues.push(0);
-        currentStructName.push("struct." + ast.I.spelling);
+        String path = ref.fileName.replace("/", ".");
+        currentStructName.push("struct." + path + "." + ast.I.spelling);
         currentStructPointers.push(f.localVarIndex - 1);
 
         ast.SA.visit(this, o);
@@ -1452,7 +1427,8 @@ public class Emitter implements Visitor {
             return null;
         }
         Struct ref = ast.ref;
-        String structName = "struct." + ref.I.spelling;
+        String file = ast.ref.fileName.replace("/", ".");
+        String structName = "struct." + file + "." + ref.I.spelling;
         int newV = f.getNewIndex();
         int index = ast.ref.getNum(((StructAccessList)ast.SAL).SA.spelling);
         emit("\t%" + newV + " = getelementptr %" + structName + ", %" + structName + "* %" + prevIndex);
@@ -1463,7 +1439,9 @@ public class Emitter implements Visitor {
 
     public Object visitStructAccess(StructAccess ast, Object o) {
         Frame f = (Frame) o;
-        String structName = "struct." + ast.ref.I.spelling;
+
+        String file = ast.ref.fileName.replace("/", ".");
+        String structName = "struct." + file + "." + ast.ref.I.spelling;
 
         int arrayIndexNum = -1;
         int newV = -1;
@@ -1509,6 +1487,38 @@ public class Emitter implements Visitor {
             }
 
         } else if (ast.varName.decl instanceof GlobalVar G) {
+
+        } else if (ast.varName.decl instanceof ParaDecl P) {
+
+            String localRef = P.I.spelling + "0";
+            if (ast.sourceType.isArray()) {
+                emit("\t%" + v + " = getelementptr ");
+                ast.sourceType.visit(this, o);
+                emit(", ");
+                ast.sourceType.visit(this, o);
+                emitN("* %" + localRef + ", i32 0, i32 %" + newV);
+                localRef = String.valueOf(v);
+                v = f.getNewIndex();
+            }
+
+            String currentVal = ast.L.SA.spelling;
+            int index = ast.ref.getNum(currentVal);
+            emit("\t%" + v + " = getelementptr %" + structName + ", %" + structName + "* %" + localRef);
+            emitN(", i32 0, i32 " + index);
+
+            ast.L.visit(this, o);
+            ast.tempIndex = v;
+
+            if (!(ast.parent.isAssignmentExpr() && ast.isLHSOfAssignment)) {
+                int oldV = f.localVarIndex - 1;
+                int v2 = f.getNewIndex();
+                emit("\t%" + v2 + " = load ");
+                ast.type.visit(this, o);
+                emit(", ");
+                ast.type.visit(this, o);
+                emitN("* %" + oldV);
+                ast.tempIndex = v2;
+            }
 
         }
 
@@ -1637,10 +1647,92 @@ public class Emitter implements Visitor {
         return v; 
     }
 
-    @Override
     public Object visitModule(Module ast, Object o) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
+        return null;
+    }
+
+    public Object visitProgram(Program ast, Object o) {
+        return null;
+    }
+
+    public Object visitIdent(Ident ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyExpr(EmptyExpr ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyStmt(EmptyStmt ast, Object o) {
+        return null;
+    }
+
+    public Object visitDeclList(DeclList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyStmtList(EmptyStmtList ast, Object o) {
+        return null;
+    }
+
+    public Object visitBooleanLiteral(BooleanLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitErrorType(ErrorType ast, Object o) {
+        return null;
+    }
+
+    public Object visitIntLiteral(IntLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitArgList(Args ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyCompStmt(EmptyCompStmt ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyDeclList(EmptyDeclList ast, Object o) {
+        return null;
+    }
+
+    public Object visitCharLiteral(CharLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitStringLiteral(StringLiteral ast, Object o) {
+        return null;
+    }
+
+    public Object visitEnum(Enum ast, Object o) {
+        return null;
+    }
+
+    public Object visitMurkyType(MurkyType ast, Object o) {
+        return null;
+    }
+
+    public Object visitDotExpr(DotExpr ast, Object o) {
+        return null;
+    }
+
+    public Object visitUnknownType(UnknownType ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyStructList(EmptyStructList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyStructArgs(EmptyStructArgs ast, Object o) {
+        return null;
+    }
+
+    public Object visitImportStmt(ImportStmt ast, Object o) {
+        return null;
     }
 
 }

@@ -20,11 +20,13 @@ public class Parser {
     private Position previousPosition;
     private Token currentToken;
     private boolean inFor = false;
+    private boolean acceptableModuleAccess = false;
 
 
     // This is to handle the confusion about struct parsing and conditional expression
     // evaluation
     private boolean inConditionalCheck = false;
+    private boolean parsingImportStmts = true;
 
     public Parser(ArrayList<Token> tokenStream, ErrorHandler handler) {
         this.tokenStream = tokenStream;
@@ -101,13 +103,32 @@ public class Parser {
         Position pos = new Position();
         start(pos);
 
+        if (currentToken.kind != TokenType.IMPORT) {
+            parsingImportStmts = false;
+        } 
+        
         if (currentToken.kind == TokenType.EOF) {
             finish(pos);
             return new EmptyDeclList(pos);
         }
 
-        if (tryConsume(TokenType.FN)) {
+        boolean isExport = tryConsume(TokenType.EXPORT);
+
+        if (currentToken.kind == TokenType.IMPORT && parsingImportStmts) {
+            match(TokenType.IMPORT);
+            finish(pos);
+            StringExpr SE = new StringExpr(parseStringLiteral(), pos);
+            match(TokenType.AS);
+            Ident I = parseIdent();
+            match(TokenType.SEMI);
+            ImportStmt IS = new ImportStmt(SE, I);
+            List dlAST2 = parseDeclList();
+            finish(pos);
+            dlAST = new DeclList(IS, dlAST2, pos);
+        } 
+        else if (tryConsume(TokenType.FN)) {
             // Function
+            acceptableModuleAccess = false;
             Ident ident = parseIdent();
             List pL = parseParaList();
             match(TokenType.ARROW);
@@ -115,6 +136,9 @@ public class Parser {
             Stmt sAST = parseCompoundStmt();
             finish(pos);
             Function function = new Function(tAST, ident, pL, sAST, pos);
+            if (isExport) {
+                function.setExported();
+            }
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(function, dlAST2, pos);
@@ -136,6 +160,9 @@ public class Parser {
             }
             finish(pos);
             Enum E = new Enum(args.toArray(new String[0]), ident, pos);
+            if (isExport) {
+                E.setExported();
+            }
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(E, dlAST2, pos);
@@ -145,6 +172,9 @@ public class Parser {
             List SL = parseStructList();
             finish(pos);
             Struct S = new Struct(SL, iAST, pos);
+            if (isExport) {
+                S.setExported();
+            }
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(S, dlAST2, pos);
@@ -164,6 +194,9 @@ public class Parser {
             finish(pos);
             match(TokenType.SEMI);
             GlobalVar globalVar = new GlobalVar(tAST, iAST, eAST, pos, isMut);
+            if (isExport) {
+                globalVar.setExported();
+            }
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(globalVar, dlAST2, pos);
@@ -568,9 +601,10 @@ public class Parser {
                     syntacticError("Expected a type, received \"%\"", currentToken.kind.toString().strip());
                     yield null;
                 }
-                String V = currentToken.lexeme;
-                accept();
-                yield new MurkyType(V, pos);
+                acceptableModuleAccess = true;
+                Ident I = parseIdent();
+                acceptableModuleAccess = false;
+                yield new MurkyType(I, pos);
             }
         };
 
@@ -597,8 +631,23 @@ public class Parser {
         if (currentToken.kind == TokenType.IDENT || currentToken.kind == TokenType.DOLLAR) {
             previousPosition = currentToken.pos;
             String spelling = currentToken.lexeme;
-            Ident I = new Ident(spelling, previousPosition);
             accept();
+
+            String spelling2 = null;
+            if (acceptableModuleAccess) {
+                if (tryConsume(TokenType.DOUBLE_COLON)) {
+                    assert(currentToken.kind == TokenType.IDENT);
+                    spelling2 = currentToken.lexeme;
+                    accept();
+                }
+            }
+
+            Ident I = null;
+            if (spelling2 != null) {
+                I = new Ident(spelling2, spelling, previousPosition);
+            } else {
+                I = new Ident(spelling, previousPosition);
+            }
             return I;
         } else {
             syntacticError("identifier expected here", "");
@@ -625,7 +674,9 @@ public class Parser {
         Optional<Type> typeAST = Optional.empty();
 
         if(lookAhead().kind == TokenType.CLOSE_PAREN && currentToken.kind != TokenType.TYPE) {
+            acceptableModuleAccess = true;
             Ident ID = parseIdent();
+            acceptableModuleAccess = false;
             finish(pos);
             Var simVAST = new SimpleVar(ID, pos);
             varExprAST = Optional.of(new VarExpr(simVAST, pos));
@@ -822,7 +873,9 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         if (tryConsume(TokenType.PERIOD)) {
+            acceptableModuleAccess = true;
             Ident I = parseIdent();
+            acceptableModuleAccess = false;
             Optional<Expr> E = Optional.empty();
             if (tryConsume(TokenType.LEFT_SQUARE)) {
                 E = Optional.of(parseExpr());
@@ -871,7 +924,12 @@ public class Parser {
                 match(TokenType.CLOSE_PAREN);
                 yield exprAST;
             }
-            case IDENT, DOLLAR -> parseIdent();
+            case IDENT, DOLLAR -> {
+                acceptableModuleAccess = true;
+                Ident I = parseIdent();
+                acceptableModuleAccess = false;
+                yield I;
+            }
             default -> {
                 System.out.println("Unrecognised primary expression: " + currentToken);
                 yield null;

@@ -97,4 +97,8 @@ public abstract class AST {
         return this instanceof StructAccess;
     }
 
+    public boolean isImportStmt() {
+        return this instanceof ImportStmt;
+    }
+
 }

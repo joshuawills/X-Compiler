@@ -107,6 +107,11 @@ do
     continue
   fi
 
+  if echo "$file" | grep -vE "_[0-9]+\.x" >> /dev/null 2>&1
+  then
+    continue
+  fi
+
   message=$(head -n1 "$file")
 
   errors=$(java -jar "$EXE" -q "$file")

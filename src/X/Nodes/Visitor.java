@@ -156,4 +156,6 @@ public interface Visitor {
     Object visitSizeOfExpr(SizeOfExpr ast, Object o);
 
     Object visitModule(Module ast, Object o);
+
+    Object visitImportStmt(ImportStmt ast, Object o);
 }

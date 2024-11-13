@@ -12,6 +12,7 @@ import X.TreePrinter.Printer;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -100,9 +101,10 @@ public class X {
         }
 
         String file_name = clARGS.get("source");
+        file_name = Paths.get(file_name).toAbsolutePath().toString();
 
         ErrorHandler handler = new ErrorHandler(file_name, clARGS.containsKey("quiet"));
-        File file = new File(file_name);
+        MyFile file = new MyFile(file_name);
 
         Instant lStart = Instant.now();
         Lex lexer = new Lex(file);
@@ -135,7 +137,7 @@ public class X {
         Checker checker = new Checker(handler);
         ArrayList<Module> modules = new ArrayList<>();
         try {
-            modules = checker.check(ast, file_name);
+            modules = checker.check(ast, file_name, true);
         } catch (Exception s) {
             s.printStackTrace();
             System.out.println(s);
@@ -163,7 +165,7 @@ public class X {
                     System.out.println("IR file must end with '.ll' file suffix");
                 }
                 Emitter emitter = new Emitter(file_name_format);
-                emitter.gen(modules);
+                emitter.gen();
             }
             Instant eEnd = Instant.now();
 

@@ -62,5 +62,9 @@ public enum TokenType {
     COLON,
     PERIOD,
     STRUCT,
-    SIZE_OF
+    SIZE_OF,
+    EXPORT,
+    IMPORT,
+    AS,
+    DOUBLE_COLON
 }

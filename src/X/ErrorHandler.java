@@ -18,6 +18,10 @@ public class ErrorHandler {
     private static final String ANSI_BLUE = "\u001b[34m";
     private static final String ANSI_YELLOW = "\u001B[33m";
 
+    public boolean isQuiet() {
+        return isQuiet;
+    }
+
     public ErrorHandler(String fileName, boolean isQuiet) {
         this.isQuiet = isQuiet;
         this.fileName = fileName;

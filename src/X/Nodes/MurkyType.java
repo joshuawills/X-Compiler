@@ -4,9 +4,9 @@ import X.Lexer.Position;
 
 public class MurkyType extends Type {
 
-    public String V;
+    public Ident V;
 
-    public MurkyType(String vAST, Position pos) {
+    public MurkyType(Ident vAST, Position pos) {
         super(pos);
         V = vAST;
     }

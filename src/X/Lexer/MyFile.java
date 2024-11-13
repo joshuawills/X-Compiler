@@ -4,12 +4,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.LineNumberReader;
 
-public class File {
+public class MyFile {
 
     public static char EOF = '\u0000';
     private LineNumberReader fileReader;
 
-    public File(String filename) {
+    public MyFile(String filename) {
         try {
             fileReader = new LineNumberReader(new BufferedReader(new FileReader(filename)));
         } catch (Exception e) {

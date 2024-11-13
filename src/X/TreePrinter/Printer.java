@@ -49,7 +49,7 @@ public class Printer implements Visitor {
 
     @Override
     public Object visitFunction(Function ast, Object o) {
-        print(indentString() + "Function");
+        print(indentString() + "Function" + ast.isExported);
         ++indent;
         ast.T.visit(this, o);
         ast.I.visit(this, o);
@@ -61,7 +61,7 @@ public class Printer implements Visitor {
 
     @Override
     public Object visitGlobalVar(GlobalVar ast, Object o) {
-        print(indentString() + "GlobalVar");
+        print(indentString() + "GlobalVar" + ast.isExported);
         ++indent;
         ast.T.visit(this, o);
         ast.I.visit(this, o);
@@ -481,7 +481,7 @@ public class Printer implements Visitor {
     }
 
     public Object visitEnum(Enum ast, Object o) {
-        print(indentString() + "Enum" + ast.I.spelling + Arrays.toString(ast.IDs));
+        print(indentString() + "Enum" + ast.I.spelling + Arrays.toString(ast.IDs) + ast.isExported);
         return null;
     }
 
@@ -603,7 +603,7 @@ public class Printer implements Visitor {
     }
 
     public Object visitStruct(Struct ast, Object o) {
-        print(indentString() + "Struct");
+        print(indentString() + "Struct " + ast.isExported);
         ++indent;
         ast.I.visit(this, o);
         ast.SL.visit(this, o);
@@ -628,10 +628,13 @@ public class Printer implements Visitor {
         return null;
     }
 
-    @Override
     public Object visitModule(Module ast, Object o) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
+        return null;
+    }
+
+    public Object visitImportStmt(ImportStmt ast, Object o) {
+        print(indentString() + "ImportStmt");
+        return null;
     }
 
 }

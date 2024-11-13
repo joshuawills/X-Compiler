@@ -248,6 +248,9 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitIdent(Ident ast, Object obj) {
+        if (ast.module.isPresent()) {
+            return layoutNullary(ast.module.get() + "::" + ast.spelling);
+        }
         return layoutNullary(ast.spelling);
     }
 
@@ -562,5 +565,10 @@ public class LayoutVisitor implements Visitor {
     public Object visitModule(Module ast, Object o) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visitModule'");
+    }
+
+    @Override
+    public Object visitImportStmt(ImportStmt ast, Object o) {
+        return layoutUnary("ImportStmt", ast.ident);
     }
 }
