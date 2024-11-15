@@ -103,6 +103,7 @@ public class Checker implements Visitor {
     private boolean hasMain = false;
     private boolean hasReturn = false;
     private boolean inMain = false;
+    private boolean declaringLocalVar = false;
 
     // Used for checking break/continue stmt
     private int loopDepth = 0;
@@ -545,6 +546,7 @@ public class Checker implements Visitor {
         }
 
         Type returnType = null;
+        declaringLocalVar = true;
         if (E.isDotExpr()) {
             try {
                 E = (Expr) E.visit(this, ast);
@@ -560,7 +562,9 @@ public class Checker implements Visitor {
         } else {
             returnType = (Type) E.visit(this, ast);
         }
+        declaringLocalVar = false;
 
+        // TODO: probably improve this, a bit hacky
         if (E.isCallExpr()) {
             CallExpr CE = (CallExpr) E;
             if (CE.I.spelling.equals("malloc")) {
@@ -1171,6 +1175,10 @@ public class Checker implements Visitor {
 
     public Object visitSimpleVar(SimpleVar ast, Object o) {
 
+        if (declaringLocalVar) {
+            ast.setDeclaringLocalVar();
+        }
+
         if (ast.I.isModuleAccess) {
             if (ast.I.spelling.equals("$")) {
                 handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
@@ -1445,6 +1453,11 @@ public class Checker implements Visitor {
     }
 
     public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
+
+        if (declaringLocalVar) {
+            ast.setDeclaringLocalVar();
+        }
+
         Decl binding = (Decl) ast.I.visit(this, o);
         if (binding == null) {
             if (idTable.retrieve(ast.I.spelling) != null || mainModule.varExists(ast.I.spelling)
@@ -1814,12 +1827,14 @@ public class Checker implements Visitor {
         }
 
         Type realType, expectedType;
+        declaringLocalVar = true;
         if (ast.RHS.isDotExpr()) {
             ast.RHS = (Expr) ast.RHS.visit(this, o);
             realType = ast.RHS.type;
         } else {
             realType = (Type) ast.RHS.visit(this, o);
         }
+        declaringLocalVar = false;
 
         if (ast.LHS.isDotExpr()) {
             isStructLHS = true;

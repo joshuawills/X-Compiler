@@ -123,11 +123,11 @@
 - more work on arrays and struct types
 - malloc and free can be called
 
-# TODO
+*15.11.2024*
 
-- arrays of structs
-- arrays in structs
-- pointers in structs!
+- bit of work cleaning up the codebase
+
+# TODO
 
 - float support
   - fix it so it works for them all! 

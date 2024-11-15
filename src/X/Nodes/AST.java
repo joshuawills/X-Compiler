@@ -7,6 +7,8 @@ public abstract class AST {
     public Position pos;
     public AST parent;
 
+    public boolean inDeclaringLocalVar = false;
+
     public AST(Position pos) {
         this.pos = pos;
     }
@@ -16,6 +18,10 @@ public abstract class AST {
     }
 
     public abstract Object visit(Visitor v, Object o);
+
+    public void setDeclaringLocalVar() {
+        inDeclaringLocalVar = true;
+    } 
 
     public boolean isLocalVar() {
         return this instanceof LocalVar;

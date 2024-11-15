@@ -17,9 +17,7 @@ public class Emitter implements Visitor {
     private ArrayType arrayDetails;
     private String arrName = "";
     private final Position dummyPos = new Position();
-    private boolean inDynamicStringRef = false;
 
-    public boolean declaringLocalVar = false;
     public boolean inCallExpr = false;
 
     String formattedCurrentPath;
@@ -52,17 +50,14 @@ public class Emitter implements Visitor {
             for (Struct s: m.getStructs().values()) {
                 s.visit(this, null);
             }
-            inMainModule = false;
         }
 
         // Visiting all the global vars
-        inMainModule = true;
         for (Module m: mainModule) {
             formattedCurrentPath = m.fileName.replace("/", ".");
             for (GlobalVar v: m.getVars().values()) {
                 v.visit(this, null);
             }
-            inMainModule = false;
         }
         
         // Visiting all the functions
@@ -154,16 +149,12 @@ public class Emitter implements Visitor {
         ast.T.visit(this, o);
         emitN("");
 
+        String name = ast.I.spelling + depth;
         if (ast.T.isArray()) {
+            arrName = name;
             arrayDetails = (ArrayType) ast.T;
-            arrName = ast.I.spelling + depth;
 
-            int v = f.getNewIndex();
-            emit("\t%" + v +  " = bitcast ");
-            ast.T.visit(this, o);
-            emit("* %" + arrName +" to ");
-            ast.T.visit(this, o);
-            emitN("*");
+            handleBitCast(ast.T, name, f);
 
             Expr E = ast.E;
             if (E.isEmptyExpr()) {
@@ -176,16 +167,9 @@ public class Emitter implements Visitor {
                 return null;
             }
 
-            int v = f.getNewIndex();
-            emit("\t%" + v + " = bitcast ");
-            ast.T.visit(this, o);
-            emit("* %" + ast.I.spelling + depth + " to ");
-            ast.T.visit(this, o);
-            emitN("*");
+            handleBitCast(ast.T, ast.I.spelling + depth, f);
 
-            declaringLocalVar = true;
             ast.E.visit(this, o);
-            declaringLocalVar = false;
 
             if (!ast.E.isStructExpr()) {
                 int srcIndex = ast.E.tempIndex;
@@ -214,9 +198,7 @@ public class Emitter implements Visitor {
             return null;
         }
 
-        inDynamicStringRef = true;
         ast.E.visit(this, o);
-        inDynamicStringRef = true;
         emit("\tstore ");
         ast.T.visit(this, o);
         int value = f.localVarIndex - 1;
@@ -462,7 +444,6 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         if (ast.O.spelling.equals("b&&")) {
             String X = f.getPreceding();
-            // Don't entirely get this, just looked at LLVM output for C++
             String L1 = f.getNewLabel();
             String L2 = f.getNewLabel();
             ast.E1.visit(this, o);
@@ -481,7 +462,6 @@ public class Emitter implements Visitor {
 
         if (ast.O.spelling.equals("b||")) {
             String X = f.getPreceding();
-            // Don't entirely get this, just looked at LLVM output for C++
             String L1 = f.getNewLabel();
             String L2 = f.getNewLabel();
             ast.E1.visit(this, o);
@@ -510,13 +490,8 @@ public class Emitter implements Visitor {
             VarExpr VE = (VarExpr) ast.E;
             SimpleVar SV = (SimpleVar) VE.V;
             Decl d = (Decl) SV.I.decl;
-            int index = f.getNewIndex();
+            int index = handleBitCast(d.T, SV.I.spelling + d.index, f);
             ast.tempIndex = index;
-            emit("\t%" + index + " = bitcast ");
-            d.T.visit(this, o);
-            emit("* %" + SV.I.spelling + d.index + " to ");
-            d.T.visit(this, o);
-            emitN("*");
             return null;
         }
         ast.E.visit(this, o);
@@ -631,8 +606,9 @@ public class Emitter implements Visitor {
         AST d = ast.I.decl;
         if (d.isLocalVar()) {
             LocalVar l = (LocalVar) d;
-            int newIndex = f.getNewIndex();
+            int newIndex = -1;
             if (l.T.isArray()) {
+                newIndex = f.getNewIndex();
                 ArrayType t = (ArrayType) l.T;
                 emit("\t%" + newIndex + " = getelementptr inbounds ");
                 int length = t.length;
@@ -643,48 +619,27 @@ public class Emitter implements Visitor {
                 return null;
             } else if (l.T.isStruct()) {
 
-                emit("\t%" + newIndex + " = bitcast ");
-                l.T.visit(this, o);
-                emit("* %" + ast.I.spelling + l.index + " to ");
-                l.T.visit(this, o);
-                emitN("*");
-
-                if (!declaringLocalVar) {
+                newIndex = handleBitCast(l.T, ast.I.spelling + l.index, f);
+                if (!ast.inDeclaringLocalVar) {
                     int v2 = f.getNewIndex();
-                    emit("\t%" + v2 + " = load ");
-                    l.T.visit(this, o);
-                    emit(", ");
-                    l.T.visit(this, o);
-                    emitN("* %" + newIndex);
+                    handleLoad(l.T, newIndex, v2, f);
                 }
 
                 return null;
+            } else {
+                newIndex = f.getNewIndex();
             }
 
-            emit("\t%" + newIndex + " = load ");
-            l.T.visit(this, o);
-            emit(", ");
-            l.T.visit(this, o);
-            emitN("* %" + ast.I.spelling + l.index);
+            handleLoad(l.T, ast.I.spelling + l.index, newIndex, f);
         } else if (d.isParaDecl()) {
             ParaDecl p = (ParaDecl) d;
 
             if (p.T.isStruct()) {
-                int newIndex = f.getNewIndex();
-                emit("\t%" + newIndex + " = bitcast ");
-                
-                p.T.visit(this, o);
-                emit("* %" + ast.I.spelling + 0 + " to ");
-                p.T.visit(this, o);
-                emitN("*");
+                int newIndex = handleBitCast(p.T, ast.I.spelling + 0, f);
 
-                if (!declaringLocalVar) {
+                if (!ast.inDeclaringLocalVar) {
                     int v2 = f.getNewIndex();
-                    emit("\t%" + v2 + " = load ");
-                    p.T.visit(this, o);
-                    emit(", ");
-                    p.T.visit(this, o);
-                    emitN("* %" + newIndex);
+                    handleLoad(p.T, newIndex, v2, f);
                 }
 
                 return null;
@@ -692,11 +647,7 @@ public class Emitter implements Visitor {
 
             if (p.isMut) {
                 int newIndex = f.getNewIndex();
-                emit("\t%" + newIndex + " = load ");
-                p.T.visit(this, o);
-                emit(", ");
-                p.T.visit(this, o);
-                emitN("* %" + ast.I.spelling + p.index);
+                handleLoad(p.T, ast.I.spelling + p.index, newIndex, f);
                 return null;
             }
 
@@ -756,9 +707,7 @@ public class Emitter implements Visitor {
     public void handleOutStr(CallExpr ast, Object o) {
         Frame f = (Frame) o;
         Expr arg = ((Args) ast.AL).E;
-        inDynamicStringRef = true;
         arg.visit(this, o);
-        inDynamicStringRef = false;
         int index = arg.tempIndex;
         emitN("\tcall i32 (i8*, ...) @printf(i8* %" + index + ")");
         f.getNewIndex();
@@ -1148,14 +1097,9 @@ public class Emitter implements Visitor {
 
         ast.tempIndex = newIndex;
         Type innerT = ((ArrayType) ast.type).t;
-        if (!(innerT.isStruct() && declaringLocalVar)) {
+        if (!(innerT.isStruct() && ast.inDeclaringLocalVar)) {
             int finalIndex = f.getNewIndex();
-            ast.tempIndex = finalIndex;
-            emit("\t%" + finalIndex + " = load ");
-            ((ArrayType) t).t.visit(this, o);
-            emit(", ");
-            ((ArrayType) t).t.visit(this, o);
-            emitN("* %" + newIndex);
+            handleLoad(((ArrayType) t).t, newIndex, finalIndex, f);
             ast.tempIndex = finalIndex;
         }
         return null;
@@ -1214,12 +1158,10 @@ public class Emitter implements Visitor {
     public Object visitStringExpr(StringExpr ast, Object o) {
         int l = ast.SL.spelling.length() + 1;
 
-        if (inDynamicStringRef) {
-            Frame f = (Frame) o;
-            int v = f.getNewIndex();
-            ast.tempIndex = v;
-            emitN("\t%" + v + " = getelementptr [" + l + " x i8], [" + l + " x i8]* @..str" + ast.index + ", i32 0, i32 0");
-        }
+        Frame f = (Frame) o;
+        int v = f.getNewIndex();
+        ast.tempIndex = v;
+        emitN("\t%" + v + " = getelementptr [" + l + " x i8], [" + l + " x i8]* @..str" + ast.index + ", i32 0, i32 0");
 
         if (ast.needToEmit) {
             emitNConst("@..str" + ast.index + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
@@ -1334,11 +1276,7 @@ public class Emitter implements Visitor {
 
     public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
         Frame f = (Frame) o;
-        declaringLocalVar = true;
-        inDynamicStringRef = true;
         ast.RHS.visit(this, o);
-        inDynamicStringRef = false;
-        declaringLocalVar = false;
         int rhsIndex = ast.RHS.tempIndex;
         boolean isGlobal = false;
         if (!ast.LHS.isVarExpr()) {
@@ -1504,13 +1442,8 @@ public class Emitter implements Visitor {
 
             if (!(ast.parent.isAssignmentExpr() && ast.isLHSOfAssignment)) {
                 int oldV = f.localVarIndex - 1;
-                int v2 = f.getNewIndex();
-                emit("\t%" + v2 + " = load ");
-                ast.type.visit(this, o);
-                emit(", ");
-                ast.type.visit(this, o);
-                emitN("* %" + oldV);
-                ast.tempIndex = v2;
+                ast.tempIndex = f.getNewIndex();
+                handleLoad(ast.type, oldV, ast.tempIndex, f);
             }
 
         } else if (ast.varName.decl instanceof GlobalVar G) {
@@ -1538,13 +1471,8 @@ public class Emitter implements Visitor {
 
             if (!(ast.parent.isAssignmentExpr() && ast.isLHSOfAssignment)) {
                 int oldV = f.localVarIndex - 1;
-                int v2 = f.getNewIndex();
-                emit("\t%" + v2 + " = load ");
-                ast.type.visit(this, o);
-                emit(", ");
-                ast.type.visit(this, o);
-                emitN("* %" + oldV);
-                ast.tempIndex = v2;
+                ast.tempIndex = f.getNewIndex();
+                handleLoad(ast.type, oldV, ast.tempIndex, f);
             }
 
         }
@@ -1599,6 +1527,40 @@ public class Emitter implements Visitor {
             return;
         }
         I.visit(this, o);
+    }
+
+    public int handleBitCast(Type t, String name, Frame f) {
+        int v = f.getNewIndex();
+        emit("\t%" + v + " = bitcast ");
+        t.visit(this, f);
+        emit("* %" + name + " to ");
+        t.visit(this, f);
+        emitN("*");
+        return v;
+    }
+
+    public void handleLoad(Type t, int v1, int v2, Frame o) {
+        emit("\t%" + v2 + " = load ");
+        t.visit(this, o);
+        emit(", ");
+        t.visit(this, o);
+        emitN("* %" + v1);
+    }
+
+    public void handleLoad(Type t, int v1, String v2, Frame o) {
+        emit("\t%" + v2 + " = load ");
+        t.visit(this, o);
+        emit(", ");
+        t.visit(this, o);
+        emitN("* %" + v1);
+    }
+
+    public void handleLoad(Type t, String v1, int v2, Frame o) {
+        emit("\t%" + v2 + " = load ");
+        t.visit(this, o);
+        emit(", ");
+        t.visit(this, o);
+        emitN("* %" + v1);
     }
 
     public void emit(String s) {
