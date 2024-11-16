@@ -127,6 +127,10 @@
 
 - bit of work cleaning up the codebase
 
+*16.11.2024*
+
+- floats properly work in the language now
+
 # TODO
 
 - float support

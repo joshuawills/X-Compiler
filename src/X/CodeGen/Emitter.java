@@ -415,24 +415,24 @@ public class Emitter implements Visitor {
             case "f/" -> "fdiv float";
             case "i==" -> "icmp eq i64";
             case "c==" -> "icmp eq i8";
-            case "f==" -> "fcmp eq float";
+            case "f==" -> "fcmp oeq float";
             case "b==" -> "icmp eq i1";
             case "i!=" -> "icmp ne i64";
             case "c!=" -> "icmp ne i8";
-            case "f!=" -> "fcmp ne float";
+            case "f!=" -> "fcmp one float";
             case "b!=" -> "icmp ne i1";
             case "i<=" -> "icmp sle i64";
             case "c<=" -> "icmp sle i8";
-            case "f<=" -> "fcmp sle float";
+            case "f<=" -> "fcmp ole float";
             case "i<" -> "icmp slt i64";
             case "c<" -> "icmp slt i8";
-            case "f<" -> "fcmp slt float";
+            case "f<" -> "fcmp olt float";
             case "i>" -> "icmp sgt i64";
             case "c>" -> "icmp sgt i8";
-            case "f>" -> "fcmp sgt float";
+            case "f>" -> "fcmp ogt float";
             case "i>=" -> "icmp sge i64";
             case "c>=" -> "icmp sge i8";
-            case "f>=" -> "fcmp sge float";
+            case "f>=" -> "fcmp oge float";
             default -> {
                 System.out.println("opToCommand not implemented: " + input);
                 yield "";
@@ -948,7 +948,8 @@ public class Emitter implements Visitor {
 
     public Object visitFloatExpr(FloatExpr ast, Object o) {
         Frame f = (Frame) o;
-        String value = ast.FL.spelling;
+        float fv = Float.parseFloat(ast.FL.spelling);
+        String value = String.format("%.21f", fv);
         int num = f.getNewIndex();
         emitN("\t%" + num + " = fadd float 0.0, " + value);
         ast.tempIndex = num;
