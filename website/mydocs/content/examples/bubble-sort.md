@@ -14,7 +14,7 @@ fn main() -> i64 {
 }
 
 fn print_arr(x: i64[], len: i64) -> void {
-     loop i in len { outInt(x[i]); }
+     loop i in len { outI64(x[i]); }
 }
 
 fn bubble_sort(mut x: i64[], len: i64) -> void {
@@ -47,7 +47,7 @@ fn main() -> i64 {
 }
 
 fn print_arr(x: i64[], len: i64) -> void {
-     loop i in len { outInt(x[i]); }
+     loop i in len { outI64(x[i]); }
 }
 
 fn bubble_sort(mut x: i64[], len: i64) -> void {

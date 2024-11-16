@@ -78,9 +78,9 @@ public class Evaluator implements Visitor {
             case "||" -> (boolean) ast.E1.visit(this, o) || (boolean) ast.E2.visit(this, o);
             case "&&" -> (boolean) ast.E1.visit(this, o) && (boolean) ast.E2.visit(this, o);
             case "==" -> {
-                if (ast.E1.type.isInt() || ast.E2.type.isChar()) {
+                if (ast.E1.type.isI64() || ast.E2.type.isI8()) {
                     yield (int) ast.E1.visit(this, o) == (int) ast.E1.visit(this, o);
-                } else if (ast.E1.type.isFloat()) {
+                } else if (ast.E1.type.isF32()) {
                     yield (float) ast.E1.visit(this, o) == (float) ast.E1.visit(this, o);
                 } else if (t.isBoolean()) {
                     yield (boolean) ast.E1.visit(this, o) == (boolean) ast.E1.visit(this, o);
@@ -89,9 +89,9 @@ public class Evaluator implements Visitor {
                 }
             }
             case "!=" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) != (int) ast.E1.visit(this, o);
-                }  else if (t.isFloat()) {
+                }  else if (t.isF32()) {
                     yield (float) ast.E1.visit(this, o) != (float) ast.E1.visit(this, o);
                 } else if (t.isBoolean()) {
                     yield (boolean) ast.E1.visit(this, o) != (boolean) ast.E1.visit(this, o);
@@ -100,56 +100,56 @@ public class Evaluator implements Visitor {
                 }
             }
             case "<=" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) <= (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) <= (float) ast.E2.visit(this, o);
                 }
             }
             case "<" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) < (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) < (float) ast.E2.visit(this, o);
                 }
             }
             case ">" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) > (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) > (float) ast.E2.visit(this, o);
                 }
             }
             case ">=" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) >= (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) >= (float) ast.E2.visit(this, o);
                 }
             }
             case "+" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) + (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) + (float) ast.E2.visit(this, o);
                 }
             }
             case "-" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) - (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) - (float) ast.E2.visit(this, o);
                 }
             }
             case "/" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) / (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) / (float) ast.E2.visit(this, o);
                 }
             }
             case "*" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield (int) ast.E1.visit(this, o) * (int) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) * (float) ast.E2.visit(this, o);
@@ -168,9 +168,9 @@ public class Evaluator implements Visitor {
         return switch (ast.O.spelling) {
             case "+" -> ast.E.visit(this, o);
             case "-" -> {
-                if (t.isInt() || t.isChar()) {
+                if (t.isI64() || t.isI8()) {
                     yield -(int) ast.E.visit(this, o);
-                } else if (t.isFloat()) {
+                } else if (t.isF32()) {
                     yield -(float) ast.E.visit(this, o);
                 } else {
                     System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
@@ -234,6 +234,14 @@ public class Evaluator implements Visitor {
     }
 
     // integer
+    public Object visitI64Expr(I64Expr ast, Object o) {
+        return Integer.parseInt(ast.IL.spelling);
+    }
+
+    public Object visitI32Expr(I32Expr ast, Object o) {
+        return Integer.parseInt(ast.IL.spelling);
+    }
+
     public Object visitIntExpr(IntExpr ast, Object o) {
         return Integer.parseInt(ast.IL.spelling);
     }
@@ -242,7 +250,11 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitIntType(SignedIntType ast, Object o) {
+    public Object visitI64Type(I64Type ast, Object o) {
+        return null;
+    }
+
+    public Object visitI32Type(I32Type ast, Object o) {
         return null;
     }
 
@@ -302,7 +314,7 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitFloatType(FloatType ast, Object o) {
+    public Object visitF32Type(F32Type ast, Object o) {
        return null;
     }
 
@@ -321,14 +333,14 @@ public class Evaluator implements Visitor {
     }
 
     public String TypeMapping(Type t) {
-        if (t instanceof SignedIntType) {
-            return LLVM.INT_TYPE;
+        if (t instanceof I64Type) {
+            return LLVM.I64_TYPE;
         } else if (t instanceof BooleanType) {
             return LLVM.BOOL_TYPE;
-        } else if (t instanceof CharType) {
-            return LLVM.CHAR_TYPE;
+        } else if (t instanceof I8Type) {
+            return LLVM.I8_TYPE;
         } else if (t instanceof EnumType) {
-            return LLVM.INT_TYPE;
+            return LLVM.I64_TYPE;
         }
         return "OHOH";
     }
@@ -371,7 +383,7 @@ public class Evaluator implements Visitor {
     }
 
 
-    public Object visitCharType(CharType ast, Object o) {
+    public Object visitI8Type(I8Type ast, Object o) {
         return null;
     }
 

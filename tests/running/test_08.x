@@ -3,20 +3,20 @@
 let i: i64 = 0;
 
 fn main() -> i64 {
-    outInt(i);
+    outI64(i);
     let i: i64 = 21;
-    outInt(i);
+    outI64(i);
     {
         let i: i64 = 19;
-        outInt(i);
+        outI64(i);
     }
 
     {
         let i: i64 = 34;
-        outInt(i);
+        outI64(i);
         {
             let i: i64 = -100;
-            outInt(i);
+            outI64(i);
         }
     }
 

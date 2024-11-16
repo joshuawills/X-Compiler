@@ -2,7 +2,7 @@
 
 struct Data -> {
     x: i64,
-    x: char*
+    x: i8*
 }
 
 fn main() -> i64 {

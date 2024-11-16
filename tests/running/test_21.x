@@ -25,6 +25,6 @@ fn main() -> i64 {
 
     let z = BasicStruct2 { IntBox2 { 2, 3 }, 4};
 
-	outInt(y.x.val);
-	outInt(z.x.val2);
+	outI64(y.x.val);
+	outI64(z.x.val2);
 }

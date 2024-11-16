@@ -2,34 +2,36 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-public class CharType extends Type {
+public class I32Type extends Type {
 
-    public CharType(Position pos) {
+
+    public I32Type(Position pos) {
         super(pos);
     }
 
     public Object visit(Visitor v, Object o) {
-        return v.visitCharType(this, o);
+        return v.visitI32Type(this, o);
     }
 
     public boolean equals(Object obj) {
         if (obj instanceof ErrorType) {
             return true;
         } else {
-            return obj instanceof CharType;
+            return obj instanceof I32Type;
         }
     }
 
     @Override
     public String toString() {
-        return "char";
+        return "i32";
     }
 
     public String getMini() {
-        return "C";
+        return "I32";
     }
 
     public boolean assignable(Object obj) {
-        return equals(obj) || obj instanceof SignedIntType;
+        return equals(obj);
     }
+
 }

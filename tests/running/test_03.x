@@ -8,58 +8,58 @@ fn doSomething() -> bool {
 fn main() -> i64 {
 
     if true && true {
-        outInt(1);
+        outI64(1);
     }
 
     if true && false {
-        outInt(2);
+        outI64(2);
     }
 
     if false && true {
-        outInt(3);
+        outI64(3);
     }
 
     if false && false {
-        outInt(4);
+        outI64(4);
     }
 
     if true && doSomething() {
-        outInt(5);
+        outI64(5);
     }
 
     if false && doSomething() {
-        outInt(6);
+        outI64(6);
     }
 
     if true || doSomething() {
-        outInt(7);
+        outI64(7);
     }
 
     if false || doSomething() {
-        outInt(8);
+        outI64(8);
     }
 
     if !false {
-        outInt(9);
+        outI64(9);
     }
 
     if !true {
-        outInt(10);
+        outI64(10);
     }
 
     if true || true {
-        outInt(11);
+        outI64(11);
     }
 
     if false || true {
-        outInt(12);
+        outI64(12);
     }
 
     if true || false {
-        outInt(13);
+        outI64(13);
     }
 
     if false || false {
-        outInt(14);
+        outI64(14);
     }
 }

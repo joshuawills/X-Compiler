@@ -3,12 +3,12 @@
 import "../../lib/math.x" as math;
 
 fn main() -> i64 {
-    outInt(math::add(1, 2));
+    outI64(math::add(1, 2));
 
-    outInt(math::Zero);
+    outI64(math::Zero);
 
     let val = math::Vec2 { 1, 1 };
-    outInt(val.x);
+    outI64(val.x);
 
     return 0;
 }

@@ -10,9 +10,9 @@ import X.Nodes.Type;
 
 public class Environment {
 
-    public static Type booleanType, i64Type, strType, voidType, errorType, floatType, charType, charPointerType;
-    public static Function outInt, outFloat, outChar, outStr, malloc, free;
+    public static Type booleanType, i64Type, strType, voidType, errorType, floatType, charType, charPointerType, i32Type;
+    public static Function outI64, outFloat, outChar, outStr, malloc, free;
 
-    public static List<String> functionNames = new ArrayList<>(Arrays.asList("outInt", "outFloat", "outChar", "outStr", "malloc", "free"));
+    public static List<String> functionNames = new ArrayList<>(Arrays.asList("outI64", "outFloat", "outChar", "outStr", "malloc", "free"));
 
 }

@@ -14,8 +14,8 @@ fn main() -> i64 {
     let mut a = 2;
     let mut b = 3;
     swap(&a, &b);
-    outInt(a);
-    outInt(b);
+    outI64(a);
+    outI64(b);
     return 0;
 }
 ```

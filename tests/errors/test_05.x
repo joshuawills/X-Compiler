@@ -3,5 +3,5 @@
 fn main() -> i64 {
     let x: i64 = true;
     let y: bool = 21;
-    let z: char = "hello";
+    let z: i8 = "hello";
 }

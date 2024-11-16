@@ -3,21 +3,21 @@
 let x: i64 = 21;
 let mut x1: i64 = 19;
 
-let y: char = 'a';
-let mut y1: char = '&';
+let y: i8= 'a';
+let mut y1: i8 = '&';
 
 let z: bool = false;
 let mut z1: bool = true;
 
 let mut aA: i64[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 let mut aB: bool[] = [true, false, true, false];
-let mut aC: char[] = ['a', 'b', 'c', 'd'];
+let mut aC: i8[] = ['a', 'b', 'c', 'd'];
 
 fn main() -> i64 {
-    outInt(x); // 20
-    outInt(x1); // 19
+    outI64(x); // 20
+    outI64(x1); // 19
     x1 += 1;
-    outInt(x1); // 20
+    outI64(x1); // 20
     printX1(); // 20
 
     outChar(y); // 'a'
@@ -33,9 +33,9 @@ fn main() -> i64 {
     printZ1(); // false;
 
     loop i in 10 {
-        outInt(aA[i]);
+        outI64(aA[i]);
     }
-    outInt(aA[0]);
+    outI64(aA[0]);
     printaAZero();
     aA[0] = 19;
     printaAZero();
@@ -58,7 +58,7 @@ fn main() -> i64 {
 }
 
 fn printaAZero() -> void {
-    outInt(aA[0]);
+    outI64(aA[0]);
 }
 
 fn printZ1() -> void {
@@ -66,7 +66,7 @@ fn printZ1() -> void {
 }
 
 fn printX1() -> void {
-    outInt(x1);
+    outI64(x1);
 }
 
 fn printY1() -> void {
@@ -76,8 +76,8 @@ fn printY1() -> void {
 
 fn outBool(x: bool) -> void {
     if x {
-        outInt(1);
+        outI64(1);
     } else {
-        outInt(0);
+        outI64(0);
     }
 }

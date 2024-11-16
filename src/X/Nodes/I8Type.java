@@ -2,37 +2,34 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-public class FloatType extends Type {
+public class I8Type extends Type {
 
-    public FloatType(Position pos) {
+    public I8Type(Position pos) {
         super(pos);
     }
 
     public Object visit(Visitor v, Object o) {
-        return v.visitFloatType(this, o);
+        return v.visitI8Type(this, o);
     }
 
     public boolean equals(Object obj) {
         if (obj instanceof ErrorType) {
             return true;
         } else {
-            return obj instanceof FloatType;
+            return obj instanceof I8Type;
         }
     }
 
     @Override
     public String toString() {
-        return "float";
+        return "char";
     }
 
     public String getMini() {
-        return "F";
+        return "I8";
     }
 
     public boolean assignable(Object obj) {
-        if (obj instanceof ErrorType) {
-            return true;
-        }
-        return obj instanceof SignedIntType || obj instanceof FloatType || obj instanceof CharType;
+        return equals(obj) || obj instanceof I64Type;
     }
 }

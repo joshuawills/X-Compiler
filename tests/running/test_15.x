@@ -2,7 +2,7 @@
 
 fn main() -> i64 {
     let x: i64 = 5;
-    outInt(factorial(x));
+    outI64(factorial(x));
 }
 
 fn factorial(x: i64) -> i64 {

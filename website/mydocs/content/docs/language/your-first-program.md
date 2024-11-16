@@ -19,9 +19,9 @@ A program is composed of global variables, functions and type definitions. The d
 variables can be seen in the below variables section. Functions are declared as seen below
 
 ```Rust
-fn foo(x: i64, mut y: char*) -> void {
+fn foo(x: i64, mut y: i8*) -> void {
     *y += 1;
-    outInt(x);
+    outI64(x);
 }
 ```
 
@@ -44,8 +44,8 @@ fn add(x: i64, y: i64) -> i64 {
 }
 
 fn main() -> i64 {
-    outInt(add(2, 1)); // logs 3
-    outInt(add(2));   // logs 2
+    outI64(add(2, 1)); // logs 3
+    outI64(add(2));   // logs 2
 }
 ```
 
@@ -88,8 +88,8 @@ fn main() -> i64 {
     let mut a = 2;
     let mut b = 3;
     swap(&a, &b);
-    outInt(a);
-    outInt(b);
+    outI64(a);
+    outI64(b);
     return 0;
 }
 ```
@@ -97,7 +97,7 @@ fn main() -> i64 {
 
 ### Types
 
-At the moment, X supports several different base types. They are `i64`, `float`, `char` and `bool`.
+At the moment, X supports several different base types. They are `i64`, `float`, `i8` and `bool`.
 Implicit type casting will occur from integers to floats, and between integers and characters. Any 
 other attempt to assign one type to another will currently fail, and explicit type casting is not 
 currently supported. Statically-sized arrays are also supported, as well as enums. Some examples of
@@ -113,7 +113,7 @@ fn main() -> i64 {
     
     let y: bool = true && false; // true and false are reserved keywords in X
     
-    let mut z: char = 'c';
+    let mut z: i8= 'c';
     char += 2; // implicit type casting occurs here
 
     let z: float = 19; // here a type annotation is required, as the RHS is identified as an integer
@@ -149,7 +149,7 @@ fn main() -> i64 {
     };
 
     if !a.vals.cond {
-        outInt(a.num);
+        outI64(a.num);
     }
 }
 
@@ -197,26 +197,26 @@ if true {
 // Permissible
 let mut i: i64 = 0;
 while i < 10 {
-    outInt(i);
+    outI64(i);
     i += 1;
 }
 
 // Permissible
 let mut i: i64 = 0;
 do {
-    outInt(i);
+    outI64(i);
     i += 1;
 } while (i < 10);
 
 // Permissible
 let mut i: i64;
 for i = 0; i < 10; i += 1 {
-    outInt(i);
+    outI64(i);
 }
 
 // Permissible, but not recommended from a style perspective
 while (true) {
-    outInt(2);
+    outI64(2);
 }
 
 // Curly braces must encompass any control flow, even for single statement conditions
@@ -247,24 +247,24 @@ loop {
 // Upper limit
 // This is semantically equivalent to "for $ = 0; $ < 10; $++"
 loop 10 {
-    outInt($);
+    outI64($);
 }
 
 // Upper and lower limit
 // This is semantically equivalent to "for $ = 1; $ < 10; $++"
 loop 1 10 {
-    outInt($);
+    outI64($);
 }
 
 // Custom variable
 // This overrides the $ value to allow for more expressiveness
 loop x {
-    outInt(x);
+    outI64(x);
 }
 
 // This case combines all these features into one example
 loop x in 1 10 {
-    outInt(x);
+    outI64(x);
 }
 ```
 

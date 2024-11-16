@@ -1,5 +1,5 @@
 
-export let hello_world: char* = "hello, world!\n";
+export let hello_world: i8* = "hello, world!\n";
 
 export let number = 21;
 

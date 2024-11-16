@@ -2,38 +2,37 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-public class SignedIntType extends Type {
+public class F32Type extends Type {
 
-    public String value;
-
-    public SignedIntType(Position pos, String valueAST) {
+    public F32Type(Position pos) {
         super(pos);
-        value = valueAST;
     }
 
     public Object visit(Visitor v, Object o) {
-        return v.visitIntType(this, o);
+        return v.visitF32Type(this, o);
     }
 
     public boolean equals(Object obj) {
         if (obj instanceof ErrorType) {
             return true;
         } else {
-            return obj instanceof SignedIntType;
+            return obj instanceof F32Type;
         }
     }
 
     @Override
     public String toString() {
-        return "int";
+        return "f32";
     }
 
     public String getMini() {
-        return "I";
+        return "F32";
     }
 
     public boolean assignable(Object obj) {
-        return equals(obj) || obj instanceof CharType;
+        if (obj instanceof ErrorType) {
+            return true;
+        }
+        return obj instanceof I64Type || obj instanceof F32Type || obj instanceof I8Type;
     }
-
 }

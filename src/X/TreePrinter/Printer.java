@@ -160,8 +160,8 @@ public class Printer implements Visitor {
         return null;
     }
 
-    public Object visitFloatType(FloatType ast, Object o) {
-        print(indentString() + "float");
+    public Object visitF32Type(F32Type ast, Object o) {
+        print(indentString() + "f32");
         return null;
     }
 
@@ -198,8 +198,8 @@ public class Printer implements Visitor {
         return null;
     }
 
-    public Object visitCharType(CharType ast, Object o) {
-        print(indentString() + "char");
+    public Object visitI8Type(I8Type ast, Object o) {
+        print(indentString() + "i8");
         return null;
     }
 
@@ -348,6 +348,24 @@ public class Printer implements Visitor {
     }
 
     @Override
+    public Object visitI64Expr(I64Expr ast, Object o) {
+        print(indentString() + "I64Expr");
+        ++indent;
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    @Override
+    public Object visitI32Expr(I32Expr ast, Object o) {
+        print(indentString() + "I32Expr");
+        ++indent;
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    @Override
     public Object visitIntExpr(IntExpr ast, Object o) {
         print(indentString() + "IntExpr");
         ++indent;
@@ -363,8 +381,14 @@ public class Printer implements Visitor {
     }
 
     @Override
-    public Object visitIntType(SignedIntType ast, Object o) {
-        print(indentString() + "int");
+    public Object visitI64Type(I64Type ast, Object o) {
+        print(indentString() + "i64");
+        return null;
+    }
+
+    @Override
+    public Object visitI32Type(I32Type ast, Object o) {
+        print(indentString() + "i32");
         return null;
     }
 

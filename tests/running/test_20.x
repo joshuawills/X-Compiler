@@ -14,6 +14,6 @@ fn main() -> i64 {
     let a = IntBox { 3 };
     let b = BoxOfMany { a, 2 == 3 };
 
-    outInt(b.val2.val);
+    outI64(b.val2.val);
 
 }

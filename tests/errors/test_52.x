@@ -2,7 +2,7 @@
 
 struct DataBox -> {
     a: i64,
-    b: char
+    b: i8 
 }
 
 fn main() -> i64 {

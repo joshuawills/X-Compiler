@@ -10,21 +10,21 @@ let a = Boolean.TRUE;
 fn main() -> i64 {
 
     if y {
-        outInt(x);
+        outI64(x);
         outChar(z);
     }
 
     let arr = [1, 2, 3, 4, 5, 6];
 
     loop i in 6 {
-        outInt(arr[i]);
+        outI64(arr[i]);
     }
 
     // Casts all following types to the first one where possible
     let arr2 = [1, 'a', Boolean.TRUE];
 
     loop i in 3 {
-        outInt(arr2[i]);
+        outI64(arr2[i]);
     }
 
 }

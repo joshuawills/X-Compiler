@@ -321,7 +321,7 @@ public class Lex {
                 case "enum" -> TokenType.ENUM;
                 case "struct" -> TokenType.STRUCT;
                 case "let" -> TokenType.LET;
-                case "char", "i8", "i16", "i32", "i64", "i128", "float", "bool", "str", "void" -> TokenType.TYPE;
+                case "i8", "i16", "i32", "i64", "i128", "f32", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
                 case "else" -> TokenType.ELSE;
                 case "else if" -> TokenType.ELIF;

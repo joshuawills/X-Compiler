@@ -7,7 +7,7 @@ weight: 1
 fn main() -> i64 {
     let x = 9;
 	
-    outInt(fib(x));
+    outI64(fib(x));
 }
 
 

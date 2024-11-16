@@ -7,14 +7,14 @@ fn main() -> i64 {
     array[0] = array[1] = 3;
 
     loop i in 10 {
-        outInt(array[i]);
+        outI64(array[i]);
     }
 
     array[0] = array[1] = array[2] = array[3] = array[4]
         = array[5] = array[6] = array[7] = array[8] = array[9] = 0;
 
     loop i in 10 {
-        outInt(array[i]);
+        outI64(array[i]);
     }
 
     let mut y = 21;
@@ -22,6 +22,6 @@ fn main() -> i64 {
 
     y = z -= 2;
 
-    outInt(y);
-    outInt(z);
+    outI64(y);
+    outI64(z);
 }

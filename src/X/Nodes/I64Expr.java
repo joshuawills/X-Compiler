@@ -2,18 +2,17 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-public class IntExpr extends Expr {
+public class I64Expr extends Expr {
 
     public IntLiteral IL;
 
-    public IntExpr(IntLiteral ilAST, Position pos) {
+    public I64Expr(IntLiteral ilAST, Position pos) {
         super(pos);
         IL = ilAST;
         IL.parent = this;
     }
 
     public Object visit(Visitor v, Object o) {
-        return v.visitIntExpr(this, o);
+        return v.visitI64Expr(this, o);
     }
 }
-

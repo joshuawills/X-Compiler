@@ -1,7 +1,7 @@
 // Struct declared but never used
 
 struct Person -> {
-    name: char*,
+    name: i8*,
     likesChicken: bool
 }
 

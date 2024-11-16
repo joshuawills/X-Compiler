@@ -3,39 +3,39 @@
 fn main() -> i64 {
 
     if (true) {
-        outInt(-2);
+        outI64(-2);
     } else {
-        outInt(-1);
+        outI64(-1);
     }
 
     if (false) {
-        outInt(1);
+        outI64(1);
     } else {
-        outInt(2);
+        outI64(2);
     }
 
     if (false) {
-        outInt(5);
+        outI64(5);
     } else if (false) {
-        outInt(6);
+        outI64(6);
     } else {
-        outInt(7);
+        outI64(7);
     }
 
     if (true) {
-        outInt(8);
+        outI64(8);
     } else if (false) {
-        outInt(9);
+        outI64(9);
     } else {
-        outInt(10);
+        outI64(10);
     }
 
     if (true) {
-        outInt(11);
+        outI64(11);
     } else if (true) {
-        outInt(12);
+        outI64(12);
     } else {
-        outInt(13);
+        outI64(13);
     }
 
 }

@@ -34,7 +34,7 @@ public class EnumType extends Type {
     }
 
     public boolean assignable(Object obj) {
-        return equals(obj) || obj instanceof SignedIntType || obj instanceof CharType;
+        return equals(obj) || obj instanceof I64Type || obj instanceof I8Type;
     }
 
 }

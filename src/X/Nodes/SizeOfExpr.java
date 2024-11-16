@@ -24,7 +24,7 @@ public class SizeOfExpr extends Expr {
             typeV.get().parent = this;
         }
 
-        this.type = new SignedIntType(pos, "i64");
+        this.type = new I64Type(pos);
     }
 
     public Object visit(Visitor v, Object o) {

@@ -2,19 +2,19 @@
 
 let x: i64[] = [1, 19, 9];
 let x1: bool[] = [true, false, true];
-let mut x2: char[] = ['a', 'b', 'c'];
+let mut x2: i8[] = ['a', 'b', 'c'];
 
 fn main() -> i64 {
 
     loop i in 3 {
-        outInt(x[i]);
+        outI64(x[i]);
     }
 
     loop y in 3 {
         if x1[y] {
-            outInt(1);
+            outI64(1);
         } else {
-            outInt(0);
+            outI64(0);
         }
     }
 

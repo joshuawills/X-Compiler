@@ -1,6 +1,6 @@
 fn main() -> i64 {
     let x: i64 = 9;
-	outInt(fib(x));
+	outI64(fib(x));
 }
 
 fn fib(x: i64) -> i64 {

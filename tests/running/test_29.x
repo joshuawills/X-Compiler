@@ -7,12 +7,12 @@ fn main() -> i64 {
         let mut val = Math::Boolean.TRUE;
 
         if val == Math::Boolean.TRUE {
-                outInt(1);
+                outI64(1);
         }
 
         val = Math::Boolean.FALSE;
 
         if val == Math::Boolean.FALSE {
-                outInt(1);
+                outI64(1);
         }
 }

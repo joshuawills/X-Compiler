@@ -13,5 +13,5 @@ fn add(x: i64, y: i64) -> i64 {
 }
 
 fn main() -> i64 {
-    outInt(add(2, 3));
+    outI64(add(2, 3));
 }

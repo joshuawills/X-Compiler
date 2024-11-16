@@ -3,7 +3,7 @@ fn main() -> i64 {
     loop {
         inInt("Enter a number: ", x);
         if is_prime(x) {
-            outInt(x);
+            outI64(x);
         } else {
             break;
         }

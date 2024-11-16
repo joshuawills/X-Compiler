@@ -7,7 +7,7 @@ fn main() -> i64 {
         return 1;
     }
 
-    outInt(euclid(x, y));
+    outI64(euclid(x, y));
     return 0;
 }
 

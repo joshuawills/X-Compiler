@@ -54,11 +54,17 @@ public interface Visitor {
 
     Object visitErrorType(ErrorType ast, Object o);
 
+    Object visitI64Expr(I64Expr ast, Object o);
+
+    Object visitI32Expr(I32Expr ast, Object o);
+
     Object visitIntExpr(IntExpr ast, Object o);
 
     Object visitIntLiteral(IntLiteral ast, Object o);
 
-    Object visitIntType(SignedIntType ast, Object o);
+    Object visitI64Type(I64Type ast, Object o);
+    
+    Object visitI32Type(I32Type ast, Object o);
 
     Object visitArgList(Args ast, Object o);
 
@@ -89,7 +95,7 @@ public interface Visitor {
 
     Object visitFloatLiteral(FloatLiteral ast, Object o);
 
-    Object visitFloatType(FloatType ast, Object o);
+    Object visitF32Type(F32Type ast, Object o);
 
     Object visitFloatExpr(FloatExpr ast, Object o);
 
@@ -101,7 +107,7 @@ public interface Visitor {
 
     Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o);
 
-    Object visitCharType(CharType ast, Object o);
+    Object visitI8Type(I8Type ast, Object o);
 
     Object visitCharLiteral(CharLiteral ast, Object o);
 

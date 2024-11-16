@@ -130,6 +130,7 @@
 *16.11.2024*
 
 - floats properly work in the language now
+- adding in new numerical types (partially done)
 
 # TODO
 

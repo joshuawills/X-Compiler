@@ -2,5 +2,5 @@
 
 fn main() -> i64 {
 
-    let x: char = 'ab';
+    let x: i8 = 'ab';
 }

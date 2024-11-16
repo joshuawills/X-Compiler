@@ -107,4 +107,8 @@ public abstract class AST {
         return this instanceof ImportStmt;
     }
 
+    public boolean isIntExpr() {
+        return this instanceof IntExpr;
+    }
+
 }

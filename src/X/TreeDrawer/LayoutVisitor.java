@@ -105,8 +105,8 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary(ast.spelling);
     }
 
-    public Object visitFloatType(FloatType ast, Object o) {
-        return layoutNullary("float");
+    public Object visitF32Type(F32Type ast, Object o) {
+        return layoutNullary("f32");
     }
 
     public Object visitFloatExpr(FloatExpr ast, Object o) {
@@ -129,8 +129,8 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("ArrayIndexExpr", ast.I, ast.index);
     }
 
-    public Object visitCharType(CharType ast, Object o) {
-        return layoutNullary("char");
+    public Object visitI8Type(I8Type ast, Object o) {
+        return layoutNullary("i8");
     }
 
     public Object visitCharLiteral(CharLiteral ast, Object o) {
@@ -199,8 +199,16 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("UnaExp", ast.O, ast.E);
     }
 
+    public Object visitI64Expr(I64Expr ast, Object obj) {
+        return layoutUnary("I64Expr", ast.IL);
+    }
+
+    public Object visitI32Expr(I32Expr ast, Object obj) {
+        return layoutUnary("I32Expr", ast.IL);
+    }
+
     public Object visitIntExpr(IntExpr ast, Object obj) {
-        return layoutUnary("IntExp", ast.IL);
+        return layoutUnary("IntExpr", ast.IL);
     }
 
     public Object visitBooleanExpr(BooleanExpr ast, Object obj) {
@@ -226,8 +234,12 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("bool");
     }
 
-    public Object visitIntType(SignedIntType ast, Object obj) {
-        return layoutNullary("int");
+    public Object visitI64Type(I64Type ast, Object obj) {
+        return layoutNullary("i64");
+    }
+
+    public Object visitI32Type(I32Type ast, Object obj) {
+        return layoutNullary("i32");
     }
 
     public Object visitAnyType(AnyType ast, Object obj) {
@@ -531,6 +543,9 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitStructAccess(StructAccess ast, Object o) {
+        if (ast.arrayIndex.isPresent()) {
+            return layoutQuaternary("StructAccess", ast.varName, ast.L, ast.arrayIndex.get(), ast.sourceType);
+        }
         return layoutBinary("StructAccess", ast.varName, ast.L);
     }
 

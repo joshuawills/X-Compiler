@@ -338,7 +338,7 @@ public class Parser {
         Optional<LocalVar> V = Optional.empty();
         if (currentToken.kind == TokenType.IDENT && lookAhead().kind == TokenType.IN) {
             Ident I = parseIdent();
-            LocalVar LV = new LocalVar(new SignedIntType(pos, "i64"), I, new EmptyExpr(pos), pos, true);
+            LocalVar LV = new LocalVar(new I64Type(pos), I, new EmptyExpr(pos), pos, true);
             V = Optional.of(LV);
             match(TokenType.IN);
         }
@@ -575,14 +575,21 @@ public class Parser {
     private Type parseType() throws SyntaxError {
         Position pos = currentToken.pos;
         Type t = switch (currentToken.lexeme) {
-            case "i8", "i16", "i32", "i64", "i128" -> {
-                String s = currentToken.lexeme;
+            case "i8" -> {
                 accept();
-                yield new SignedIntType(pos, s);
+                yield new I8Type(pos);
             }
-            case "char" -> {
+            case "i32" -> {
                 accept();
-                yield new CharType(pos);
+                yield new I32Type(pos);
+            }
+            case "i64" -> {
+                accept();
+                yield new I64Type(pos);
+            }
+            case "f32" -> {
+                accept();
+                yield new F32Type(pos);
             }
             case "bool" -> {
                 accept();
@@ -591,10 +598,6 @@ public class Parser {
             case "void" -> {
                 accept();
                 yield new VoidType(pos);
-            }
-            case "float" -> {
-                accept();
-                yield new FloatType(pos);
             }
             // Murky type -> TBD during type evaluation
             default -> {

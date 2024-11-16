@@ -18,12 +18,28 @@ public abstract class Type extends AST {
         return (this instanceof VoidType);
     }
 
-    public boolean isInt() {
-        return (this instanceof SignedIntType || this instanceof CharType || this instanceof EnumType);
+    public boolean isNumeric() {
+        return (this instanceof I8Type || this instanceof I32Type || this instanceof I64Type || this instanceof F32Type);
     }
 
-    public boolean isFloat() {
-        return (this instanceof FloatType);
+    public boolean isInteger() {
+        return (this instanceof I8Type || this instanceof I32Type || this instanceof I64Type);
+    }
+
+    public boolean isI8() {
+        return this instanceof I8Type;
+    }
+
+    public boolean isI32() {
+        return this instanceof I32Type;
+    }
+
+    public boolean isI64() {
+        return this instanceof I64Type || this instanceof EnumType;
+    } 
+
+    public boolean isF32() {
+        return (this instanceof F32Type);
     }
 
     public boolean isBoolean() {
@@ -40,10 +56,6 @@ public abstract class Type extends AST {
 
     public boolean isArray() {
         return this instanceof ArrayType;
-    }
-
-    public boolean isChar() {
-        return this instanceof CharType;
     }
 
     public boolean isMurky() {

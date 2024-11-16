@@ -7,7 +7,7 @@ fn main() -> i64 {
 
 
     loop i in 10 {
-        outInt($);
+        outI64($);
     }
 
 }

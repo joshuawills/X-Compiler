@@ -4,7 +4,7 @@ fn main() -> i64 {
 
     let mut i: i64 = 0;
     while i < 10 {
-        outInt(i);
+        outI64(i);
         i += 1;
     }
 
@@ -17,24 +17,24 @@ fn main() -> i64 {
         if j == 2 {
             continue;
         }
-        outInt(j);
+        outI64(j);
     }
 
     loop {
         if $ == 1 {
             continue;
         }
-        outInt($);
+        outI64($);
         if $ == 3 {
             break;
         }
     }
 
     loop haha in 3 5 {
-        outInt(haha);
+        outI64(haha);
     }
 
-    outInt(-19);
+    outI64(-19);
 
     loop l_one in 5 {
         
@@ -46,8 +46,8 @@ fn main() -> i64 {
             if l_two == 1 {
                 continue;
             }
-            outInt(l_one);
-            outInt(l_two);
+            outI64(l_one);
+            outI64(l_two);
         }
     }
 
@@ -59,12 +59,12 @@ fn main() -> i64 {
 
     let mut donda: i64 = 0;
     for donda = 0; donda < 10; donda += 1 {
-        outInt(donda);
+        outI64(donda);
     }
 
     let mut explanatory: i64 = 0;
     for ;; {
-        outInt(explanatory);
+        outI64(explanatory);
         if explanatory == 3 {
             break;
         }
