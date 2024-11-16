@@ -2,4 +2,4 @@
 
 enum bar -> {}
 
-fn main() -> int {}
+fn main() -> i64 {}

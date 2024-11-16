@@ -1,11 +1,11 @@
 // Excess arguments to struct declaration
 
 struct DataBox -> {
-    a: int,
+    a: i64,
     b: char,
     c: bool
 }
 
-fn main() -> int {
+fn main() -> i64 {
     let data = DataBox { 1, 'c', 1 == 1, 2 };
 }

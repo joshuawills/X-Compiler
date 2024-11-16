@@ -1,8 +1,8 @@
 // Incompatible type for this binary operator
 
-fn main() -> int {
+fn main() -> i64 {
 
-    let x: int = 1 + true;
+    let x: i64 = 1 + true;
 
     let x1: char = "false" - 19;
 

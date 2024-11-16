@@ -2,7 +2,7 @@
 
 let mut x: char[] = ['a', 'b', 'c'];
 
-fn main() -> int {
+fn main() -> i64 {
 
     let mut y: bool = false;
 

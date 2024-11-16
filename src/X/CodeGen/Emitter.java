@@ -543,7 +543,7 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitIntType(IntType ast, Object o) {
+    public Object visitIntType(SignedIntType ast, Object o) {
         emit(LLVM.INT_TYPE);
         return null;
     }

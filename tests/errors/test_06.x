@@ -4,6 +4,6 @@ fn foo() -> void {
     return 21;
 }
 
-fn main() -> int {
+fn main() -> i64 {
     return;
 }

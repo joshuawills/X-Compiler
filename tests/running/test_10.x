@@ -5,8 +5,8 @@ enum DaysOfWeek -> {
 }
 
 struct BasicStruct -> {
-    x: int,
-    y: int
+    x: i64,
+    y: i64
 }
 
 struct StructWithEnumAndOtherStruct -> {
@@ -15,10 +15,10 @@ struct StructWithEnumAndOtherStruct -> {
 }
 
 struct StructWithPointers -> {
-    data: int*
+    data: i64*
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     let data = BasicStruct { 2, 3 };
 

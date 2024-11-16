@@ -46,7 +46,7 @@ I recommend invoking the program with the `-h` flag to see all the options you c
 with. For a simple example, write the following content to a file called `hello.x`
 
 ```Rust
-fn main() -> int {
+fn main() -> i64 {
     outStr("hello, world!\n");
 }
 ```

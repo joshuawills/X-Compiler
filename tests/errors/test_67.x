@@ -2,7 +2,7 @@
 
 import "standard.x" as std;
 
-fn main() -> int {
+fn main() -> i64 {
 
     let x = std::B { 2 };
 

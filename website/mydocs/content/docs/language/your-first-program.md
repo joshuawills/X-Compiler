@@ -3,7 +3,7 @@ title: "Your First Program"
 ---
 
 ```Rust
-fn main() -> int {
+fn main() -> i64 {
     let val = "hello, world\n";
     outStr(val);
     return 0;
@@ -19,7 +19,7 @@ A program is composed of global variables, functions and type definitions. The d
 variables can be seen in the below variables section. Functions are declared as seen below
 
 ```Rust
-fn foo(x: int, mut y: char*) -> void {
+fn foo(x: i64, mut y: char*) -> void {
     *y += 1;
     outInt(x);
 }
@@ -35,15 +35,15 @@ X supports function overloading. Multiple functions can be declared with the sam
 have differing input types. An example of this is shown below.
 
 ```Rust
-fn add(x: int) -> int {
+fn add(x: i64) -> i64 {
     return add(0, x);
 }
 
-fn add(x: int, y: int) -> int {
+fn add(x: i64, y: i64) -> i64 {
     return x + y;
 }
 
-fn main() -> int {
+fn main() -> i64 {
     outInt(add(2, 1)); // logs 3
     outInt(add(2));   // logs 2
 }
@@ -67,9 +67,9 @@ is when you declare a variable without assigning an initial expression to it, or
 parameters.
 
 ```Rust
-let x: int = 21; // the type annotation here is not necessary, as its deducable from the RHS
+let x: i64 = 21; // the type annotation here is not necessary, as its deducable from the RHS
 
-let mut x: int = 21; // this variable can be mutated later on in the programs runtime
+let mut x: i64 = 21; // this variable can be mutated later on in the programs runtime
 ```
 
 X supports both global and local variables. They are assigned in the same way. 
@@ -78,13 +78,13 @@ Basic pointer types are also currently supported in X. These are experimental ho
 problems.
 
 ```Rust
-fn swap(mut a: int*, mut b: int*) -> void {
+fn swap(mut a: i64*, mut b: i64*) -> void {
     let temp= *a;
     *a = *b;
     *b = temp;
 }
 
-fn main() -> int {
+fn main() -> i64 {
     let mut a = 2;
     let mut b = 3;
     swap(&a, &b);
@@ -97,7 +97,7 @@ fn main() -> int {
 
 ### Types
 
-At the moment, X supports several different base types. They are `int`, `float`, `char` and `bool`.
+At the moment, X supports several different base types. They are `i64`, `float`, `char` and `bool`.
 Implicit type casting will occur from integers to floats, and between integers and characters. Any 
 other attempt to assign one type to another will currently fail, and explicit type casting is not 
 currently supported. Statically-sized arrays are also supported, as well as enums. Some examples of
@@ -108,8 +108,8 @@ enum DaysOfWeek -> {
     MON, TUE, WED, THU, FRI, SAT, SUN
 }
 
-fn main() -> int {
-    let x: int = 21;
+fn main() -> i64 {
+    let x: i64 = 21;
     
     let y: bool = true && false; // true and false are reserved keywords in X
     
@@ -118,7 +118,7 @@ fn main() -> int {
 
     let z: float = 19; // here a type annotation is required, as the RHS is identified as an integer
 
-    let arr: int[] = [1, 2, 3, 4, 5, 6]; // the int[] is not necessary, as is the case for primitive types also
+    let arr: i64[] = [1, 2, 3, 4, 5, 6]; // the int[] is not necessary, as is the case for primitive types also
 
     let mut day = DaysOfWeek.TUE;
     day *= 2; // enums are just ints under the hood, so implicit type casting occurs here
@@ -137,10 +137,10 @@ struct BoolBox -> {
 
 struct Data -> {
     vals: BoolBox,
-    num: int
+    num: i64
 }
 
-fn main() -> int {
+fn main() -> i64 {
     let a = Data {
         BoolBox { 
             false
@@ -168,7 +168,7 @@ type, you can't do certain expressions that you can in C, such as
 ```C
 // This is C code
 
-let x: int = 1;
+let x: i64 = 1;
 // Invalid in X
 if (x) {
     printf("x\n");
@@ -195,21 +195,21 @@ if true {
 }
 
 // Permissible
-let mut i: int = 0;
+let mut i: i64 = 0;
 while i < 10 {
     outInt(i);
     i += 1;
 }
 
 // Permissible
-let mut i: int = 0;
+let mut i: i64 = 0;
 do {
     outInt(i);
     i += 1;
 } while (i < 10);
 
 // Permissible
-let mut i: int;
+let mut i: i64;
 for i = 0; i < 10; i += 1 {
     outInt(i);
 }
@@ -299,7 +299,7 @@ precedence, check out the [grammar page](/docs/grammar), but it can be summarise
 X supports some shorthand syntax for redeclaring numeric types
 
 ```Rust
-fn main() -> int {
+fn main() -> i64 {
     let mut x = 21;
     x += 21; // '+=', '-=', '*=' and '/=' are all supported
 }

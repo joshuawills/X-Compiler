@@ -2,6 +2,6 @@
 
 import "standard.x" as std;
 
-fn main() -> int {
+fn main() -> i64 {
     std::log("hello, world!\n");
 }

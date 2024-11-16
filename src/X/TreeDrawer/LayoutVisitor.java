@@ -226,7 +226,7 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("bool");
     }
 
-    public Object visitIntType(IntType ast, Object obj) {
+    public Object visitIntType(SignedIntType ast, Object obj) {
         return layoutNullary("int");
     }
 

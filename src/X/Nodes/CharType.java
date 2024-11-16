@@ -30,6 +30,6 @@ public class CharType extends Type {
     }
 
     public boolean assignable(Object obj) {
-        return equals(obj) || obj instanceof IntType;
+        return equals(obj) || obj instanceof SignedIntType;
     }
 }

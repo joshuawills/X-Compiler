@@ -1,8 +1,8 @@
 // Attempted reassignment of array
 
-let mut x: int[] = [1, 2, 3];
+let mut x: i64[] = [1, 2, 3];
 
-fn main() -> int {
+fn main() -> i64 {
 
     x = [2, 3, 4];
 

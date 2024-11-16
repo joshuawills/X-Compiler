@@ -58,7 +58,7 @@ public interface Visitor {
 
     Object visitIntLiteral(IntLiteral ast, Object o);
 
-    Object visitIntType(IntType ast, Object o);
+    Object visitIntType(SignedIntType ast, Object o);
 
     Object visitArgList(Args ast, Object o);
 

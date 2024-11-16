@@ -350,13 +350,13 @@ public class Checker implements Visitor {
         PointerType voidPointerType = new PointerType(dummyPos, anyType);
         Environment.booleanType = new BooleanType(dummyPos);
         Environment.charType= new CharType(dummyPos);
-        Environment.intType = new IntType(dummyPos);
+        Environment.i64Type = new SignedIntType(dummyPos, "i64");
         Environment.floatType = new FloatType(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
         Environment.errorType = new ErrorType(dummyPos);
         Environment.charPointerType = new PointerType(dummyPos, Environment.charType);
         Environment.outInt = stdFunction(Environment.voidType, "outInt", new ParaList(
-                new ParaDecl(Environment.intType, i, dummyPos, false),
+                new ParaDecl(Environment.i64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.outChar = stdFunction(Environment.voidType, "outChar", new ParaList(
@@ -372,7 +372,7 @@ public class Checker implements Visitor {
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.malloc = stdFunction(voidPointerType, "malloc", new ParaList(
-                new ParaDecl(Environment.intType, i, dummyPos, false),
+                new ParaDecl(Environment.i64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.free = stdFunction(Environment.voidType, "free", new ParaList(
@@ -507,24 +507,25 @@ public class Checker implements Visitor {
         }
     }
 
-    private Object visitVarDecl(Decl ast, Type T, Ident I, Expr E) {
+    private Object visitVarDecl(Decl ast, Type existingType, Ident I, Expr E) {
         checkMurking(ast);
-        T = ast.T;
+        existingType = ast.T;
+        System.out.println(existingType);
 
         declareVariable(ast.I, ast);
 
-        if (T.isVoid()) {
+        if (existingType.isVoid()) {
             handler.reportError(errors[3] + ": %", ast.I.spelling, ast.T.pos);
-            T = Environment.errorType;
-            return T;
+            existingType = Environment.errorType;
+            return existingType;
         }
 
-        if (T.isArray()) {
-            Type iT = ((ArrayType) T).t;
+        if (existingType.isArray()) {
+            Type iT = ((ArrayType) existingType).t;
             if (iT.isVoid()) {
                 handler.reportError(errors[30] + ": %", ast.I.spelling, ast.T.pos);
-                T = Environment.errorType;
-                return T;
+                existingType = Environment.errorType;
+                return existingType;
             }
         }
 
@@ -535,14 +536,14 @@ public class Checker implements Visitor {
 
             if (ast.T.isUnknown()) {
                 handler.reportError(errors[44] + ": %", ast.I.spelling, ast.I.pos);
-                T = Environment.errorType;
+                existingType = Environment.errorType;
             }
 
-            if (T.isArray() && ((ArrayType) T).length == -1) {
+            if (existingType.isArray() && ((ArrayType) existingType).length == -1) {
                 handler.reportError(errors[34] + ": %", ast.I.spelling, ast.T.pos);
-                T = Environment.errorType;
+                existingType = Environment.errorType;
             }
-            return T;
+            return existingType;
         }
 
         Type returnType = null;
@@ -568,7 +569,7 @@ public class Checker implements Visitor {
         if (E.isCallExpr()) {
             CallExpr CE = (CallExpr) E;
             if (CE.I.spelling.equals("malloc")) {
-                E.type = T;
+                E.type = existingType;
             }
         }
 
@@ -582,11 +583,11 @@ public class Checker implements Visitor {
            return ast.T;
         }
 
-        if (returnType != null && !T.assignable(returnType) && !returnType.isError()) {
-            String message = "expected " + T + ", received " + returnType;
+        if (returnType != null && !existingType.assignable(returnType) && !returnType.isError()) {
+            String message = "expected " + existingType + ", received " + returnType;
             handler.reportError(errors[5] + ": %", message, E.pos);
-            T = Environment.errorType;
-            return T;
+            existingType = Environment.errorType;
+            return existingType;
         }
 
         // May need to cast
@@ -596,7 +597,7 @@ public class Checker implements Visitor {
         } else if (ast instanceof GlobalVar V) {
             V.E = e2AST;
         }
-        return T;
+        return existingType;
     }
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
@@ -608,15 +609,15 @@ public class Checker implements Visitor {
         }
 
         // TODO: fix this, so lazy
-        if (expectedT instanceof CharType && expr.type instanceof IntType) {
+        if (expectedT instanceof CharType && expr.type instanceof SignedIntType) {
             CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
             E.type = expectedT;
             return E;
-        } else if (expectedT instanceof IntType && expr.type instanceof CharType) {
+        } else if (expectedT instanceof SignedIntType && expr.type instanceof CharType) {
             CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
             E.type = expectedT;
             return E;
-        } else if (expectedT instanceof IntType && expr.type instanceof EnumType) {
+        } else if (expectedT instanceof SignedIntType && expr.type instanceof EnumType) {
             return expr;
         }
         // End TODO
@@ -936,17 +937,17 @@ public class Checker implements Visitor {
         } else if (t1.isChar() && t2.isInt()) {
             ast.O.spelling = "i" + ast.O.spelling;
             ast.E1 = new CastExpr(ast.E1, t1, t2, ast.E1.pos, ast);
-            ast.type = Environment.intType;
+            ast.type = Environment.i64Type;
             return ast.type;
         } else if (t1.isInt() && t2.isChar()) {
             ast.O.spelling = "i" + ast.O.spelling;
             ast.E2= new CastExpr(ast.E2, t2, t1, ast.E2.pos, ast);
-            ast.type = Environment.intType;
+            ast.type = Environment.i64Type;
             return ast.type;
         }
         if (t1.isInt() && t2.isInt()) {
             ast.O.spelling = "i" + ast.O.spelling;
-            ast.type = Environment.intType;
+            ast.type = Environment.i64Type;
         } else if (t1.isInt() && t2.isFloat()) {
             ast.O.spelling = "f" + ast.O.spelling;
             ast.type = Environment.floatType;
@@ -1082,16 +1083,16 @@ public class Checker implements Visitor {
     }
 
     public Object visitIntExpr(IntExpr ast, Object o) {
-        ast.type = Environment.intType;
+        ast.type = Environment.i64Type;
         return ast.type;
     }
 
     public Object visitIntLiteral(IntLiteral ast, Object o) {
-        return Environment.intType;
+        return Environment.i64Type;
     }
 
-    public Object visitIntType(IntType ast, Object o) {
-        return Environment.intType;
+    public Object visitIntType(SignedIntType ast, Object o) {
+        return Environment.i64Type;
     }
 
     public Object visitArgList(Args ast, Object o) {
@@ -1214,7 +1215,7 @@ public class Checker implements Visitor {
             handler.reportError(errors[24] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         } else if (ast.I.spelling.equals("$")) {
-            return Environment.intType;
+            return Environment.i64Type;
         }
 
         Decl decl = idTable.retrieve(ast.I.spelling);

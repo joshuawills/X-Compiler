@@ -1,10 +1,10 @@
 // Struct values are correctly duplicated
 
 struct A -> {
-	mut v: int
+	mut v: i64
 }
 
-fn main() -> int {
+fn main() -> i64 {
 	let mut b = A { 2 };
 	let mut v = b;
 	b.v = 3;

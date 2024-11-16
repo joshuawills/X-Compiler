@@ -1,7 +1,7 @@
 // Array in struct definition must have size defined
 
 struct ArrayWrapper -> {
-    array: int[]
+    array: i64[]
 }
 
-fn main() -> int {}
+fn main() -> i64 {}

@@ -1,6 +1,6 @@
 // Statements not reached
 
-fn main() -> int {
+fn main() -> i64 {
     if true {
         return 1;
         outInt(2);

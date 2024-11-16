@@ -1,8 +1,8 @@
 // Can use malloc and free
 
-fn main() -> int {
+fn main() -> i64 {
 
-	let x: int* = malloc(size(int));
+	let x: i64* = malloc(size(i64));
 
 	let y: char* = malloc(8 * size(char));
 

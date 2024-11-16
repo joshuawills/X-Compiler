@@ -1,14 +1,14 @@
 // Swap POINTERS
 
-fn swap(mut a: int*, mut b: int*) -> void {
-    let temp: int = *a;
+fn swap(mut a: i64*, mut b: i64*) -> void {
+    let temp: i64 = *a;
     *a = *b;
     *b = temp;
 }
 
-fn main() -> int {
-    let mut a: int = 2;
-    let mut b: int = 3;
+fn main() -> i64 {
+    let mut a: i64 = 2;
+    let mut b: i64 = 3;
     swap(&a, &b);
     outInt(a);
     outInt(b);

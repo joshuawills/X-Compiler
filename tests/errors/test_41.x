@@ -2,6 +2,6 @@
 
 enum Boolean -> { TRUE, FALSE }
 
-fn main() -> int {
+fn main() -> i64 {
     let x: Boolean = Boolean.MAYBE;
 }

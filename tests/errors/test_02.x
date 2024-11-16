@@ -1,6 +1,6 @@
 // Identifier redeclared
 
-let x: int = 21;
-let x: int = 21;
+let x: i64 = 21;
+let x: i64 = 21;
 
-fn main() -> int {}
+fn main() -> i64 {}

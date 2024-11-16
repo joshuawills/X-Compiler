@@ -242,7 +242,7 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitIntType(IntType ast, Object o) {
+    public Object visitIntType(SignedIntType ast, Object o) {
         return null;
     }
 
@@ -321,7 +321,7 @@ public class Evaluator implements Visitor {
     }
 
     public String TypeMapping(Type t) {
-        if (t instanceof IntType) {
+        if (t instanceof SignedIntType) {
             return LLVM.INT_TYPE;
         } else if (t instanceof BooleanType) {
             return LLVM.BOOL_TYPE;

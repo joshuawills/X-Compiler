@@ -1,9 +1,9 @@
-fn main() -> int {
-    let x: int = 5;
+fn main() -> i64 {
+    let x: i64 = 5;
     outInt(factorial(x));
 }
 
-fn factorial(x: int) -> int {
+fn factorial(x: i64) -> i64 {
     if x <= 1 {
         return 1;
     }

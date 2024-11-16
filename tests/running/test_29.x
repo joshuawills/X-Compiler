@@ -2,7 +2,7 @@
 
 import "../../lib/math.x" as Math;
 
-fn main() -> int {
+fn main() -> i64 {
 
         let mut val = Math::Boolean.TRUE;
 

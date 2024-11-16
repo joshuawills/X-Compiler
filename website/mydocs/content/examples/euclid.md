@@ -4,7 +4,7 @@ weight: 1
 ---
 
 ```Rust
-fn main() -> int {
+fn main() -> i64 {
 
     let x = 6;
     let y = 2;
@@ -13,7 +13,7 @@ fn main() -> int {
     return 0;
 }
 
-fn euclid(x: int, y: int) -> int {
+fn euclid(x: i64, y: i64) -> i64 {
     if x == 0 {
         return y;
     }

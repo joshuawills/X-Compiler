@@ -1,9 +1,9 @@
 // Missing return statement
 
-fn foo(x: int) -> int {
+fn foo(x: i64) -> i64 {
 
 }
 
-fn main() -> int {
+fn main() -> i64 {
     foo(2);
 }

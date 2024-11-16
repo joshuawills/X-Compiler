@@ -1,15 +1,15 @@
 export struct Vec2 -> {
-    mut x: int,
-    mut y: int
+    mut x: i64,
+    mut y: i64
 }
 
 export enum Boolean -> {
 	TRUE, FALSE
 }
 
-export let Zero: int = 0;
+export let Zero: i64 = 0;
 
-export fn add(x: int, y: int) -> int {
+export fn add(x: i64, y: i64) -> i64 {
     return x + y;
 }
 

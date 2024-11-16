@@ -33,6 +33,6 @@ public class FloatType extends Type {
         if (obj instanceof ErrorType) {
             return true;
         }
-        return obj instanceof IntType || obj instanceof FloatType || obj instanceof CharType;
+        return obj instanceof SignedIntType || obj instanceof FloatType || obj instanceof CharType;
     }
 }

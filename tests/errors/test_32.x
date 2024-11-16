@@ -4,11 +4,11 @@ fn foo() -> void {
 
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     foo[0] = 19;
 
-    let mut x: int = 21;
+    let mut x: i64 = 21;
 
     x[2] = 19;
 

@@ -2,6 +2,6 @@
 
 enum Boolean -> { TRUE, FALSE }
 
-fn main() -> int {
+fn main() -> i64 {
     return 0;
 }

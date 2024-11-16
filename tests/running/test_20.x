@@ -1,7 +1,7 @@
 // Nested struct accesses with primitive types
 
 struct IntBox -> {
-    val: int
+    val: i64
 }
 
 struct BoxOfMany -> {
@@ -9,7 +9,7 @@ struct BoxOfMany -> {
     val3: bool
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     let a = IntBox { 3 };
     let b = BoxOfMany { a, 2 == 3 };

@@ -2,10 +2,13 @@ package X.Nodes;
 
 import X.Lexer.Position;
 
-public class IntType extends Type {
+public class SignedIntType extends Type {
 
-    public IntType(Position pos) {
+    public String value;
+
+    public SignedIntType(Position pos, String valueAST) {
         super(pos);
+        value = valueAST;
     }
 
     public Object visit(Visitor v, Object o) {
@@ -16,7 +19,7 @@ public class IntType extends Type {
         if (obj instanceof ErrorType) {
             return true;
         } else {
-            return obj instanceof IntType;
+            return obj instanceof SignedIntType;
         }
     }
 

@@ -19,7 +19,7 @@ public abstract class Type extends AST {
     }
 
     public boolean isInt() {
-        return (this instanceof IntType || this instanceof CharType || this instanceof EnumType);
+        return (this instanceof SignedIntType || this instanceof CharType || this instanceof EnumType);
     }
 
     public boolean isFloat() {

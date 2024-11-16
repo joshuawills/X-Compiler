@@ -5,7 +5,7 @@ fn doSomething() -> bool {
     return true;
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     if true && true {
         outInt(1);

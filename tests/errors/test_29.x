@@ -1,8 +1,8 @@
 // Inappropriate dereference of variable
 
-fn main() -> int {
+fn main() -> i64 {
 
-    let mut x: int = 2;
+    let mut x: i64 = 2;
 
     *x = 21;
 }

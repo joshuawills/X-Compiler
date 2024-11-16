@@ -1,6 +1,6 @@
 // Testing if-else constructs
 
-fn main() -> int {
+fn main() -> i64 {
 
     if (true) {
         outInt(-2);

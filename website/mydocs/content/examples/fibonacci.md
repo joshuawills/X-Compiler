@@ -4,17 +4,17 @@ weight: 1
 ---
 
 ```Rust
-fn main() -> int {
+fn main() -> i64 {
     let x = 9;
 	
     outInt(fib(x));
 }
 
 
-fn fib(x: int) -> int {
+fn fib(x: i64) -> i64 {
     let mut f1 = 0;
     let mut f2 = 1;
-    let mut fi: int;
+    let mut fi: i64;
 	
     if x == 0 || x == 1 { 
         return x; 

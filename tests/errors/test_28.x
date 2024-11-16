@@ -1,9 +1,9 @@
 // Can't deref a constant
 
-let x: int = -1;
+let x: i64 = -1;
 
-fn main() -> int {
+fn main() -> i64 {
 
-    let y: int* = &x;
+    let y: i64* = &x;
 
 }

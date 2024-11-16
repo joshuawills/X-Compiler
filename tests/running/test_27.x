@@ -2,7 +2,7 @@
 
 import "../../lib/math.x" as math;
 
-fn main() -> int {
+fn main() -> i64 {
     outInt(math::add(1, 2));
 
     outInt(math::Zero);

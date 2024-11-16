@@ -1,7 +1,7 @@
 // Attempt to use a function as a scalar
 
-fn foo() -> int { return 0; }
+fn foo() -> i64 { return 0; }
 
-fn main() -> int {
-    let x: int = foo;
+fn main() -> i64 {
+    let x: i64 = foo;
 }

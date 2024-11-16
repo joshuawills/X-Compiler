@@ -1,15 +1,15 @@
 // Structs and functions!
 
 struct Data -> {
-    x: int,
-    y: int
+    x: i64,
+    y: i64
 }
 
 fn foo(x: Data) -> void {}
 
 fn fooP(x: Data*) -> void {}
 
-fn main() -> int {
+fn main() -> i64 {
 
     let mut y = Data { 2, 3 };
     foo(y);

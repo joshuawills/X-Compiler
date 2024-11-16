@@ -1,11 +1,11 @@
 // Simple struct accesses, no nesting
 
 struct Box -> {
-    num: int,
+    num: i64,
     cond: bool
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     let var = Box { 2, false };
 

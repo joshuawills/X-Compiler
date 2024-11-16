@@ -1,6 +1,6 @@
 // super simple: printing 0
 
-fn main() -> int {
+fn main() -> i64 {
     outInt(2);
     return 0;
 }

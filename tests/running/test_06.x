@@ -1,10 +1,10 @@
 // Logging global arrays, mutating them
 
-let x: int[] = [1, 19, 9];
+let x: i64[] = [1, 19, 9];
 let x1: bool[] = [true, false, true];
 let mut x2: char[] = ['a', 'b', 'c'];
 
-fn main() -> int {
+fn main() -> i64 {
 
     loop i in 3 {
         outInt(x[i]);

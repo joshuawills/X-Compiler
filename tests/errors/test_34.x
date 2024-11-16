@@ -1,5 +1,5 @@
 // Unknown array size at compile time
 
-let x: int[];
+let x: i64[];
 
-fn main() -> int {}
+fn main() -> i64 {}

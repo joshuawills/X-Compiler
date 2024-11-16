@@ -1,6 +1,6 @@
 // Break must be in a loop construction
 
-fn main() -> int {
+fn main() -> i64 {
 
     break;
 

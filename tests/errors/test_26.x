@@ -1,6 +1,6 @@
 // Do while conditional is not boolean
 
-fn main() -> int {
+fn main() -> i64 {
 
     do {
 

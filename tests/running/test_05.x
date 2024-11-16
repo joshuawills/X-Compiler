@@ -1,7 +1,7 @@
 // Global variables
 
-let x: int = 21;
-let mut x1: int = 19;
+let x: i64 = 21;
+let mut x1: i64 = 19;
 
 let y: char = 'a';
 let mut y1: char = '&';
@@ -9,11 +9,11 @@ let mut y1: char = '&';
 let z: bool = false;
 let mut z1: bool = true;
 
-let mut aA: int[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+let mut aA: i64[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 let mut aB: bool[] = [true, false, true, false];
 let mut aC: char[] = ['a', 'b', 'c', 'd'];
 
-fn main() -> int {
+fn main() -> i64 {
     outInt(x); // 20
     outInt(x1); // 19
     x1 += 1;

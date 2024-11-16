@@ -1,6 +1,6 @@
 // Floats works now
 
-fn main() -> int {
+fn main() -> i64 {
 
 	let mut x = 0.1;
 

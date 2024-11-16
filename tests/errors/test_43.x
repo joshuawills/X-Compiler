@@ -4,11 +4,11 @@ fn foo() -> void {
 
 }
 
-fn bar(a: int) -> int {
+fn bar(a: i64) -> i64 {
     return 0;
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     foo(2);
     bar();

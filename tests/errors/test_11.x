@@ -1,6 +1,6 @@
 // If conditional is not boolean
 
-fn main() -> int {
+fn main() -> i64 {
 
     if 1 {
         outInt(1);

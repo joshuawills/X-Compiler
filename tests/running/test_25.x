@@ -1,6 +1,6 @@
 // Redeclaring char*
 
-fn main() -> int {
+fn main() -> i64 {
     let mut val = "hello, world\n";
 
     outStr(val);

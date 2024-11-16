@@ -1,9 +1,9 @@
 // operator precedence and maths
 
-fn main() -> int {
+fn main() -> i64 {
 
-    let x: int = 19;
-    let y: int = 21;
+    let x: i64 = 19;
+    let y: i64 = 21;
 
     outInt(2 + x - 19);
     outInt(19 * y % x);

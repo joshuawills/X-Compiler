@@ -1,8 +1,8 @@
 // Attempt to reference a scalar as a function
 
-fn main() -> int {
+fn main() -> i64 {
 
-    let x: int = 21;
-    let y: int = x();
+    let x: i64 = 21;
+    let y: i64 = x();
 
 }

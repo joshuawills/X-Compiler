@@ -2,7 +2,7 @@
 
 enum Boolean -> { TRUE, FALSE }
 
-fn main() -> int {
+fn main() -> i64 {
 
     let what = Boolean.TRUE.a;
 

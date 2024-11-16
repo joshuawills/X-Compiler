@@ -1,9 +1,9 @@
 // Invalid unary operator
 
-fn main() -> int
+fn main() -> i64
 {
 
-    let x: int = !1;
+    let x: i64 = !1;
     let haha: bool = -true;
 
 }

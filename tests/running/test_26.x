@@ -1,13 +1,13 @@
 // Testing size of
 
-struct A -> { b: int, c: bool}
+struct A -> { b: i64, c: bool}
 
-fn main() -> int {
+fn main() -> i64 {
 	
 	let a = A { 2, false };
 
 	outInt(size(char*));
-	outInt(size(int));
+	outInt(size(i64));
 	outInt(size(bool));
 	outInt(size(float));
 

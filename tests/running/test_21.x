@@ -1,25 +1,25 @@
 // declaring sub structs in place
 
 struct IntBox -> {
-	val: int
+	val: i64
 }
 
 struct BasicStruct -> {
     x: IntBox,
-    y: int
+    y: i64
 }
 
 struct IntBox2 -> {
-    val: int,
-    val2: int
+    val: i64,
+    val2: i64
 }
 
 struct BasicStruct2 -> {
     x: IntBox2,
-    y: int
+    y: i64
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     let y = BasicStruct { IntBox { 2 }, 3 };
 

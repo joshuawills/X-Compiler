@@ -1,6 +1,6 @@
 // Loop iterators are not integers
 
-fn main() -> int {
+fn main() -> i64 {
 
     loop i in true {
 

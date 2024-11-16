@@ -1,7 +1,7 @@
-fn main() -> int {
+fn main() -> i64 {
 
-    let x: int = 6;
-    let y: int = 2;
+    let x: i64 = 6;
+    let y: i64 = 2;
 
     if x <= 0 || y <= 0 {
         return 1;
@@ -11,7 +11,7 @@ fn main() -> int {
     return 0;
 }
 
-fn euclid(x: int, y: int) -> int {
+fn euclid(x: i64, y: i64) -> i64 {
     if x == 0 {
         return y;
     }

@@ -1,9 +1,9 @@
 // inappropriate use of the '$' operator
 
 
-fn main() -> int {
+fn main() -> i64 {
 
-    let $: int = 21;
+    let $: i64 = 21;
 
 
     loop i in 10 {

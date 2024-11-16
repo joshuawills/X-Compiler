@@ -2,7 +2,7 @@
 
 fn foo() -> void {}
 
-fn main() -> int {
+fn main() -> i64 {
     let mut x = 21;
     19 = 21;
 

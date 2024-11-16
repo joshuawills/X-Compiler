@@ -1,14 +1,14 @@
 // Invalid struct accesses on immutable fields
 
 struct A -> {
-    x: int 
+    x: i64 
 }
 
 struct B -> {
     mut c: A
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
     let mut val = A { 3 };
 

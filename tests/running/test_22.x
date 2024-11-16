@@ -1,14 +1,14 @@
 // Can succesfully instantiate an array of structs
 
 struct A -> {
-	v: int
+	v: i64
 }
 
 struct B -> {
-	x: int[10]
+	x: i64[10]
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
 	let a: A[2] = [
 		A { 2 },

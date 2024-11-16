@@ -1,10 +1,10 @@
 // Duplicable struct members
 
 struct Data -> {
-    x: int,
+    x: i64,
     x: char*
 }
 
-fn main() -> int {
+fn main() -> i64 {
 
 }

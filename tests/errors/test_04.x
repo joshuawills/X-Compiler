@@ -1,5 +1,5 @@
 // Identifier undeclared
 
-fn main() -> int {
-    let x: int = y;
+fn main() -> i64 {
+    let x: i64 = y;
 }

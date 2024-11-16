@@ -1,9 +1,9 @@
 // Attempt to use an array as a scalar
 
-let array: int[] = [1, 2, 3, 4, 5, 6];
+let array: i64[] = [1, 2, 3, 4, 5, 6];
 
-fn main() -> int {
+fn main() -> i64 {
 
-    let x: int = array;
+    let x: i64 = array;
 
 }

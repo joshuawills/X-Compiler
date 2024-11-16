@@ -2,6 +2,6 @@
 
 enum Letters -> { A, A, B }
 
-fn main() -> int {
+fn main() -> i64 {
 
 }

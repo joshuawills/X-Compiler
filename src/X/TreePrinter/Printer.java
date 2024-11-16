@@ -363,7 +363,7 @@ public class Printer implements Visitor {
     }
 
     @Override
-    public Object visitIntType(IntType ast, Object o) {
+    public Object visitIntType(SignedIntType ast, Object o) {
         print(indentString() + "int");
         return null;
     }

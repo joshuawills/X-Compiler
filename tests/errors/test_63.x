@@ -1,6 +1,6 @@
 // Alias does not exist for module access
 
-fn main() -> int {
+fn main() -> i64 {
 
     let x = Math::add(1, 2);
 

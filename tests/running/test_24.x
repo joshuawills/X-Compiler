@@ -1,6 +1,6 @@
 // Hello world
 
-fn main() -> int {
+fn main() -> i64 {
 
     let x = "hello, world!\n";
     outStr(x);

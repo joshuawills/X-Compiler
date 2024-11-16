@@ -1,7 +1,7 @@
 // Identifier declared void[]
 
 
-fn main() -> int {
+fn main() -> i64 {
 
     let x: void[];
 }

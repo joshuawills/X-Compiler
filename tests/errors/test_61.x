@@ -5,4 +5,4 @@ import "haha/what.x" as What;
 import "../../lib/math.x" as Math;
 
 
-fn main() -> int { return 0; }
+fn main() -> i64 { return 0; }

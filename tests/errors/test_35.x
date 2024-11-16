@@ -1,8 +1,8 @@
 // Excess elements in array initialiser
 
-let x: int[2] = [1, 2, 3, 4];
+let x: i64[2] = [1, 2, 3, 4];
 
-fn main() -> int {
+fn main() -> i64 {
 
     let y: char[1] = ['a', 'b'];
 
