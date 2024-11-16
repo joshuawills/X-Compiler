@@ -510,7 +510,6 @@ public class Checker implements Visitor {
     private Object visitVarDecl(Decl ast, Type existingType, Ident I, Expr E) {
         checkMurking(ast);
         existingType = ast.T;
-        System.out.println(existingType);
 
         declareVariable(ast.I, ast);
 
