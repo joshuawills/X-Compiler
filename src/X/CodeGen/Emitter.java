@@ -1686,9 +1686,9 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         int size = -1;
 
-        if (t.isI64() || t.isEnum() || t.isF32()) {
+        if (t.isI64() || t.isEnum() || t.isF64()) {
             size = 8;
-        } else if (t.isF32()) {
+        } else if (t.isF32() || t.isI32()) {
             size = 4;
         }else if (t.isI8() || t.isBoolean()) {
             size = 1;
