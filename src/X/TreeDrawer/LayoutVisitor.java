@@ -101,7 +101,7 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("DoWhileStmt", ast.S, ast.E);
     }
 
-    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+    public Object visitDecimalLiteral(DecimalLiteral ast, Object o) {
         return layoutNullary(ast.spelling);
     }
 
@@ -109,8 +109,20 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("f32");
     }
 
-    public Object visitFloatExpr(FloatExpr ast, Object o) {
-        return layoutUnary("FloatExp", ast.FL);
+    public Object visitF64Type(F64Type ast, Object o) {
+        return layoutNullary("f64");
+    }
+
+    public Object visitF32Expr(F32Expr ast, Object o) {
+        return layoutUnary("F32Expr", ast.DL);
+    }
+
+    public Object visitF64Expr(F64Expr ast, Object o) {
+        return layoutUnary("F64Expr", ast.DL);
+    }
+
+    public Object visitDecimalExpr(DecimalExpr ast, Object o) {
+        return layoutUnary("DecimalExpr", ast.DL);
     }
 
     public Object visitPointerType(PointerType ast, Object o) {

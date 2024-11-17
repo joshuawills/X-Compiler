@@ -591,6 +591,10 @@ public class Parser {
                 accept();
                 yield new F32Type(pos);
             }
+            case "f64" -> {
+                accept();
+                yield new F64Type(pos);
+            }
             case "bool" -> {
                 accept();
                 yield new BooleanType(pos);
@@ -906,9 +910,9 @@ public class Parser {
                 yield new IntExpr(ilAST, pos);
             }
             case FLOAT_LIT -> {
-                FloatLiteral flAST = parseFloatLiteral();
+                DecimalLiteral flAST = parseDecimalLiteral();
                 finish(pos);
-                yield new FloatExpr(flAST, pos);
+                yield new DecimalExpr(flAST, pos);
             }
             case BOOL_LIT -> {
                 BooleanLiteral blAST = parseBooleanLiteral();
@@ -944,12 +948,12 @@ public class Parser {
         };
     }
 
-    private FloatLiteral parseFloatLiteral() throws SyntaxError {
-        FloatLiteral FL = null;
+    private DecimalLiteral parseDecimalLiteral() throws SyntaxError {
+        DecimalLiteral FL = null;
         if (currentToken.kind == TokenType.FLOAT_LIT) {
             String spelling = currentToken.lexeme;
             accept();
-            FL = new FloatLiteral(spelling, previousPosition);
+            FL = new DecimalLiteral(spelling, previousPosition);
         } else {
             syntacticError("integer literal expected here", "");
         }

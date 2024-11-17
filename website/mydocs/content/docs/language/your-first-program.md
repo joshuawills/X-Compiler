@@ -97,7 +97,7 @@ fn main() -> i64 {
 
 ### Types
 
-At the moment, X supports several different base types. They are `i64`, `float`, `i8` and `bool`.
+At the moment, X supports several different base types. They are `i64`, `i32`, `i8`, `f32`, `f64` and `bool`.
 Implicit type casting will occur from integers to floats, and between integers and characters. Any 
 other attempt to assign one type to another will currently fail, and explicit type casting is not 
 currently supported. Statically-sized arrays are also supported, as well as enums. Some examples of
@@ -312,11 +312,13 @@ choice as such operators are not necessary and can cause confusion.
 
 Although quite primitive, we have some basic IO functions as a standard library.
 
-`outInt` takes in an integer and prints it to stdout, followed by a newline.
+`outI64` takes in an integer and prints it to stdout, followed by a newline.
 
 `outChar` takes in a character and prints it to stdout, followed by a newline.
 
-`outFloat` takes in a float and prints it to stdout, followed by a newline.
+`outF32` takes in a float and prints it to stdout, followed by a newline.
+
+`outF64` takes in a double and prints it to stdout, followed by a newline.
 
 `outStr` takes in a string constant and prints it to stdout.
 

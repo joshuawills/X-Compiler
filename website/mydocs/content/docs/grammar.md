@@ -86,7 +86,7 @@ stmt})? \\
 \textit{arg} &\to \textbf{mut}? \textit{ ident } \text{ ":" } \textit{ type}\\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
-\textit{type} &\to \textbf{ident | char | int | str | void | bool | float | \textit{type}* | \textit{type}[\textit{INTLITERAL}] } \\
+\textit{type} &\to \textbf{ident | i8 | i32 | i64 | str | void | bool | f32 | f64 | \textit{type}* | \textit{type}[\textit{INTLITERAL}] } \\
 
 \textit{INTLITERAL} &\to [0-9]+ \\
 \textit{FLOATLITERAL} &\to [0-9]^+\textit{"."}[0-9]? \\

@@ -246,6 +246,10 @@ public class Evaluator implements Visitor {
         return Integer.parseInt(ast.IL.spelling);
     }
 
+    public Object visitDecimalExpr(DecimalExpr ast, Object o) {
+        return Float.parseFloat(ast.DL.spelling);
+    }
+
     public Object visitIntLiteral(IntLiteral ast, Object o) {
         return null;
     }
@@ -310,7 +314,7 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+    public Object visitDecimalLiteral(DecimalLiteral ast, Object o) {
         return null;
     }
 
@@ -318,8 +322,16 @@ public class Evaluator implements Visitor {
        return null;
     }
 
-    public Object visitFloatExpr(FloatExpr ast, Object o) {
-        return Float.parseFloat(ast.FL.spelling);
+    public Object visitF64Type(F64Type ast, Object o) {
+        return null;
+    }
+
+    public Object visitF32Expr(F32Expr ast, Object o) {
+        return Float.parseFloat(ast.DL.spelling);
+    }
+
+    public Object visitF64Expr(F64Expr ast, Object o) {
+        return Double.parseDouble(ast.DL.spelling);
     }
 
     public Object visitPointerType(PointerType ast, Object o) {

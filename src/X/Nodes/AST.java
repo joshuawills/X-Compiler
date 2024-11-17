@@ -111,4 +111,12 @@ public abstract class AST {
         return this instanceof IntExpr;
     }
 
+    public boolean isDecimalExpr() {
+        return this instanceof DecimalExpr;
+    }
+    
+    public boolean isIntOrDecimalExpr() {
+        return this instanceof IntExpr || this instanceof DecimalExpr;
+    }
+
 }

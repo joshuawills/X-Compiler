@@ -131,7 +131,7 @@ public class Checker implements Visitor {
 
     private String currentFileName;
 
-    private String[] intPriority = {"I8", "I32", "I64", "F32"}; // Later ones take priority
+    private String[] numPriority = {"I8", "I32", "I64", "F32", "F64"}; // Later ones take priority
 
     public ArrayList<Module> check(AST ast, String filename, boolean isMain) {
 
@@ -353,27 +353,32 @@ public class Checker implements Visitor {
         AnyType anyType = new AnyType(dummyPos);
         PointerType voidPointerType = new PointerType(dummyPos, anyType);
         Environment.booleanType = new BooleanType(dummyPos);
-        Environment.charType= new I8Type(dummyPos);
+        Environment.i8Type= new I8Type(dummyPos);
         Environment.i64Type = new I64Type(dummyPos);
         Environment.i32Type = new I32Type(dummyPos);
-        Environment.floatType = new F32Type(dummyPos);
+        Environment.f32Type = new F32Type(dummyPos);
+        Environment.f64Type = new F64Type(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
         Environment.errorType = new ErrorType(dummyPos);
-        Environment.charPointerType = new PointerType(dummyPos, Environment.charType);
+        Environment.charPointerType = new PointerType(dummyPos, Environment.i8Type);
         Environment.outI64 = stdFunction(Environment.voidType, "outI64", new ParaList(
                 new ParaDecl(Environment.i64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.outChar = stdFunction(Environment.voidType, "outChar", new ParaList(
-                new ParaDecl(Environment.charType, i, dummyPos, false),
+                new ParaDecl(Environment.i8Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
-        Environment.outStr= stdFunction(Environment.voidType, "outStr", new ParaList(
+        Environment.outStr = stdFunction(Environment.voidType, "outStr", new ParaList(
                 new ParaDecl(Environment.charPointerType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
-        Environment.outFloat = stdFunction(Environment.voidType, "outFloat", new ParaList(
-                new ParaDecl(Environment.floatType, i, dummyPos, false),
+        Environment.outF32 = stdFunction(Environment.voidType, "outF32", new ParaList(
+                new ParaDecl(Environment.f32Type, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.outF64 = stdFunction(Environment.voidType, "outF64", new ParaList(
+                new ParaDecl(Environment.f64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
         Environment.malloc = stdFunction(voidPointerType, "malloc", new ParaList(
@@ -556,7 +561,7 @@ public class Checker implements Visitor {
             currentNumericalType = existingType;
         }
 
-        if (E.isDotExpr() || E.isIntExpr()) {
+        if (E.isDotExpr() || E.isIntOrDecimalExpr()) {
             try {
                 E = (Expr) E.visit(this, ast);
             } catch (Exception e) {
@@ -617,14 +622,30 @@ public class Checker implements Visitor {
             }
         }
 
+        if (expectedT.isNumeric() && expr.type.isNumeric()) {
+            if (expectedT.getMini().equals(expr.type.getMini())) {
+                return expr;
+            }
+            CastExpr E = null;
+            if (prioritiseIntTypes(expectedT, expr.type)) {
+                // This means that the expectedT is of higher priority
+                E = new CastExpr(expr, expr.type, expectedT, expr.pos, parent);
+            } else {
+                E = new CastExpr(expr, expectedT, expr.type, expr.pos, parent);
+            }
+            
+            E.visit(this, null);
+            return E;
+        }
+
         // TODO: fix this, so lazy
         if (expectedT instanceof I8Type && expr.type instanceof I64Type) {
             CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
-            E.type = expectedT;
+            E.visit(this, null);
             return E;
         } else if (expectedT instanceof I64Type && expr.type instanceof I8Type) {
             CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
-            E.type = expectedT;
+            E.visit(this, null);
             return E;
         } else if (expectedT instanceof I64Type && expr.type instanceof EnumType) {
             return expr;
@@ -646,7 +667,7 @@ public class Checker implements Visitor {
         } else {
             E = new CastExpr(expr, tFromAST, expectedT, expr.pos);
         }
-        E.type = expectedT;
+        E.visit(this, null);
         return E;
     }
 
@@ -696,7 +717,7 @@ public class Checker implements Visitor {
     public Object visitIfStmt(IfStmt ast, Object o) {
         Type condT;
         
-        if (ast.E.isDotExpr() || ast.E.isIntExpr()) {
+        if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
             Expr e1 = (Expr) ast.E.visit(this, ast);
             condT = e1.type;
         } else {
@@ -766,7 +787,7 @@ public class Checker implements Visitor {
 
     public Object visitWhileStmt(WhileStmt ast, Object o) {
         Type conditionType;
-        if (ast.E.isStructAccess() || ast.E.isIntExpr()) {
+        if (ast.E.isStructAccess() || ast.E.isIntOrDecimalExpr()) {
             ast.E = (Expr) ast.E.visit(this, ast);
             conditionType = ast.E.type;
         } else {
@@ -829,7 +850,7 @@ public class Checker implements Visitor {
             if (this.currentFunctionType.isNumeric()) {
                 currentNumericalType = this.currentFunctionType;
             }
-            if (ast.E.isDotExpr() || ast.E.isIntExpr()) {
+            if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
                 ast.E = (Expr) ast.E.visit(this, ast);
                 conditionType= ast.E.type;
             } else {
@@ -861,7 +882,7 @@ public class Checker implements Visitor {
         String t2 = T2.getMini();
         int i1 = -1, i2 = -1;
         int index = 0;
-        for (String s: intPriority) {
+        for (String s: numPriority) {
             if (s.equals(t1)) {
                 i1 = index;
             } else if (s.equals(t2)) {
@@ -879,13 +900,15 @@ public class Checker implements Visitor {
 
     private String getPrefix(Type T) {
         if (T.isI8()) {
-            return "c";
+            return "i8";
         } else if (T.isI32()) {
             return "i32";
         } else if (T.isI64() || T.isEnum()) {
             return "i64";
         } else if (T.isF32()) {
             return "f32";
+        } else if (T.isF64()) {
+            return "f64";
         } else if (T.isBoolean()) {
             return "b";
         }
@@ -896,22 +919,22 @@ public class Checker implements Visitor {
     public Object visitBinaryExpr(BinaryExpr ast, Object o) {
         ast.O.visit(this, ast);
         Type t1, t2;
-        if (ast.E1.isDotExpr() || ast.E1.isIntExpr()) {
+        if (ast.E1.isDotExpr() || ast.E1.isIntOrDecimalExpr()) {
             ast.E1 = (Expr) ast.E1.visit(this, o);
             t1 = ast.E1.type;
         } else {
             t1 = (Type) ast.E1.visit(this, o);
         }
 
-        if (ast.E2.isDotExpr() || ast.E2.isIntExpr()) {
+        if (ast.E2.isDotExpr() || ast.E2.isIntOrDecimalExpr()) {
             ast.E2 = (Expr) ast.E2.visit(this, o);
             t2 = ast.E2.type;
         } else {
             t2 = (Type) ast.E2.visit(this, o);
         }
 
-        boolean v1Numeric = t1.isI8() || t1.isI64() || t1.isI32() || t1.isF32() || t1.isEnum() || t1.isError();
-        boolean v2Numeric = t2.isI8() || t2.isI64() || t2.isI32() || t2.isF32() || t2.isEnum() || t2.isError();
+        boolean v1Numeric = t1.isNumeric() || t1.isEnum() || t1.isError();
+        boolean v2Numeric = t2.isNumeric() || t2.isEnum() || t2.isError();
 
         if (t1.isError() || t2.isError()) {
             ast.type = Environment.errorType;
@@ -998,7 +1021,7 @@ public class Checker implements Visitor {
     public Object visitUnaryExpr(UnaryExpr ast, Object o) {
         ast.O.visit(this, ast);
         Type eT;
-        if (ast.E.isDotExpr() || ast.E.isIntExpr()) {
+        if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
             ast.E = (Expr) ast.E.visit(this, o);
             eT = ast.E.type;
         } else {
@@ -1011,7 +1034,7 @@ public class Checker implements Visitor {
 
         switch (ast.O.spelling) {
             case "+", "-" -> {
-                if (!eT.isI64() && !eT.isF32() && !eT.isI8()) {
+                if (!eT.isNumeric()) {
                     handler.reportError(errors[8], "", ast.O.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -1119,14 +1142,40 @@ public class Checker implements Visitor {
     public Object visitIntExpr(IntExpr ast, Object o) {
         
         Expr E = null;
-        if (currentNumericalType == null || currentNumericalType.isI64()) {
+        if (currentNumericalType == null || currentNumericalType.isI64() || currentNumericalType.isFloat()) {
             E = new I64Expr(ast.IL, ast.pos);
         } else if (currentNumericalType.isI32()) {
             E = new I32Expr(ast.IL, ast.pos);
         } else if (currentNumericalType.isI8()) {
             Expr inner = new I64Expr(ast.IL, ast.pos);
             inner.visit(this, o);
-            E = new CastExpr(inner, inner.type, Environment.charType, dummyPos);
+            E = new CastExpr(inner, inner.type, Environment.i8Type, dummyPos);
+        }
+         
+        if (!E.isIntExpr()) {
+            E.visit(this, o);
+            E.parent = ast.parent;
+        } else {
+            E.type = Environment.i64Type;
+        }
+
+        if (currentNumericalType != null) {
+            E = checkCast(currentNumericalType, E, ast);
+        }
+
+        return E;
+    }
+
+    public Object visitDecimalExpr(DecimalExpr ast, Object o) {
+        
+        Expr E = null;
+        if (currentNumericalType == null || currentNumericalType.isF64()) {
+            E = new F64Expr(ast.DL, ast.pos);
+        } else if (currentNumericalType.isF32()) {
+            E = new F32Expr(ast.DL, ast.pos);
+        } else {
+            System.out.println("UNREACHABLE: VISIT DECIMAL EXPR");
+            return null;
         }
 
         E.parent = ast.parent;
@@ -1153,7 +1202,7 @@ public class Checker implements Visitor {
         if (expectedType.isNumeric()) {
             currentNumericalType = expectedType;
         }
-        if (ast.E.isDotExpr() || ast.E.isIntExpr()) {
+        if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
             ast.E = (Expr) ast.E.visit(this, o);
         }
         currentNumericalType = null;
@@ -1312,7 +1361,7 @@ public class Checker implements Visitor {
         ast.varName.ifPresent(localVar -> localVar.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter));
         validDollar = ast.varName.isEmpty();
         if (ast.I1.isPresent()) {
-            if (ast.I1.get().isDotExpr() || ast.I1.get().isIntExpr()) {
+            if (ast.I1.get().isDotExpr() || ast.I1.get().isIntOrDecimalExpr()) {
                 ast.I1 = Optional.of((Expr) ast.I1.get().visit(this, o));
                 T1 = ast.I1.get().type;
             } else {
@@ -1323,7 +1372,7 @@ public class Checker implements Visitor {
             }
         }
         if (ast.I2.isPresent()) {
-            if (ast.I2.get().isDotExpr() || ast.I2.get().isIntExpr()) {
+            if (ast.I2.get().isDotExpr() || ast.I2.get().isIntOrDecimalExpr()) {
                 ast.I2 = Optional.of((Expr) ast.I2.get().visit(this, o));
                 T2 = ast.I2.get().type;
             } else {
@@ -1359,16 +1408,25 @@ public class Checker implements Visitor {
         return null;
     }
 
-    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
-        return Environment.floatType;
+    public Object visitDecimalLiteral(DecimalLiteral ast, Object o) {
+        return Environment.f32Type;
     }
 
     public Object visitF32Type(F32Type ast, Object o) {
-        return Environment.floatType;
+        return Environment.f32Type;
     }
 
-    public Object visitFloatExpr(FloatExpr ast, Object o) {
-        ast.type = Environment.floatType;
+    public Object visitF64Type(F64Type ast, Object o) {
+        return Environment.f64Type;
+    }
+
+    public Object visitF32Expr(F32Expr ast, Object o) {
+        ast.type = Environment.f32Type;
+        return ast.type;
+    }
+
+    public Object visitF64Expr(F64Expr ast, Object o) {
+        ast.type = Environment.f64Type;
         return ast.type;
     }
 
@@ -1392,7 +1450,7 @@ public class Checker implements Visitor {
         int length = 0;
         Args args = (Args) ast.AL;
         Type T;
-        if (args.E.isDotExpr() || args.E.isIntExpr()) {
+        if (args.E.isDotExpr() || args.E.isIntOrDecimalExpr()) {
             args.E = (Expr) args.E.visit(this, o);
             T = args.E.type;
         } else {
@@ -1410,7 +1468,7 @@ public class Checker implements Visitor {
             if (T.isNumeric()) {
                 currentNumericalType = T;
             }
-            if (args.E.isDotExpr() || args.E.isIntExpr()) {
+            if (args.E.isDotExpr() || args.E.isIntOrDecimalExpr()) {
                 args.E = (Expr) args.E.visit(this, o);
                 t = args.E.type;
             } else {
@@ -1475,7 +1533,7 @@ public class Checker implements Visitor {
             if (iT.isNumeric()) {
                 currentNumericalType = iT;
             }
-            if (args.E.isDotExpr() || args.E.isIntExpr()) {
+            if (args.E.isDotExpr() || args.E.isIntOrDecimalExpr()) {
                 args.E = (Expr) args.E.visit(this, o);
                 t = args.E.type;
             } else {
@@ -1548,7 +1606,7 @@ public class Checker implements Visitor {
         // make sure that the index is of int type
         Type T;
         currentNumericalType = Environment.i32Type;
-        if (ast.index.isDotExpr() || ast.index.isIntExpr()) {
+        if (ast.index.isDotExpr() || ast.index.isIntOrDecimalExpr()) {
             ast.index = (Expr) ast.index.visit(this, o);
             T = ast.index.type;
         } else {
@@ -1570,11 +1628,11 @@ public class Checker implements Visitor {
     }
 
     public Object visitI8Type(I8Type ast, Object o) {
-        return Environment.charType;
+        return Environment.i8Type;
     }
 
     public Object visitCharLiteral(CharLiteral ast, Object o) {
-        return Environment.charType;
+        return Environment.i8Type;
     }
 
     public Object visitCharExpr(CharExpr ast, Object o) {
@@ -1584,7 +1642,7 @@ public class Checker implements Visitor {
             handler.reportMinorError(errors[38] + ": %", m, ast.CL.pos);
             return Environment.errorType;
         }
-        ast.type = Environment.charType;
+        ast.type = Environment.i8Type;
         return ast.type;
     }
 
@@ -1669,7 +1727,7 @@ public class Checker implements Visitor {
         while (!head.isEmptyArgList()) {
             Expr D = ((Args) head).E;
             Type t;
-            if (D.isDotExpr() || D.isIntExpr()) {
+            if (D.isDotExpr() || D.isIntOrDecimalExpr()) {
                 Expr E = (Expr) D.visit(this, o);
                 t = E.type;
             } else {
@@ -1759,7 +1817,7 @@ public class Checker implements Visitor {
                 return Environment.errorType;
             }
 
-            if (ast.arrayIndex.get().isDotExpr() || ast.arrayIndex.get().isIntExpr()) {
+            if (ast.arrayIndex.get().isDotExpr() || ast.arrayIndex.get().isIntOrDecimalExpr()) {
                 ast.arrayIndex = Optional.of((Expr) ast.arrayIndex.get().visit(this, o));
             } else {
                 ast.arrayIndex.get().visit(this, o);
@@ -1810,7 +1868,7 @@ public class Checker implements Visitor {
         if (expectedType.isNumeric()) {
             currentNumericalType = expectedType;
         }
-        if (ast.E.isDotExpr() || ast.E.isIntExpr()) {
+        if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
             ast.E = (Expr) ast.E.visit(this, o);
             realType = ast.E.type;
         } else {
@@ -1907,15 +1965,6 @@ public class Checker implements Visitor {
         }
 
         Type realType, expectedType;
-        declaringLocalVar = true;
-        if (ast.RHS.isDotExpr() || ast.RHS.isIntExpr()) {
-            ast.RHS = (Expr) ast.RHS.visit(this, o);
-            realType = ast.RHS.type;
-        } else {
-            realType = (Type) ast.RHS.visit(this, o);
-        }
-        declaringLocalVar = false;
-
         if (ast.LHS.isDotExpr()) {
             isStructLHS = true;
             ast.LHS = (Expr) ast.LHS.visit(this, o);
@@ -1927,6 +1976,19 @@ public class Checker implements Visitor {
         } else {
             expectedType = (Type) ast.LHS.visit(this, o);
         }
+
+        declaringLocalVar = true;
+        if (expectedType.isNumeric()) {
+            currentNumericalType = expectedType;
+        }
+        if (ast.RHS.isDotExpr() || ast.RHS.isIntOrDecimalExpr()) {
+            ast.RHS = (Expr) ast.RHS.visit(this, o);
+            realType = ast.RHS.type;
+        } else {
+            realType = (Type) ast.RHS.visit(this, o);
+        }
+        currentNumericalType = null;
+        declaringLocalVar = false;
 
         if (ast.RHS.isCallExpr()) {
             CallExpr CE = (CallExpr) ast.RHS;   
@@ -2065,7 +2127,7 @@ public class Checker implements Visitor {
                 Type indexType;
                 Type innerT = ((ArrayType) d.T).t;
                 currentNumericalType = Environment.i32Type;
-                if (ast.arrayIndex.get().isDotExpr() || ast.arrayIndex.get().isIntExpr()) {
+                if (ast.arrayIndex.get().isDotExpr() || ast.arrayIndex.get().isIntOrDecimalExpr()) {
                     Expr E2 = (Expr) ast.arrayIndex.get().visit(this, o);
                     ast.arrayIndex = Optional.of(E2);
                     indexType = E2.type;

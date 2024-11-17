@@ -155,7 +155,7 @@ public class Printer implements Visitor {
         return null;
     }
 
-    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+    public Object visitDecimalLiteral(DecimalLiteral ast, Object o) {
         print(indentString() + ast.spelling);
         return null;
     }
@@ -165,10 +165,31 @@ public class Printer implements Visitor {
         return null;
     }
 
-    public Object visitFloatExpr(FloatExpr ast, Object o) {
-        print(indentString() + "FloatExpr");
+    public Object visitF64Type(F64Type ast, Object o) {
+        print(indentString() + "f64");
+        return null;
+    }
+
+    public Object visitF32Expr(F32Expr ast, Object o) {
+        print(indentString() + "F32Expr");
         ++indent;
-        ast.FL.visit(this, o);
+        ast.DL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitF64Expr(F64Expr ast, Object o) {
+        print(indentString() + "F64Expr");
+        ++indent;
+        ast.DL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitDecimalExpr(DecimalExpr ast, Object o) {
+        print(indentString() + "DecimalExpr");
+        ++indent;
+        ast.DL.visit(this, o);
         --indent;
         return null;
     }

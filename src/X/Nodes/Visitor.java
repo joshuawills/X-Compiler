@@ -93,11 +93,17 @@ public interface Visitor {
 
     Object visitDoWhileStmt(DoWhileStmt ast, Object o);
 
-    Object visitFloatLiteral(FloatLiteral ast, Object o);
+    Object visitDecimalLiteral(DecimalLiteral ast, Object o);
+
+    Object visitDecimalExpr(DecimalExpr ast, Object o);
 
     Object visitF32Type(F32Type ast, Object o);
 
-    Object visitFloatExpr(FloatExpr ast, Object o);
+    Object visitF64Type(F64Type ast, Object o);
+
+    Object visitF32Expr(F32Expr ast, Object o);
+
+    Object visitF64Expr(F64Expr ast, Object o);
 
     Object visitPointerType(PointerType ast, Object o);
 

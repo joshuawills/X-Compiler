@@ -42,6 +42,7 @@ public class Emitter implements Visitor {
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
         emitN("@.Cstr = constant [4 x i8] c\"%c\\0A\\00\"");
         emitN("@.IFstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
+        emitN("@.IDstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
         emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");       
 
         // Visiting all the structs
@@ -403,34 +404,43 @@ public class Emitter implements Visitor {
             case "i64+" ->  "add i64";
             case "i8+" ->  "add i8";
             case "f32+" ->  "fadd float";
+            case "f64+" ->  "fadd double";
             case "i64*" -> "mul i64";
             case "i8*" -> "mul i8";
             case "f32*" -> "fmul float";
+            case "f64*" -> "fmul double";
             case "i64%", "ii%" -> "srem i64";
             case "i8%" -> "srem i8";
             case "i64/" -> "sdiv i64";
             case "i8/" -> "sdiv i8";
             case "f32/" -> "fdiv float";
+            case "f64/" -> "fdiv double";
             case "i64==" -> "icmp eq i64";
             case "i8==" -> "icmp eq i8";
             case "f32==" -> "fcmp oeq float";
+            case "f64==" -> "fcmp oeq double";
             case "b==" -> "icmp eq i1";
             case "i64!=" -> "icmp ne i64";
             case "i8!=" -> "icmp ne i8";
             case "f32!=" -> "fcmp one float";
+            case "f64!=" -> "fcmp one double";
             case "b!=" -> "icmp ne i1";
             case "i64<=" -> "icmp sle i64";
             case "i8<=" -> "icmp sle i8";
             case "f32<=" -> "fcmp ole float";
+            case "f64<=" -> "fcmp ole double";
             case "i64<" -> "icmp slt i64";
             case "i8<" -> "icmp slt i8";
             case "f32<" -> "fcmp olt float";
+            case "f64<" -> "fcmp olt double";
             case "i64>" -> "icmp sgt i64";
             case "i8>" -> "icmp sgt i8";
             case "f32>" -> "fcmp ogt float";
+            case "f64>" -> "fcmp ogt double";
             case "i64>=" -> "icmp sge i64";
             case "i8>=" -> "icmp sge i8";
             case "f32>=" -> "fcmp oge float";
+            case "f64>=" -> "fcmp oge double";
             default -> {
                 System.out.println("opToCommand not implemented: " + input);
                 yield "";
@@ -704,7 +714,7 @@ public class Emitter implements Visitor {
         emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i8 %" + index + ")");
     }
 
-    public void handleOutFloat(CallExpr ast, Object o) {
+    public void handleOutF32(CallExpr ast, Object o) {
         Frame f = (Frame) o;
         ((Args) ast.AL).E.visit(this, o);
         int index = ((Args) ast.AL).E.tempIndex;
@@ -714,6 +724,16 @@ public class Emitter implements Visitor {
         int newIndex = f.getNewIndex();
         emitN("\t%" + indexStr + " = getelementptr [6 x i8], [6 x i8]* @.IFstr, i32 0, i32 0");
         emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", double %" + valIndex + ")");
+    }
+
+    public void handleOutF64(CallExpr ast, Object o) {
+        Frame f = (Frame) o;
+        ((Args) ast.AL).E.visit(this, o);
+        int index = ((Args) ast.AL).E.tempIndex;
+        int indexStr = f.getNewIndex();
+        int newIndex = f.getNewIndex();
+        emitN("\t%" + indexStr + " = getelementptr [6 x i8], [6 x i8]* @.IDstr, i32 0, i32 0");
+        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", double %" + index + ")");
     }
 
     public void handleOutStr(CallExpr ast, Object o) {
@@ -767,8 +787,13 @@ public class Emitter implements Visitor {
             return null;
         }
 
-        if (ast.I.spelling.equals("outFloat")) {
-            handleOutFloat(ast, o);
+        if (ast.I.spelling.equals("outF32")) {
+            handleOutF32(ast, o);
+            return null;
+        }
+
+        if (ast.I.spelling.equals("outF64")) {
+            handleOutF64(ast, o);
             return null;
         }
 
@@ -949,7 +974,7 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitFloatLiteral(FloatLiteral ast, Object o) {
+    public Object visitDecimalLiteral(DecimalLiteral ast, Object o) {
         return null;
     }
 
@@ -958,12 +983,27 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitFloatExpr(FloatExpr ast, Object o) {
+    public Object visitF64Type(F64Type ast, Object o) {
+        emit(LLVM.F64_TYPE);
+        return null;
+    }
+
+    public Object visitF32Expr(F32Expr ast, Object o) {
         Frame f = (Frame) o;
-        float fv = Float.parseFloat(ast.FL.spelling);
+        float fv = Float.parseFloat(ast.DL.spelling);
         String value = String.format("%.21f", fv);
         int num = f.getNewIndex();
         emitN("\t%" + num + " = fadd float 0.0, " + value);
+        ast.tempIndex = num;
+        return null;
+    }
+
+    public Object visitF64Expr(F64Expr ast, Object o) {
+        Frame f = (Frame) o;
+        float fv = Float.parseFloat(ast.DL.spelling);
+        String value = String.format("%.21f", fv);
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = fadd double 0.0, " + value);
         ast.tempIndex = num;
         return null;
     }
@@ -1071,9 +1111,7 @@ public class Emitter implements Visitor {
 
         Type t = ast.type;
         Frame f = (Frame) o;
-        emitN("\t;A");
         ast.index.visit(this, o);
-        emitN("\t;B");
         int index = f.localVarIndex - 1;
         int newIndex = f.getNewIndex();
         emit("\t%" + newIndex + " = getelementptr ");
@@ -1144,41 +1182,49 @@ public class Emitter implements Visitor {
 
         if (from.isI64()) {
             if (to.isI32()) {
-                emit("trunc i64 %" + numOne + " to i32");
+                emitN("trunc i64 %" + numOne + " to i32");
             } else if (to.isI8()) {
-                emit("trunc i64 %" + numOne + " to i8");
+                emitN("trunc i64 %" + numOne + " to i8");
             } else if (to.isF32()) {
-                emit("sitofp i64 %" + numOne + " to float");
+                emitN("sitofp i64 %" + numOne + " to float");
+            } else if (to.isF64()) {
+                emitN("sitofp i64 %" + numOne + " to double");
             }
         }
 
         if (from.isI32()) {
             if (to.isI64()) {
-                emit("sext i32 %" + numOne + " to i64");
+                emitN("sext i32 %" + numOne + " to i64");
             } else if (to.isI8()) {
-                emit("trunc i32 %" + numOne + " to i8");
+                emitN("trunc i32 %" + numOne + " to i8");
             } else if (to.isF32()) {
-                emit("sitofp i32 %" + numOne + " to float");
+                emitN("sitofp i32 %" + numOne + " to float");
+            } else if (to.isF64()) {
+                emitN("sitofp i32 %" + numOne + " to double");
             }
         }
 
         if (from.isI8()) {
             if (to.isI64()) {
-                emit("sext i8 %" + numOne + " to i64");
+                emitN("sext i8 %" + numOne + " to i64");
             } else if (to.isI32()) {
-                emit("sext i8 %" + numOne + " to i32");
+                emitN("sext i8 %" + numOne + " to i32");
             } else if (to.isF32()) {
-                emit("sitofp i8 %" + numOne + " to float");
+                emitN("sitofp i8 %" + numOne + " to float");
+            } else if (to.isF64()) {
+                emitN("sitofp i8 %" + numOne + " to double");
             }
         }
 
         if (from.isF32()) {
             if (to.isI64()) {
-                emit("fptosi float %" + numOne + " to i64");
+                emitN("fptosi float %" + numOne + " to i64");
             } else if (to.isI32()) {
-                emit("fptosi float %" + numOne + " to i32");
+                emitN("fptosi float %" + numOne + " to i32");
             } else if (to.isI8()) {
-                emit("fptosi float %" + numOne + " to i8");
+                emitN("fptosi float %" + numOne + " to i8");
+            } else if (to.isF64()) {
+                emitN("fpext float %" + numOne + " to double");
             }
         }
 
@@ -1565,7 +1611,7 @@ public class Emitter implements Visitor {
         } else if (t.isBoolean()) {
             I = new BooleanExpr(new BooleanLiteral("false", dummyPos), dummyPos);
         } else if (t.isF32()) {
-            I = new FloatExpr(new FloatLiteral("1.0", dummyPos), dummyPos);
+            I = new F32Expr(new DecimalLiteral("1.0", dummyPos), dummyPos);
         } else {
             return;
         }
@@ -1774,4 +1820,8 @@ public class Emitter implements Visitor {
     public Object visitIntExpr(IntExpr ast, Object o) {
         return null;
     }   
+
+    public Object visitDecimalExpr(DecimalExpr ast, Object o) {
+        return null;
+    }
 }
