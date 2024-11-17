@@ -592,6 +592,10 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("SizeOfExpr", ast.varExpr.get());
     }
 
+    public Object visitTypeOfExpr(TypeOfExpr ast, Object o) {
+        return layoutUnary("TypeOfExpr", ast.E);
+    }
+
     @Override
     public Object visitModule(Module ast, Object o) {
         // TODO Auto-generated method stub

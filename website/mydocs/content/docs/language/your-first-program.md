@@ -328,3 +328,6 @@ Although quite primitive, we have some basic IO functions as a standard library.
 
 `size` can take in a type (primitive or constructed) or a variable and return its size
 in bytes as an integer
+
+`type` can take in an expr and return its type. Only works for primitive types (e.g. can't pass
+in an array or a struct)

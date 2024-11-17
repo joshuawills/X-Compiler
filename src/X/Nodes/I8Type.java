@@ -22,7 +22,7 @@ public class I8Type extends Type {
 
     @Override
     public String toString() {
-        return "char";
+        return "i8";
     }
 
     public String getMini() {

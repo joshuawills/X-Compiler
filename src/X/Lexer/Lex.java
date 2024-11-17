@@ -321,7 +321,7 @@ public class Lex {
                 case "enum" -> TokenType.ENUM;
                 case "struct" -> TokenType.STRUCT;
                 case "let" -> TokenType.LET;
-                case "i8", "i32", "i64", "i128", "f32", "f64", "bool", "str", "void" -> TokenType.TYPE;
+                case "i8", "i32", "i64", "f32", "f64", "bool", "str", "void" -> TokenType.TYPE;
                 case "if" -> TokenType.IF;
                 case "else" -> TokenType.ELSE;
                 case "else if" -> TokenType.ELIF;
@@ -333,6 +333,7 @@ public class Lex {
                 case "true", "false" -> TokenType.BOOL_LIT;
                 case "mut" -> TokenType.MUT;
                 case "size" -> TokenType.SIZE_OF;
+                case "type" -> TokenType.TYPE_OF;
                 case "export" -> TokenType.EXPORT;
                 case "import" -> TokenType.IMPORT;
                 case "as" -> TokenType.AS;

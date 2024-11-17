@@ -667,9 +667,22 @@ public class Parser {
 
         if (currentToken.kind == TokenType.SIZE_OF) {
             return parseSizeOf();
+        } else if (currentToken.kind == TokenType.TYPE_OF) {
+            return parseTypeOf();
         }
 
         return parseAssignmentExpr();
+    }
+
+    private Expr parseTypeOf() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        match(TokenType.TYPE_OF);
+        match(TokenType.OPEN_PAREN);
+        Expr E = parseExpr();
+        match(TokenType.CLOSE_PAREN);
+        finish(pos);
+        return new TypeOfExpr(E, pos);
     }
 
     private Expr parseSizeOf() throws SyntaxError {
@@ -800,6 +813,9 @@ public class Parser {
         return switch (currentToken.kind) {
             case SIZE_OF -> {
                 yield parseSizeOf();
+            }
+            case TYPE_OF -> {
+                yield parseTypeOf();
             }
             case STAR -> {
                 match(TokenType.STAR);

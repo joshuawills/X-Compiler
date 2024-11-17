@@ -684,6 +684,14 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitTypeOfExpr(TypeOfExpr ast, Object o) {
+        print(indentString() + "TypeOf");
+        ++indent;
+        ast.E.visit(this, o);
+        --indent;
+        return null;
+    }
+
     public Object visitModule(Module ast, Object o) {
         return null;
     }

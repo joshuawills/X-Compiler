@@ -509,10 +509,12 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    @Override
     public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visitSizeOfExpr'");
+    }
+
+    public Object visitTypeOfExpr(TypeOfExpr ast, Object o) {
+        throw new UnsupportedOperationException("Unimplemented method 'visitTypeOfExpr'");
     }
 
     public Object visitModule(Module ast, Object o) {

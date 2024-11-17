@@ -2183,6 +2183,23 @@ public class Checker implements Visitor {
         return new PointerType(ast.pos, new I8Type(ast.pos));
     }
 
+    public Object visitTypeOfExpr(TypeOfExpr ast, Object o) {
+        if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
+            ast.E = (Expr) ast.E.visit(this, o);
+        } else {
+            ast.E.visit(this, o);
+        }
+        Type t = ast.E.type;
+        if (t.isArray()) {
+            t = ((ArrayType) t).t;
+        }
+        StringLiteral SL = new StringLiteral(t.toString(), ast.pos);
+        ast.SE = new StringExpr(SL, SL.pos);
+        ast.SE.parent = ast;
+        ast.SE.visit(this, o);
+        return Environment.charPointerType;
+    }
+
     public Object visitSizeOfExpr(SizeOfExpr ast, Object o) {
         if (ast.varExpr.isPresent()) {
             // Make sure the variable exists

@@ -63,6 +63,7 @@ public enum TokenType {
     PERIOD,
     STRUCT,
     SIZE_OF,
+    TYPE_OF,
     EXPORT,
     IMPORT,
     AS,

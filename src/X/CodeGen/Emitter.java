@@ -1682,6 +1682,12 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitTypeOfExpr(TypeOfExpr ast, Object o) {
+        ast.SE.visit(this, o);
+        ast.tempIndex = ast.SE.tempIndex;
+        return null;
+    }
+
     private int handleSizeOfExpr(Type t, Object o) {
         Frame f = (Frame) o;
         int size = -1;
