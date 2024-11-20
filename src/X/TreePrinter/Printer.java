@@ -493,7 +493,11 @@ public class Printer implements Visitor {
 
     @Override
     public Object visitCallExpr(CallExpr ast, Object o) {
-        print(indentString() + "CallExpr");
+        if (ast.isLibC) {
+            print(indentString() + "@CallExpr");
+        } else {
+            print(indentString() + "CallExpr");
+        }
         ++indent;
         ast.I.visit(this, o);
         ast.AL.visit(this, o);

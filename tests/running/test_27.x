@@ -1,6 +1,6 @@
 // Basic file import work
 
-import "../../lib/math.x" as math;
+import "math-what.x" as math;
 
 fn main() -> i64 {
     outI64(math::add(1, 2));

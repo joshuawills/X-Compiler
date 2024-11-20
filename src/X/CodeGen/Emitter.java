@@ -30,6 +30,8 @@ public class Emitter implements Visitor {
     public AllModules modules;
     public Module currentModule;
 
+    private boolean inLibCDeclarations = false;
+
     public final void gen() {
 
         modules = AllModules.getInstance();
@@ -44,6 +46,13 @@ public class Emitter implements Visitor {
         emitN("@.IFstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
         emitN("@.IDstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
         emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");       
+
+        // Set up all the libc functions
+        inLibCDeclarations = true;
+        for (Function f: modules.getLibCFunctions()) {
+            f.visit(this, null);
+        }
+        inLibCDeclarations = false;
 
         // Visiting all the structs
         for (Module m: mainModule) {
@@ -75,11 +84,26 @@ public class Emitter implements Visitor {
         LLVM.dump(outputName);
     }
 
+    public void handleLibC(Function ast, Frame f) {
+        emit("declare ");
+        ast.T.visit(this, f);
+        emit(" @");
+        emit(ast.I.spelling);
+        ast.PL.visit(this, f);
+        emitN("");
+    }
+
     public Object visitFunction(Function ast, Object o) {
+
+        Frame f = new Frame(ast.I.spelling.equals("main"));
+        if (inLibCDeclarations) {
+            handleLibC(ast, f);
+            return null;
+        }
+
         if (!ast.isUsed && !ast.I.spelling.equals("main")) {
             return null;
         }
-        Frame f = new Frame(ast.I.spelling.equals("main"));
         emit("define ");
         ast.T.visit(this, f);
         if (inMainModule) {
@@ -355,26 +379,26 @@ public class Emitter implements Visitor {
     public Object visitOperator(Operator ast, Object o) {
         Frame f = (Frame) o;
         switch (ast.spelling) {
-            case "i8-", "i64-", "f32-" -> {
+            case "i8-", "i64-", "i32-", "f32-", "f64-" -> {
                 if (ast.parent instanceof BinaryExpr parent) {
                     int numOne = parent.E1.tempIndex;
                     int numTwo = parent.E2.tempIndex;
                     int newNum = f.getNewIndex();
                     parent.tempIndex = newNum;
-                    if (ast.spelling.equals("c-")) {
-                        emitN("\t%" + newNum + " = sub i8 %" + numOne + ", %" + numTwo);
-                    } else {
-                        emitN("\t%" + newNum + " = sub i64 %" + numOne + ", %" + numTwo);
-                    }
+
+                    emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
+                        " %" + numOne + ", %" + numTwo);
                 } else if (ast.parent instanceof UnaryExpr parent) {
                     int numOne = parent.E.tempIndex;
                     int newNum = f.getNewIndex();
-                    parent.tempIndex = newNum;
-                    if (ast.spelling.equals("c-")) {
-                        emitN("\t%" + newNum + " = sub i8 0, %" + numOne);
+                    if (parent.E.type.isFloat()) {
+                        emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
+                            " 0.0, %" + numOne);
                     } else {
-                        emitN("\t%" + newNum + " = sub i64 0, %" + numOne);
+                        emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
+                            " 0, %" + numOne);
                     }
+                    parent.tempIndex = newNum;
                 }
             }
             case "b!" -> {
@@ -401,46 +425,83 @@ public class Emitter implements Visitor {
 
     public String opToCommand(String input) {
         return switch (input)  {
-            case "i64+" ->  "add i64";
             case "i8+" ->  "add i8";
+            case "i32+" ->  "add i32";
+            case "i64+" ->  "add i64";
+
             case "f32+" ->  "fadd float";
             case "f64+" ->  "fadd double";
-            case "i64*" -> "mul i64";
+
+            case "i8-" ->  "sub i8";
+            case "i32-" ->  "sub i32";
+            case "i64-" ->  "sub i64";
+
+            case "f32-" ->  "fsub float";
+            case "f64-" ->  "fsub double";
+
             case "i8*" -> "mul i8";
+            case "i32*" -> "mul i32";
+            case "i64*" -> "mul i64";
+
             case "f32*" -> "fmul float";
             case "f64*" -> "fmul double";
-            case "i64%", "ii%" -> "srem i64";
+
             case "i8%" -> "srem i8";
-            case "i64/" -> "sdiv i64";
+            case "i32%" -> "srem i32";
+            case "i64%", "ii%" -> "srem i64";
+
             case "i8/" -> "sdiv i8";
+            case "i32/" -> "sdiv i32";
+            case "i64/" -> "sdiv i64";
+
             case "f32/" -> "fdiv float";
             case "f64/" -> "fdiv double";
-            case "i64==" -> "icmp eq i64";
+
             case "i8==" -> "icmp eq i8";
+            case "i32==" -> "icmp eq i32";
+            case "i64==" -> "icmp eq i64";
+
             case "f32==" -> "fcmp oeq float";
             case "f64==" -> "fcmp oeq double";
+
             case "b==" -> "icmp eq i1";
-            case "i64!=" -> "icmp ne i64";
+            case "b!=" -> "icmp ne i1";
+
             case "i8!=" -> "icmp ne i8";
+            case "i32!=" -> "icmp ne i32";
+            case "i64!=" -> "icmp ne i64";
+
             case "f32!=" -> "fcmp one float";
             case "f64!=" -> "fcmp one double";
-            case "b!=" -> "icmp ne i1";
-            case "i64<=" -> "icmp sle i64";
+
             case "i8<=" -> "icmp sle i8";
+            case "i32<=" -> "icmp sle i32";
+            case "i64<=" -> "icmp sle i64";
+
             case "f32<=" -> "fcmp ole float";
             case "f64<=" -> "fcmp ole double";
-            case "i64<" -> "icmp slt i64";
+
             case "i8<" -> "icmp slt i8";
+            case "i32<" -> "icmp slt i32";
+            case "i64<" -> "icmp slt i64";
+
             case "f32<" -> "fcmp olt float";
             case "f64<" -> "fcmp olt double";
-            case "i64>" -> "icmp sgt i64";
+
             case "i8>" -> "icmp sgt i8";
+            case "i32>" -> "icmp sgt i32";
+            case "i64>" -> "icmp sgt i64";
+
             case "f32>" -> "fcmp ogt float";
             case "f64>" -> "fcmp ogt double";
-            case "i64>=" -> "icmp sge i64";
+
             case "i8>=" -> "icmp sge i8";
+            case "i32>=" -> "icmp sge i32";
+            case "i64>=" -> "icmp sge i64";
+
             case "f32>=" -> "fcmp oge float";
             case "f64>=" -> "fcmp oge double";
+
             default -> {
                 System.out.println("opToCommand not implemented: " + input);
                 yield "";
@@ -596,10 +657,16 @@ public class Emitter implements Visitor {
         if (ast.T.isArray()) {
             PointerType pT = new PointerType(dummyPos, ((ArrayType) ast.T).t);
             pT.visit(this, o);
-            emit(" %" + ast.I.spelling);
+            if (!inLibCDeclarations) {
+                emit(" %" + ast.I.spelling);
+            }
             return null;
         } else {
             ast.T.visit(this, o);
+        }
+
+        if (inLibCDeclarations) {
+            return null;
         }
 
         if (!ast.isMut && !ast.T.isPointer()) {
@@ -676,7 +743,12 @@ public class Emitter implements Visitor {
             int newIndex = f.getNewIndex();
             emit("\t%" + newIndex + " = ");
             Type T = p.T;
-            if (T.isI64() || T.isBoolean() || T.isI8() || T.isEnum()) {
+            if (T.isFloat()) {
+                emit("fadd ");
+                T.visit(this, o);
+                emit(" 0.0, ");
+            }
+            else if (T.isNumeric() || T.isBoolean() || T.isEnum()) {
                 emit("add ");
                 T.visit(this, o);
                 emit(" 0, ");
@@ -826,6 +898,10 @@ public class Emitter implements Visitor {
             Module refMod = currentModule.getModuleFromAlias(ast.I.module.get());
             String path = refMod.fileName.replace("/", ".");
             emit(" @" + path + ast.I.spelling + "." + ast.TypeDef);
+        }  else if (ast.isLibC) {
+            emit(" @" + ast.I.spelling);
+        } else if (!inMainModule) {
+            emit(" @" + formattedCurrentPath + ast.I.spelling + "." + ast.TypeDef);
         } else {
             emit(" @" + ast.I.spelling + "." + ast.TypeDef);
         }
@@ -1663,6 +1739,7 @@ public class Emitter implements Visitor {
     public void emitN(String s) {
         LLVM.append(new Instruction(s + "\n"));
     }
+
     public void emitNConst(String s) {
         LLVM.appendConstant(new Instruction(s + "\n"));
     }

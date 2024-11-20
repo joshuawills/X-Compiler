@@ -171,7 +171,7 @@ public class X {
 
             Instant clangStart = Instant.now();
             if (!clARGS.containsKey("asm")) {
-                shellCommand("clang -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format, false);
+                shellCommand("clang -lm -o " + clARGS.getOrDefault("exe", "a.out") + " " + file_name_format, false);
                 shellCommand("rm -f " + file_name_format, false);
             }
             Instant clangEnd = Instant.now();

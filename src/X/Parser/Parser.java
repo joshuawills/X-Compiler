@@ -842,6 +842,22 @@ public class Parser {
                 finish(pos);
                 yield new UnaryExpr(opAST, eAST, pos);
             }
+            case AT_SYMBOL -> {
+                match(TokenType.AT_SYMBOL);
+                Ident I = parseIdent();
+                finish(pos);
+                match(TokenType.OPEN_PAREN);
+                List aLIST;
+                if (tryConsume(TokenType.CLOSE_PAREN)) {
+                    finish(pos);
+                    aLIST = new EmptyArgList(pos);
+                } else {
+                    aLIST = parseArgList();
+                    match(TokenType.CLOSE_PAREN);
+                }
+                finish(pos);
+                yield new CallExpr(I, aLIST, pos, true);
+            }
             default -> parsePostFixExpression();
        };
     }
@@ -870,7 +886,7 @@ public class Parser {
                     match(TokenType.CLOSE_PAREN);
                 }
                 finish(pos);
-                yield new CallExpr((Ident) E, aLIST, pos);
+                yield new CallExpr((Ident) E, aLIST, pos, false);
             }
             case LEFT_SQUARE -> {
                 match(TokenType.LEFT_SQUARE);

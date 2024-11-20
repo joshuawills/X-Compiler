@@ -132,21 +132,30 @@
 - floats properly work in the language now
 - adding in new numerical types (partially done)
 
+*17.11.2024*
+
+- adding in new numerical types (f32/f64)
+- new type() function
+
+*20.11.2024*
+
+- starting to write out standard libraries
+- accessing lib c through '@' prefix of call expressions
+- various bug fixes in expression evaluation
+
 # TODO
 
-- float support
-  - fix it so it works for them all! 
-  - set up type checking without type conversion first
-
 - in-compilation expression everywhere possible
-- write some more test cases 
+
 - basic string operations
   - static reassignment
     - mut str x = "a"; x = "b";
 	- '+' operator
+
 - basic control flow logic evaluation
   - if always false, don't generate logic
   - side effect detector
+
 - errors messages regarding mutability/reassignment w/ pointers
 
 - pointers and dynamic memory
@@ -154,7 +163,6 @@
 
 - clean up all the todos
 - set default values for uninitialised
-- change strs to native char *
 - underline relevant part in error messages
 
 HERE

@@ -80,6 +80,11 @@ do
     continue
   fi
 
+  if echo "$file" | grep -vE "_[0-9]+\.x" >> /dev/null 2>&1
+  then
+    continue
+  fi
+
   message=$(head -n1 "$file")
 
   java -jar "$EXE" "$file" -q -r > "$TEMP"
@@ -97,6 +102,36 @@ do
 
 done < <(find "tests/running" -type f)
 
+echo -e "${YELLOW}RUNNING LIB TESTS: ${RESET}"
+while IFS= read -r file
+do
+
+  if echo "$file" | grep -vE "\.x" >> /dev/null 2>&1
+  then
+    continue
+  fi
+
+  if echo "$file" | grep -vE "_[0-9]+\.x" >> /dev/null 2>&1
+  then
+    continue
+  fi
+
+  message=$(head -n1 "$file")
+
+  java -jar "$EXE" "$file" -q -r > "$TEMP"
+  real_file=$(echo "$file" | sed -E 's/x$/txt/g')
+
+  output=$(diff -q "$TEMP" "$real_file")
+  if [ -n "$output" ]
+  then
+    echo -e "    '$(basename "$file")' ${RED}FAILED${RESET} ${message}"
+    FAIL=$((FAIL+1))
+  else
+    echo -e "    '$(basename "$file")' ${GREEN}PASSED${RESET} ${message}"
+    PASS=$((PASS+1))
+  fi
+
+done < <(find "tests/libs" -type f)
 
 echo -e "${YELLOW}FAILING TESTS: ${RESET}"
 while IFS= read -r file

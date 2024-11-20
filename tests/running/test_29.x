@@ -1,6 +1,6 @@
 // Enums in other files accessed!
 
-import "../../lib/math.x" as Math;
+import "math-what.x" as Math;
 
 fn main() -> i64 {
 

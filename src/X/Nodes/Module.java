@@ -155,4 +155,10 @@ public class Module extends AST {
         return aliasToModule.get(alias);
     }
 
+    public void printAllFunctions() {
+        for (String key : functions.keySet()) {
+            System.out.println(key);
+        }
+    }
+
 }

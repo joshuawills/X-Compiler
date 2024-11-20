@@ -97,6 +97,7 @@ public class Checker implements Visitor {
         "*65: no such function in module",
         "*66: no such variable in module",
         "*67: no such type in module",
+        "*68: no such lib C function"
     };
 
     private final SymbolTable idTable;
@@ -389,7 +390,36 @@ public class Checker implements Visitor {
                 new ParaDecl(voidPointerType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
+
+
+        // Lib C ones
+        Environment.sin = stdFunctionLibC(Environment.f64Type, "sin", new ParaList(
+                new ParaDecl(Environment.f64Type, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.cos = stdFunctionLibC(Environment.f64Type, "cos", new ParaList(
+                new ParaDecl(Environment.f64Type, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.pow = stdFunctionLibC(Environment.f64Type, "pow", new ParaList(
+                new ParaDecl(Environment.f64Type, i, dummyPos, false),
+                new ParaList(
+                    new ParaDecl(Environment.f64Type, i, dummyPos, false),
+                    new EmptyParaList(dummyPos), dummyPos
+                ), dummyPos
+        ));
    }
+
+    private Function stdFunctionLibC(Type resultType, String id, List pl) {
+        Function binding = new Function(resultType, new Ident(id, dummyPos),
+            pl, new EmptyStmt(dummyPos), dummyPos);
+        binding.setTypeDef();
+        binding.isUsed = true;
+        if (!modules.libCFunctionExists(id)) {
+            modules.addLibCFunction(binding);
+        }
+        return binding;
+    }
 
     private Function stdFunction(Type resultType, String id, List pl) {
         Function binding = new Function(resultType, new Ident(id, dummyPos),
@@ -1660,7 +1690,13 @@ public class Checker implements Visitor {
             ast.setTypeDef(TL);
         }
 
-        if (ast.I.isModuleAccess) {
+        if (ast.isLibC) {
+            if (!modules.libCFunctionExists(ast.I.spelling)) {
+                handler.reportError(errors[68] + ": %", ast.I.spelling, ast.I.pos);
+                return Environment.errorType;
+            }
+        }
+        else if (ast.I.isModuleAccess) {
             String moduleAlias = ast.I.module.get();
             String message = moduleAlias + "::" + ast.I.spelling;
             if (!mainModule.aliasExists(moduleAlias)) {
@@ -1672,6 +1708,8 @@ public class Checker implements Visitor {
                 Module specificModule = mainModule.getModuleFromAlias(moduleAlias);
 
                 if (!specificModule.functionExists(ast.I.spelling + "." + ast.TypeDef)) {
+                    System.out.println(ast.I.spelling + "." + ast.TypeDef);
+                    specificModule.printAllFunctions();
                     if (specificModule.functionWithNameExists(ast.I.spelling)) {
                         handler.reportError(errors[43] + ": %", message, ast.I.pos);
                     } else {
@@ -1711,6 +1749,8 @@ public class Checker implements Visitor {
         Function function;
         if (isFreeCall) {
             function = mainModule.getFunction("free.PA");
+        } else if (ast.isLibC) {
+            function = modules.getLibCFunction(ast.I.spelling);
         } else {
             function = mainModule.getFunction(ast.I.spelling + "." + ast.TypeDef);
         }

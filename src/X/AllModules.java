@@ -1,10 +1,14 @@
 package X;
 
 import java.util.ArrayList;
+
+import X.Nodes.Function;
 import X.Nodes.Module;
 
 public class AllModules {
 
+
+    private ArrayList<Function> libCFunctions = new ArrayList<Function>();
 
     private ArrayList<Module> modules = new ArrayList<Module>();
     private static AllModules instance = null;
@@ -25,6 +29,32 @@ public class AllModules {
 
     public void addModule(Module mainModule) {
         modules.add(mainModule);
+    }
+
+    public void addLibCFunction(Function f) {
+        libCFunctions.add(f);
+    }
+
+    public boolean libCFunctionExists(String name) {
+        for (Function f : libCFunctions) {
+            if (f.I.spelling.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ArrayList<Function> getLibCFunctions() {
+        return libCFunctions;
+    }
+
+    public Function getLibCFunction(String name) {
+        for (Function f : libCFunctions) {
+            if (f.I.spelling.equals(name)) {
+                return f;
+            }
+        }
+        return null;
     }
 
     public boolean moduleExists(String filename) {

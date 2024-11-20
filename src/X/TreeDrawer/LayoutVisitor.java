@@ -186,7 +186,11 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {
-        return layoutBinary("CallExpr(" + ast.TypeDef + ")", ast.I, ast.AL);
+        if (ast.isLibC) {
+            return layoutBinary("@CallExpr(" + ast.TypeDef + ")", ast.I, ast.AL);
+        } else {
+            return layoutBinary("CallExpr(" + ast.TypeDef + ")", ast.I, ast.AL);
+        }
     }
 
     public Object visitLoopStmt(LoopStmt ast, Object o) {

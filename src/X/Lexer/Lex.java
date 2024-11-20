@@ -109,6 +109,10 @@ public class Lex {
                 }
                 yield TokenType.FLOAT_LIT;
             }
+            case '@' -> {
+                acceptWithSpelling();
+                yield TokenType.AT_SYMBOL;
+            }
             case '(' -> {
                 acceptWithSpelling();
                 yield TokenType.OPEN_PAREN;
@@ -242,9 +246,9 @@ public class Lex {
                 acceptWithSpelling();
                 if (currChar == '=') {
                     acceptWithSpelling();
-                    yield TokenType.DASH_EQUAL;
+                    yield TokenType.F_SLASH_EQUAL;
                 } else {
-                    yield TokenType.DASH;
+                    yield TokenType.F_SLASH;
                 }
             }
             case '$' -> {

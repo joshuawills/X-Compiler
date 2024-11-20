@@ -8,15 +8,17 @@ public class CallExpr extends Expr {
     public List AL;
     public String TypeDef;
 
+    public boolean isLibC;
 
     public void setTypeDef(String X) {
         TypeDef = X;
     }
 
-    public CallExpr(Ident id, List alAST, Position pos) {
+    public CallExpr(Ident id, List alAST, Position pos, boolean isLibCV) {
         super(pos);
         I = id;
         AL = alAST;
+        isLibC = isLibCV;
         I.parent = AL.parent = this;
     }
 
