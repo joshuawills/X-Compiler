@@ -64,6 +64,7 @@ stmt})? \\
 \textbf{STRINGLITERAL} \\
 \textbf{BOOLLITERAL} \\
 \textbf{CHARLITERAL} \\
+\textit{null} \\
 "(" \textit{ expr } ")" \\
 \textit{ident} \\
 \textit{(+ | - | ! | * | \&) unary-expr} \\

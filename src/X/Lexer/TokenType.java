@@ -68,5 +68,6 @@ public enum TokenType {
     IMPORT,
     AS,
     DOUBLE_COLON,
-    AT_SYMBOL
+    AT_SYMBOL,
+    NULL
 }

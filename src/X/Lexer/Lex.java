@@ -341,6 +341,7 @@ public class Lex {
                 case "export" -> TokenType.EXPORT;
                 case "import" -> TokenType.IMPORT;
                 case "as" -> TokenType.AS;
+                case "null" -> TokenType.NULL;
                 default -> TokenType.IDENT;
             };
         }

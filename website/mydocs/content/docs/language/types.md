@@ -63,7 +63,7 @@ fn main() -> int {
 ### Structs
 
 Struct types are an experimental feature currently being developed for the X-Compiler. They can be nested,
-and are accessed using a dot notation. An example is below.
+and are accessed using a dot notation. Use the *->* syntax, like C, for pointer accesses. An example is below.
 
 ```Rust
 struct BoolBox -> {

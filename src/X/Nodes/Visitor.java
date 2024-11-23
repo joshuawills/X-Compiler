@@ -171,5 +171,7 @@ public interface Visitor {
 
     Object visitModule(Module ast, Object o);
 
+    Object visitNullExpr(NullExpr ast, Object o);
+
     Object visitImportStmt(ImportStmt ast, Object o);
 }

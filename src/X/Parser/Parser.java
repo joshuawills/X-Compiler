@@ -821,6 +821,11 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         return switch (currentToken.kind) {
+            case NULL -> {
+                match(TokenType.NULL);
+                finish(pos);
+                yield new NullExpr(pos);
+            }
             case SIZE_OF -> {
                 yield parseSizeOf();
             }

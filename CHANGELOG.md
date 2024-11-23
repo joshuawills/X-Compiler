@@ -179,3 +179,5 @@ HERE
 
 - pointer arithmetic
 - assigning string literals
+
+- do struct accesses in grammar

@@ -123,5 +123,13 @@ public abstract class AST {
     public boolean isIntOrDecimalExpr() {
         return this instanceof IntExpr || this instanceof DecimalExpr;
     }
+    
+    public boolean isNullExpr() {
+        return this instanceof NullExpr;
+    }
+
+    public boolean isBinaryExpr() {
+        return this instanceof BinaryExpr;
+    }
 
 }

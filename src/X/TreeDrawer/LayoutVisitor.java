@@ -609,4 +609,8 @@ public class LayoutVisitor implements Visitor {
     public Object visitImportStmt(ImportStmt ast, Object o) {
         return layoutUnary("ImportStmt", ast.ident);
     }
+
+    public Object visitNullExpr(NullExpr ast, Object o) {
+        return layoutNullary("null");
+    }
 }

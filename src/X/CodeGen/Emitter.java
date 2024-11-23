@@ -183,11 +183,17 @@ public class Emitter implements Visitor {
     public Object visitLocalVar(LocalVar ast, Object o) {
         String depth = ast.index;
         Frame f = (Frame) o;
-        emit("\t%" + ast.I.spelling + depth + " = alloca ");
+        String name = ast.I.spelling + depth;
+        emit("\t%" + name + " = alloca ");
         ast.T.visit(this, o);
         emitN("");
 
-        String name = ast.I.spelling + depth;
+        if (ast.E.isNullExpr()) {
+            assert(ast.T.isPointer());
+            emitN("\tstore ptr null, ptr %" + name);
+            return null;
+        }
+
         if (ast.T.isArray()) {
             arrName = name;
             arrayDetails = (ArrayType) ast.T;
@@ -553,6 +559,31 @@ public class Emitter implements Visitor {
             return null;
         }
 
+        if (ast.O.spelling.equals("p==") || ast.O.spelling.equals("p!=")) {
+            boolean isEq = ast.O.spelling.equals("p==");
+            Expr E = null;;
+            if (ast.E1.isNullExpr() && ast.E2.isNullExpr()) {
+                int i = f.getNewIndex();
+                ast.tempIndex = i;
+                emitN("\t%" + i + " = add i1 0, 1");
+                return null;
+            } else if (ast.E1.isNullExpr()) {
+                E = ast.E2;
+            } else {
+                E = ast.E1;
+            }
+            E.visit(this, o);
+            int index = E.tempIndex;
+            int i = f.getNewIndex();
+            ast.tempIndex = i;
+            if (isEq) {
+                emitN("\t%" + i + " = icmp eq ptr %" + index + ", null");
+            } else {
+                emitN("\t%" + i + " = icmp ne ptr %" + index + ", null");
+            }
+            return null;
+        }
+
         ast.E1.visit(this, o);
         ast.E2.visit(this, o);
         ast.O.visit(this, o);
@@ -750,10 +781,13 @@ public class Emitter implements Visitor {
                 return null;
             }
 
-            if (p.T.isPointer() && ((PointerType) p.T).t.isVoid()) {
-                int newIndex = f.getNewIndex();
-                handleLoad(p.T, ast.I.spelling + p.index, newIndex, f);
-                return null;
+            if (p.T.isPointer()) {
+                Type innerT = ((PointerType) p.T).t;
+                if (innerT.isVoid() || innerT.isStruct()) {
+                    int newIndex = f.getNewIndex();
+                    handleLoad(p.T, ast.I.spelling + p.index, newIndex, f);
+                    return null;
+                }
             }
 
             int newIndex = f.getNewIndex();
@@ -1248,7 +1282,9 @@ public class Emitter implements Visitor {
 
     public Object visitCastExpr(CastExpr ast, Object o) {
         Frame f = (Frame) o;
+        emitN("\t;A");
         ast.E.visit(this, o);
+        emitN("\t;B");
         int numOne = ast.E.tempIndex;
         int temp = f.getNewIndex();
         ast.tempIndex = temp;
@@ -1454,12 +1490,29 @@ public class Emitter implements Visitor {
 
     public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
         Frame f = (Frame) o;
-        ast.RHS.visit(this, o);
+
+        if (!ast.RHS.isNullExpr()) {
+            ast.RHS.visit(this, o);
+        }
+
         int rhsIndex = ast.RHS.tempIndex;
         boolean isGlobal = false;
         if (!ast.LHS.isVarExpr()) {
             ast.LHS.parent = ast;
             ast.LHS.visit(this, o);
+        }
+
+        if (ast.RHS.isNullExpr()) {
+            assert(ast.LHS.type.isPointer());
+            String V;
+            if (ast.LHS.isVarExpr()) {
+                SimpleVar VS = (SimpleVar) ((VarExpr) ast.LHS).V;
+                V = VS.I.spelling + ((Decl) VS.I.decl).index;
+            } else {
+                V = String.valueOf(f.localVarIndex - 1);
+            }
+            emitN("\tstore ptr null, ptr %" + V);
+            return null;
         }
 
         int lhsIndex = f.localVarIndex - 1;
@@ -1598,7 +1651,7 @@ public class Emitter implements Visitor {
             }
 
             if (ast.isPointerAccess) {
-                emit("\t%" + v + " = load %" + structName + "*, ptr %" + localRef);
+                emitN("\t%" + v + " = load %" + structName + "*, ptr %" + localRef);
                 localRef = String.valueOf(v);
                 v = f.getNewIndex();
             }
@@ -1631,7 +1684,7 @@ public class Emitter implements Visitor {
             }
 
           if (ast.isPointerAccess) {
-                emit("\t%" + v + " = load %" + structName + "*, ptr %" + localRef);
+                emitN("\t%" + v + " = load %" + structName + "*, ptr %" + localRef);
                 localRef = String.valueOf(v);
                 v = f.getNewIndex();
             }
@@ -1651,6 +1704,11 @@ public class Emitter implements Visitor {
             }
         }
 
+        return null;
+    }
+
+    public Object visitNullExpr(NullExpr ast, Object o) {
+        System.out.println("NEVER REACHED: NULL EXPR");
         return null;
     }
 

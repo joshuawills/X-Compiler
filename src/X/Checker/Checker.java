@@ -100,6 +100,7 @@ public class Checker implements Visitor {
         "*68: no such lib C function",
         "*69: incompatible type for cast expression",
         "*70: innapropriate use of pointer access",
+        "*71: inappropriate use of 'null'"
     };
 
     private final SymbolTable idTable;
@@ -461,6 +462,7 @@ public class Checker implements Visitor {
         baseStatementCounter = 0;
 
         // Check if func already exists with that name
+        checkMurking(ast);
         this.currentFunctionType = ast.T;
         if (ast.I.spelling.equals("main")) {
             inMain = hasMain = true;
@@ -642,7 +644,14 @@ public class Checker implements Visitor {
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
 
+        if (expr.isNullExpr()) {
+            return expr;
+        }
+
         if (expr.type != null && expr.type.isVoidPointer()) {
+            if (expectedT.isVoidPointer()) {
+                return expr;
+            }
             // Assume expectedT is pointer
             CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos, parent);
             E.visit(this, null);
@@ -957,6 +966,15 @@ public class Checker implements Visitor {
 
         if (t1.isError() || t2.isError()) {
             ast.type = Environment.errorType;
+            return ast.type;
+        }
+
+        if (t1.isVoidPointer() || t2.isVoidPointer()) {
+            if (!(ast.O.spelling.equals("==") || ast.O.spelling.equals("!="))) {
+                handler.reportError(errors[70], "", ast.pos);
+            }
+            ast.O.spelling = "p" + ast.O.spelling;
+            ast.type = Environment.booleanType;
             return ast.type;
         }
 
@@ -2053,6 +2071,16 @@ public class Checker implements Visitor {
         ast.RHS = checkCast(expectedType, ast.RHS, ast);
         ast.type = expectedType;
         return ast.type;
+    }
+
+    public Object visitNullExpr(NullExpr ast, Object o) {
+        if (ast.parent.isLocalVar() || ast.parent.isAssignmentExpr() || ast.parent.isBinaryExpr()) {
+            ast.type = Environment.voidPointerType;
+            return Environment.voidPointerType;
+        }
+        handler.reportError(errors[71], "", ast.pos);
+        ast.type = Environment.errorType;
+        return Environment.errorType;
     }
 
     public Object visitDerefExpr(DerefExpr ast, Object o) {
