@@ -63,8 +63,20 @@ public abstract class Type extends AST {
         return this instanceof PointerType;
     }
 
+    public boolean isVoidPointer() {
+        return this instanceof PointerType && ((PointerType) this).t.isVoid();
+    }
+
+    public boolean isMurkyPointer() {
+        return this instanceof PointerType && ((PointerType) this).t.isMurky();
+    }
+
     public boolean isArray() {
         return this instanceof ArrayType;
+    }
+
+    public boolean isMurkyArray() {
+        return this instanceof ArrayType && ((ArrayType) this).t.isMurky();
     }
 
     public boolean isMurky() {
@@ -83,7 +95,4 @@ public abstract class Type extends AST {
         return this instanceof StructType;
     }
 
-    public boolean isAny() {
-        return this instanceof AnyType;
-    }
 }

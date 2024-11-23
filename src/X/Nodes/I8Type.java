@@ -30,6 +30,11 @@ public class I8Type extends Type {
     }
 
     public boolean assignable(Object obj) {
-        return equals(obj) || obj instanceof I64Type;
+        if (obj instanceof ErrorType) {
+            return true;
+        }
+        assert(obj instanceof Type);
+        Type t = (Type) obj;
+        return t.isNumeric();
     }
 }

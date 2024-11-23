@@ -97,7 +97,8 @@ public class Checker implements Visitor {
         "*65: no such function in module",
         "*66: no such variable in module",
         "*67: no such type in module",
-        "*68: no such lib C function"
+        "*68: no such lib C function",
+        "*69: incompatible type for cast expression"
     };
 
     private final SymbolTable idTable;
@@ -352,7 +353,6 @@ public class Checker implements Visitor {
 
     private void establishEnv() {
         Ident i = new Ident("x", dummyPos);
-        AnyType anyType = new AnyType(dummyPos);
         Environment.booleanType = new BooleanType(dummyPos);
         Environment.i8Type= new I8Type(dummyPos);
         Environment.i64Type = new I64Type(dummyPos);
@@ -641,10 +641,15 @@ public class Checker implements Visitor {
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
 
-        if (expectedT.isPointer()) {
-            if (((PointerType) expectedT).t.isAny()) {
-                return expr;
-            }
+        if (expr.type != null && expr.type.isVoidPointer()) {
+            // Assume expectedT is pointer
+            CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos, parent);
+            E.visit(this, null);
+            return E;
+        }
+
+        if (expectedT.isVoidPointer()) {
+            return expr;
         }
 
         if (expectedT.isNumeric() && expr.type.isNumeric()) {
@@ -663,25 +668,12 @@ public class Checker implements Visitor {
             return E;
         }
 
-        // TODO: fix this, so lazy
-        if (expectedT instanceof I8Type && expr.type instanceof I64Type) {
-            CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
-            E.visit(this, null);
-            return E;
-        } else if (expectedT instanceof I64Type && expr.type instanceof I8Type) {
-            CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos);
-            E.visit(this, null);
-            return E;
-        } else if (expectedT instanceof I64Type && expr.type instanceof EnumType) {
-            return expr;
-        }
-        // End TODO
-
         Type t = expr.type;
         if (expr instanceof ArrayIndexExpr) {
             t = ((ArrayType) expr.type).t;
         }
-        if (expectedT.assignable(t) || t == null || t.isError() || expectedT.equals(t)) {
+
+        if (t == null || expectedT.assignable(t) || t.isError() || expectedT.equals(t)) {
             return expr;
         }
 
@@ -1707,8 +1699,6 @@ public class Checker implements Visitor {
                 Module specificModule = mainModule.getModuleFromAlias(moduleAlias);
 
                 if (!specificModule.functionExists(ast.I.spelling + "." + ast.TypeDef)) {
-                    System.out.println(ast.I.spelling + "." + ast.TypeDef);
-                    specificModule.printAllFunctions();
                     if (specificModule.functionWithNameExists(ast.I.spelling)) {
                         handler.reportError(errors[43] + ": %", message, ast.I.pos);
                     } else {
@@ -2247,6 +2237,7 @@ public class Checker implements Visitor {
                 S.isUsed = true;
                 ast.varExpr = Optional.empty();
                 ast.typeV = Optional.of(new StructType(S, S.pos));
+                ast.typeV.get().parent = ast;
             } else {
                 Decl d = idTable.retrieve(name);
 
@@ -2340,6 +2331,37 @@ public class Checker implements Visitor {
     }
 
     public Object visitCastExpr(CastExpr ast, Object o) {
+
+        if (ast.manualCast) {
+            Type realT;
+            if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
+                ast.E = (Expr) ast.E.visit(this, o);
+                realT = ast.E.type;
+            } else {
+                realT = (Type) ast.E.visit(this, o);
+            }
+
+            ast.type = ast.tTo;
+            if (ast.tTo.isMurky()) {
+                ast.tTo = unMurk((MurkyType) ast.tTo);
+            } else if (ast.tTo.isMurkyPointer()) {
+                MurkyType MT = (MurkyType) ((PointerType) ast.tTo).t;
+                Type T = unMurk(MT);
+                ((PointerType) ast.tTo).t = T;
+            } else if (ast.tTo.isMurkyArray()) {
+                MurkyType MT = (MurkyType) ((ArrayType) ast.tTo).t;
+                Type T = unMurk(MT);
+                ((ArrayType) ast.tTo).t = T;
+            }
+
+            ast.tFrom = realT;
+            if (!realT.assignable(ast.tTo)) {
+                String message = "expected " + ast.tTo + ", received " + realT;
+                handler.reportError(errors[69] + ": %", message, ast.pos);
+                return Environment.errorType;
+            }
+        }
+
         ast.type = ast.tTo;
         return ast.tTo;
     }
@@ -2402,7 +2424,4 @@ public class Checker implements Visitor {
         return null;
     }
 
-    public Object visitAnyType(AnyType ast, Object o) {
-        return null;
-    }
 }

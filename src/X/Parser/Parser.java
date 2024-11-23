@@ -671,7 +671,17 @@ public class Parser {
             return parseTypeOf();
         }
 
-        return parseAssignmentExpr();
+        Expr E = parseAssignmentExpr();
+
+        if (tryConsume(TokenType.AS)) {
+            Position pos = E.pos;
+            Type T = parseType();
+            finish(pos);
+            E = new CastExpr(E, new UnknownType(pos), T, pos);
+            ((CastExpr) E).setManualCast();
+        }
+
+        return E;
     }
 
     private Expr parseTypeOf() throws SyntaxError {

@@ -6,6 +6,11 @@ public class CastExpr extends Expr {
 
     public Expr E;
     public Type tFrom, tTo;
+    public boolean manualCast = false;
+
+    public void setManualCast() {
+        manualCast = true;
+    }
 
     public CastExpr(Expr eAST, Type tFromAST, Type tToAST, Position pos) {
         super(pos);
@@ -14,7 +19,6 @@ public class CastExpr extends Expr {
         tTo = tToAST;
         E.parent = this;
     }
-
 
     public CastExpr(Expr eAST, Type tFromAST, Type tToAST, Position pos, AST p) {
         super(pos);

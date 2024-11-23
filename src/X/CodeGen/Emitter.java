@@ -1255,6 +1255,18 @@ public class Emitter implements Visitor {
         Type from = ast.tFrom, to = ast.tTo;
         emit("\t%" + temp+ " = ");
 
+        if (from.isVoidPointer()) {
+            emit("bitcast ptr %" + numOne + " to ");
+            to.visit(this, o);
+            emitN("");
+            return null;
+        } else if (to.isVoidPointer()) {
+            emit("bitcast ");
+            from.visit(this, o);
+            emitN(" %" + numOne + " to ptr");
+            return null;
+        }
+
         if (from.isI64()) {
             if (to.isI32()) {
                 emitN("trunc i64 %" + numOne + " to i32");
@@ -1300,6 +1312,18 @@ public class Emitter implements Visitor {
                 emitN("fptosi float %" + numOne + " to i8");
             } else if (to.isF64()) {
                 emitN("fpext float %" + numOne + " to double");
+            }
+        }
+
+        if (from.isF64()) {
+            if (to.isI64()) {
+                emitN("fptosi double %" + numOne + " to i64");
+            } else if (to.isI32()) {
+                emitN("fptosi double %" + numOne + " to i32");
+            } else if (to.isI8()) {
+                emitN("fptosi double %" + numOne + " to i8");
+            } else if (to.isF32()) {
+                emitN("fptrunc double %" + numOne + " to float");
             }
         }
 
@@ -1879,10 +1903,6 @@ public class Emitter implements Visitor {
     }
 
     public Object visitImportStmt(ImportStmt ast, Object o) {
-        return null;
-    }
-
-    public Object visitAnyType(AnyType ast, Object o) {
         return null;
     }
 

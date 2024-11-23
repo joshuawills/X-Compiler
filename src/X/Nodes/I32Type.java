@@ -31,7 +31,12 @@ public class I32Type extends Type {
     }
 
     public boolean assignable(Object obj) {
-        return equals(obj);
+        if (obj instanceof ErrorType) {
+            return true;
+        }
+        assert(obj instanceof Type);
+        Type t = (Type) obj;
+        return t.isNumeric();
     }
 
 }

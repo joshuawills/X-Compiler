@@ -21,7 +21,7 @@ fn main() -> i64 {
     }
 
     // Casts all following types to the first one where possible
-    let arr2 = [1, 'a', Boolean.TRUE];
+    let arr2 = [1, 'a', 2];
 
     loop i in 3 {
         outI64(arr2[i]);

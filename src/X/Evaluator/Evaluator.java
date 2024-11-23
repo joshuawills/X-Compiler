@@ -525,7 +525,4 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitAnyType(AnyType ast, Object o) {
-        return null;
-    }
 }

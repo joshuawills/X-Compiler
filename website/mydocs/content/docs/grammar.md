@@ -44,7 +44,7 @@ stmt})? \\
 \textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\
 \textit{loop-stmt} &\to \textbf{ loop} \textit{ ident } \textit{ compound-stmt}\\ \\
 
-\textit{expr} &\to \textit{assignment-expr} || \textit{size-of-expr} || \textit{type-expr} \\
+\textit{expr} &\to \textit{assignment-expr } (\textbf{as} \textit{ type})? || \textit{size-of-expr} || \textit{type-expr} \\
 \textit{size-of-expr} &\to \textbf{size} ( \textit{type | IDENT} ) \\ 
 \textit{type-expr} &\to \textbf{type} ( \textit{expr} ) \\ 
 \textit{type-expr} &\to \textbf{size} ( \textit{type | IDENT} ) \\ 

@@ -35,6 +35,14 @@ public class PointerType extends Type {
     }
 
     public boolean assignable(Object obj) {
+        assert(obj instanceof Type);
+        Type t1 = (Type) obj;
+        if (t1.isVoidPointer()) {
+            return true;
+        }
+        if (t.isVoid() && t1.isPointer()) {
+            return true;
+        }
         return equals(obj);
     }
 

@@ -33,6 +33,8 @@ public class F32Type extends Type {
         if (obj instanceof ErrorType) {
             return true;
         }
-        return obj instanceof I64Type || obj instanceof F32Type || obj instanceof I8Type;
+        assert(obj instanceof Type);
+        Type t = (Type) obj;
+        return t.isNumeric();
     }
 }

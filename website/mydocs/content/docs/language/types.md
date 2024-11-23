@@ -5,9 +5,7 @@ weight: 1
 
 At the moment, X supports several different base types. They are `i64`, `i32`, `i8`, `f32`, `f64` and `bool`.
 Implicit type casting will occur from integers to floats, and between integers and characters. Any 
-other attempt to assign one type to another will currently fail, and explicit type casting is not 
-currently supported. Statically-sized arrays are also supported, as well as enums. Some examples of
-these types is shown below.
+other attempt to assign one type to another will currently fail. Statically-sized arrays are also supported, as well as enums. Some examples of these types is shown below.
 
 ```Rust
 enum DaysOfWeek -> {
@@ -30,6 +28,37 @@ fn main() -> i64 {
     day *= 2; // enums are just ints under the hood, so implicit type casting occurs here
 }
 ```
+
+### Explicit Type Casting
+
+Explicit type casting can be useful, especially when working with libC methods. Below are some examples of how to utilise explicit type casting using the **as** keyword.
+
+```Rust
+import "lib/std.x" as std;
+
+struct Node -> {
+    val: i64
+}
+
+fn main() -> int {
+
+    // The 'as' negates the need for a type signature
+    let myNode = std::malloc(size(Node)) as Node*;
+
+    // Alternatively
+    let myNode2: Node* = std::malloc(size(Node));
+
+    // As integer expressions default to i64, the explicit casting removes the need for 
+    // a type annotation
+    let myNum = 21 as i8;
+
+    // Alternatively
+    let myNum2: i8 = 21;
+
+}
+
+```
+
 
 ### Structs
 
