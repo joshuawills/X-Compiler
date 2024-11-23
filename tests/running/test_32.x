@@ -13,11 +13,13 @@ fn main() -> i64 {
     outStr(type(1.0)); // f64
     outStr(type('c')); // i8
 
-    let x: i64 = 1;
+    let mut x: i64 = 1;
     outStr(type(x)); // i64
+    outStr(type(&x)); // i64
 
-    let x1: i32= 1;
+    let mut x1: i32= 1;
     outStr(type(x1)); // i32
+    outStr(type(&x1)); // i32
 
     let x2: i8 = 1;
     outStr(type(x2)); // i8

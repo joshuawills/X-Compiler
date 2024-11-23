@@ -8,12 +8,15 @@ defined in other language documentation.
 
 {{< katex display >}}
 \begin{align}
-\textit{program} &\to (\textit{function }|\textit{ global-var }|\textit{ enum }|\textit{ struct})^*  \\ \\
-\textit{global-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
+\textit{program} &\to \textit{import-stmts}^* (\textit{function }|\textit{ global-var }|\textit{ enum }|\textit{ struct})^*  \\ \\
+
+\textit{import-stmts} &\to \textbf{import } \textit{STRINGLITERAL} \textbf{ as } \textit{ident} \text{";"} \\ \\
+
+\textit{global-var} &\to \textbf{export}? \textbf{ let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
-\textit{function} &\to \textbf{fn} \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
-\textit{enum} &\to \textbf{enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\
-\textit{struct} &\to \textbf{struct} \textit{ ident } \textit{"->" "\{ "} \textbf{mut}? \textit{ ident}\text{ ":" type } (\textit{"," \textbf{mut}? \textit{ ident}\text{ ":" type }})^*\textit{ " \}"}\\ \\
+\textit{function} &\to \textbf{export}? \textbf{ fn } (\text{"@"})? \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
+\textit{enum} &\to \textbf{export}? \textbf{ enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\
+\textit{struct} &\to \textbf{export}? \textbf{ struct} \textit{ ident } \textit{"->" "\{ "} \textbf{mut}? \textit{ ident}\text{ ":" type } (\textit{"," \textbf{mut}? \textit{ ident}\text{ ":" type }})^*\textit{ " \}"}\\ \\
 
 \text{compound-stmt} &\to \text{"\\\{" } (\textit{stmt } | \textit{ local-var})^* \text{ "\\\}"} \\
 \text{stmt} &\to
@@ -41,8 +44,10 @@ stmt})? \\
 \textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\
 \textit{loop-stmt} &\to \textbf{ loop} \textit{ ident } \textit{ compound-stmt}\\ \\
 
-\textit{expr} &\to \textit{assignment-expr} || \textit{size-of-expr}\\
+\textit{expr} &\to \textit{assignment-expr} || \textit{size-of-expr} || \textit{type-expr} \\
 \textit{size-of-expr} &\to \textbf{size} ( \textit{type | IDENT} ) \\ 
+\textit{type-expr} &\to \textbf{type} ( \textit{expr} ) \\ 
+\textit{type-expr} &\to \textbf{size} ( \textit{type | IDENT} ) \\ 
 \textit{assignment-expr} &\to \textit{or-expr } || \textit{unary-expr} \textbf{ ASSIGNMENT-OPERATOR } \textit{assignment-expr}\\  
 \textit{or-expr} &\to \textit{and-expr } (\text{"||" } \textit{and-expr})^* \\
 \textit{and-expr} &\to \textit{equality-expr } (\text{"\\\&\\\&" } \textit{equality-expr})^* \\
@@ -53,6 +58,7 @@ stmt})? \\
 \textit{mult-expr} &\to \textit{unary-expr } ((\text{"\%" } | \text{"*" } | \text{ "/" }) \textit{ unary-expr})^* \\
 \textit{unary-expr} &\to
 \begin{cases}
+\textit{size-of-expr} \\
 \textbf{INTLITERAL} \\
 \textbf{FLOATLITERAL} \\
 \textbf{STRINGLITERAL} \\
@@ -86,7 +92,7 @@ stmt})? \\
 \textit{arg} &\to \textbf{mut}? \textit{ ident } \text{ ":" } \textit{ type}\\
 
 \textit{ident} &\to \textbf{letter} (\textbf{letter } | \textbf{ digit})^* || \textit{ \$} \\
-\textit{type} &\to \textbf{ident | i8 | i32 | i64 | str | void | bool | f32 | f64 | \textit{type}* | \textit{type}[\textit{INTLITERAL}] } \\
+\textit{type} &\to \textbf{ident | i8 | i32 | i64 | void | bool | f32 | f64 | \textit{type}* | \textit{type}[\textit{INTLITERAL}] } \\
 
 \textit{INTLITERAL} &\to [0-9]+ \\
 \textit{FLOATLITERAL} &\to [0-9]^+\textit{"."}[0-9]? \\
