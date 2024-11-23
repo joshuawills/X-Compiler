@@ -353,7 +353,6 @@ public class Checker implements Visitor {
     private void establishEnv() {
         Ident i = new Ident("x", dummyPos);
         AnyType anyType = new AnyType(dummyPos);
-        PointerType voidPointerType = new PointerType(dummyPos, anyType);
         Environment.booleanType = new BooleanType(dummyPos);
         Environment.i8Type= new I8Type(dummyPos);
         Environment.i64Type = new I64Type(dummyPos);
@@ -361,6 +360,7 @@ public class Checker implements Visitor {
         Environment.f32Type = new F32Type(dummyPos);
         Environment.f64Type = new F64Type(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
+        Environment.voidPointerType = new PointerType(dummyPos, Environment.voidType);
         Environment.errorType = new ErrorType(dummyPos);
         Environment.charPointerType = new PointerType(dummyPos, Environment.i8Type);
         Environment.outI64 = stdFunction(Environment.voidType, "outI64", new ParaList(
@@ -383,17 +383,19 @@ public class Checker implements Visitor {
                 new ParaDecl(Environment.f64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
-        Environment.malloc = stdFunction(voidPointerType, "malloc", new ParaList(
-                new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.free = stdFunction(Environment.voidType, "free", new ParaList(
-                new ParaDecl(voidPointerType, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
+      
+
 
 
         // Lib C ones
+        Environment.free = stdFunctionLibC(Environment.voidType, "free", new ParaList(
+                new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
+        Environment.malloc = stdFunctionLibC(Environment.voidPointerType, "malloc", new ParaList(
+                new ParaDecl(Environment.i64Type, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
         Environment.sin = stdFunctionLibC(Environment.f64Type, "sin", new ParaList(
                 new ParaDecl(Environment.f64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
@@ -609,14 +611,6 @@ public class Checker implements Visitor {
         }
         declaringLocalVar = false;
         currentNumericalType = null;
-
-        // TODO: probably improve this, a bit hacky
-        if (E.isCallExpr()) {
-            CallExpr CE = (CallExpr) E;
-            if (CE.I.spelling.equals("malloc")) {
-                E.type = existingType;
-            }
-        }
 
         if (returnType == null || returnType.isError()) {
             return returnType;
@@ -1689,8 +1683,6 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
-        boolean isFreeCall = !ast.I.isModuleAccess && ast.I.spelling.equals("free");
-
         String TL;
         if (ast.TypeDef == null) {
             TL = genTypes(ast.AL, o);
@@ -1741,7 +1733,7 @@ public class Checker implements Visitor {
                 }
             }
         }
-        else if (!mainModule.functionExists(ast.I.spelling + "." + ast.TypeDef) && !isFreeCall) {
+        else if (!mainModule.functionExists(ast.I.spelling + "." + ast.TypeDef)) {
             if (idTable.retrieve(ast.I.spelling) != null || mainModule.varExists(ast.I.spelling)) {
                 handler.reportError(errors[10] + ": %", ast.I.spelling, ast.I.pos);
             } else if (mainModule.functionWithNameExists(ast.I.spelling)) {
@@ -1754,9 +1746,7 @@ public class Checker implements Visitor {
         }
 
         Function function;
-        if (isFreeCall) {
-            function = mainModule.getFunction("free.PA");
-        } else if (ast.isLibC) {
+        if (ast.isLibC) {
             function = modules.getLibCFunction(ast.I.spelling);
         } else {
             function = mainModule.getFunction(ast.I.spelling + "." + ast.TypeDef);
@@ -2038,13 +2028,6 @@ public class Checker implements Visitor {
         }
         currentNumericalType = null;
         declaringLocalVar = false;
-
-        if (ast.RHS.isCallExpr()) {
-            CallExpr CE = (CallExpr) ast.RHS;   
-            if (CE.I.spelling.equals("malloc")) {
-                ast.RHS.type = ast.LHS.type;
-            }
-        }
 
         if (!realType.assignable(expectedType)) {
             String message = "expected " + expectedType + ", received " + realType;

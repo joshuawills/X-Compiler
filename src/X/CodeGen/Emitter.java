@@ -39,8 +39,7 @@ public class Emitter implements Visitor {
 
         emitN("declare i32 @printf(i8*, ...)");
         emitN("declare i32 @scanf(i8*, ...)");
-        emitN("declare ptr @malloc(i64)");
-        emitN("declare void @free(ptr)");
+
         emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
         emitN("@.Cstr = constant [4 x i8] c\"%c\\0A\\00\"");
         emitN("@.IFstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
@@ -129,7 +128,11 @@ public class Emitter implements Visitor {
                 t.visit(this, o);
                 emit(" %" + P.I.spelling + ", ");
                 t.visit(this, o);
-                emitN("* %" + P.I.spelling + "0");
+                if (t.isPointer() && ((PointerType) t).t.isVoid()) {
+                    emitN(" %" + P.I.spelling + "0");
+                } else {
+                    emitN("* %" + P.I.spelling + "0");
+                }
             }
 
             if (t.isStruct()) {
@@ -228,7 +231,11 @@ public class Emitter implements Visitor {
         int value = f.localVarIndex - 1;
         emit(" %" + value + ", ");
         ast.T.visit(this, o);
-        emitN("* %" + ast.I.spelling + depth);
+        if (ast.T.isPointer() && ((PointerType) ast.T).t.isVoid()) {
+            emitN(" %" + ast.I.spelling + depth);
+        } else {
+            emitN("* %" + ast.I.spelling + depth);
+        }
         return null;
     }
 
@@ -743,6 +750,12 @@ public class Emitter implements Visitor {
                 return null;
             }
 
+            if (p.T.isPointer() && ((PointerType) p.T).t.isVoid()) {
+                int newIndex = f.getNewIndex();
+                handleLoad(p.T, ast.I.spelling + p.index, newIndex, f);
+                return null;
+            }
+
             int newIndex = f.getNewIndex();
             emit("\t%" + newIndex + " = ");
             Type T = p.T;
@@ -756,6 +769,7 @@ public class Emitter implements Visitor {
                 T.visit(this, o);
                 emit(" 0, ");
             }
+
             emitN(" %" + ast.I.spelling + "0");
         } else if (d.isGlobalVar()) {
             GlobalVar g = (GlobalVar) d;
@@ -820,32 +834,7 @@ public class Emitter implements Visitor {
         f.getNewIndex();
     }
 
-    public void handleMalloc(CallExpr ast, Object o) {
-        Frame f = (Frame) o;
-        ((Args) ast.AL).E.visit(this, o);
-        int index = ((Args) ast.AL).E.tempIndex;
-        int indexStr = f.getNewIndex();
-        emitN("\t%" + indexStr + " = call i8* @malloc(i64 %" + index + ")");
-        ast.tempIndex = indexStr;
-    }
-
-    public void handleFree(CallExpr ast, Object o) {
-        ((Args) ast.AL).E.visit(this, o);
-        int index = ((Args) ast.AL).E.tempIndex;
-        emitN("\tcall void @free(ptr %" + index + ")");
-    }
-
     public Object visitCallExpr(CallExpr ast, Object o) {
-
-        if (ast.I.spelling.equals("malloc")) {
-            handleMalloc(ast, o);
-            return null;
-        }
-
-        if (ast.I.spelling.equals("free")) {
-            handleFree(ast, o);
-            return null;
-        }
 
         if (ast.I.spelling.equals("outI64")) {
             handleOutI64(ast, o);
@@ -1091,6 +1080,10 @@ public class Emitter implements Visitor {
     }
 
     public Object visitPointerType(PointerType ast, Object o) {
+        if (ast.t.isVoid()) {
+            emit("ptr");
+            return null;
+        }
         ast.t.visit(this, o);
         emit("*");
         return null;
@@ -1690,7 +1683,11 @@ public class Emitter implements Visitor {
         t.visit(this, o);
         emit(", ");
         t.visit(this, o);
-        emitN("* %" + v1);
+        if (t.isPointer() && ((PointerType)t).t.isVoid()) {
+            emitN(" %" + v1);
+        } else {
+            emitN("* %" + v1);
+        }
     }
 
     public void handleLoad(Type t, int v1, String v2, Frame o) {
@@ -1698,7 +1695,11 @@ public class Emitter implements Visitor {
         t.visit(this, o);
         emit(", ");
         t.visit(this, o);
-        emitN("* %" + v1);
+        if (t.isPointer() && ((PointerType)t).t.isVoid()) {
+            emitN(" %" + v1);
+        } else {
+            emitN("* %" + v1);
+        }
     }
 
     public void handleLoad(Type t, String v1, int v2, Frame o) {
@@ -1706,7 +1707,11 @@ public class Emitter implements Visitor {
         t.visit(this, o);
         emit(", ");
         t.visit(this, o);
-        emitN("* %" + v1);
+        if (t.isPointer() && ((PointerType)t).t.isVoid()) {
+            emitN(" %" + v1);
+        } else {
+            emitN("* %" + v1);
+        }
     }
 
     public void emit(String s) {

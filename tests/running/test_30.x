@@ -1,12 +1,14 @@
 // Can use malloc and free
 
+import "../../lib/std.x" as std;
+
 fn main() -> i64 {
 
-	let x: i64* = malloc(size(i64));
+	let x: void* = std::malloc(size(i64));
 
-	let y: i8* = malloc(8 * size(i8));
+	let y: void* = std::malloc(8 * size(i8));
 
-	free(x);
-	free(y);
+	std::free(x);
+	std::free(y);
 
 }
