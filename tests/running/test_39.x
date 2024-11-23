@@ -1,4 +1,4 @@
-// Simple linked list implementation
+// Linked list :)
 
 import "../../lib/std.x" as std;
 
@@ -10,6 +10,16 @@ struct Node -> {
 struct LinkedList -> {
 	mut head: Node*,
 	mut len: i64
+}
+
+fn freeLinkedList(list: LinkedList*) -> void {
+	let mut curr: Node* = list->head;
+	while curr != null {
+		let mut next: Node* = curr->next;
+		std::free(curr as void*);
+		curr = next;
+	}
+	std::free(list as void*);
 }
 
 fn makeLinkedList() -> LinkedList* {
@@ -57,16 +67,16 @@ fn printLinkedList(list: LinkedList*) -> void {
 	outI64(list->len);
 }
 
-fn freeLinkedList(list: LinkedList*) -> void {
+fn listContainsValue(list: LinkedList*, val: i64) -> bool {
 	let mut curr: Node* = list->head;
 	while curr != null {
-		let mut next: Node* = curr->next;
-		std::free(curr as void*);
-		curr = next;
+		if curr->val == val {
+			return true;
+		}
+		curr = curr->next;
 	}
-	std::free(list as void*);
+	return false;
 }
-
 
 fn main() -> i64 {
 
@@ -75,6 +85,18 @@ fn main() -> i64 {
 		addNumToLinkedList(list, $);
 	}
 	printLinkedList(list);
+
+	if listContainsValue(list, 500) {
+		outStr("List contains 500\n");
+	} else {
+		outStr("List does not contain 500\n");
+	}
+
+	if listContainsValue(list, 2500) {
+		outStr("List contains 2500\n");
+	} else {
+		outStr("List does not contain 2500\n");
+	}
 
 	freeLinkedList(list);
 

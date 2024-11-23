@@ -10,6 +10,16 @@ struct LinkedList -> {
 	mut len: i64
 }
 
+fn freeLinkedList(list: LinkedList*) -> void {
+	let mut curr: Node* = list->head;
+	while curr != null {
+		let mut next: Node* = curr->next;
+		std::free(curr as void*);
+		curr = next;
+	}
+	std::free(list as void*);
+}
+
 fn makeLinkedList() -> LinkedList* {
 	let mut val: LinkedList* = std::malloc(size(LinkedList));
 	val->len = 0;
@@ -55,16 +65,16 @@ fn printLinkedList(list: LinkedList*) -> void {
 	outI64(list->len);
 }
 
-fn freeLinkedList(list: LinkedList*) -> void {
+fn listContainsValue(list: LinkedList*, val: i64) -> bool {
 	let mut curr: Node* = list->head;
 	while curr != null {
-		let mut next: Node* = curr->next;
-		std::free(curr as void*);
-		curr = next;
+		if curr->val == val {
+			return true;
+		}
+		curr = curr->next;
 	}
-	std::free(list as void*);
+	return false;
 }
-
 
 fn main() -> i64 {
 
@@ -73,6 +83,18 @@ fn main() -> i64 {
 		addNumToLinkedList(list, $);
 	}
 	printLinkedList(list);
+
+	if listContainsValue(list, 500) {
+		outStr("List contains 500");
+	} else {
+		outStr("List does not contain 500");
+	}
+
+	if listContainsValue(list, 2500) {
+		outStr("List contains 2500");
+	} else {
+		outStr("List does not contain 2500");
+	}
 
 	freeLinkedList(list);
 

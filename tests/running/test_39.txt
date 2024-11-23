@@ -999,3 +999,5 @@
 998
 999
 Size is: 1000
+List contains 500
+List does not contain 2500
