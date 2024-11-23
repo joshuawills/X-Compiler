@@ -98,7 +98,8 @@ public class Checker implements Visitor {
         "*66: no such variable in module",
         "*67: no such type in module",
         "*68: no such lib C function",
-        "*69: incompatible type for cast expression"
+        "*69: incompatible type for cast expression",
+        "*70: innapropriate use of pointer access",
     };
 
     private final SymbolTable idTable;
@@ -2098,6 +2099,11 @@ public class Checker implements Visitor {
                 handler.reportError(errors[32], "", ast.pos);
                 return Environment.errorType;
             }
+            if (ast.isPointerAccess) {
+                handler.reportError(errors[70] + ": %", "cannot be used on enum expression",
+                    ast.pos);
+                return Environment.errorType;
+            }
 
             EnumExpr newEnum = new EnumExpr(ast.I, innerE.I, ast.pos);
             newEnum.visit(this, o);
@@ -2134,13 +2140,21 @@ public class Checker implements Visitor {
                 d = G;
             }
 
-            if (!d.isMut && isStructLHS) {
+            if ((!d.isMut && !ast.isPointerAccess) && isStructLHS) {
                 handler.reportError(errors[20] + ": %", "'" + ast.I.spelling + "'", ast.pos);
                 return errorExpr;
             }
 
             Ident varName = d.I;
             Struct ref = null;
+
+            if (ast.isPointerAccess) {
+                if (!d.T.isPointer()) {
+                    handler.reportError(errors[70] + ": %", "specified variable is not a pointer. Use '.' instead", ast.pos);
+                    return errorExpr;
+                }
+            }
+
             if (d.T.isArray()) {
                 if (ast.arrayIndex.isEmpty()) {
                     handler.reportError(errors[32], "", ast.pos);
@@ -2169,14 +2183,17 @@ public class Checker implements Visitor {
                 }
                 ref = ((StructType) innerT).S;
             }
-            else if (!d.T.isStruct()) {
+            else if (!d.T.isStruct() && !(ast.isPointerAccess && d.T.isPointer() && ((PointerType) d.T).t.isStruct())) {
                 handler.reportError(errors[57] + ": %", varName.spelling, ast.pos);
                 return errorExpr;
-            } else {
+            } else if (ast.isPointerAccess) {
+                ref = ((StructType) ((PointerType) d.T).t).S;
+            }
+            else {
                 ref = ((StructType) d.T).S;
             }
             StructAccessList SL = generateStructAccessList((DotExpr) ast.E);
-            StructAccess SA = new StructAccess(ref, varName, SL, ast.pos, ast.arrayIndex, d.T);
+            StructAccess SA = new StructAccess(ref, varName, SL, ast.pos, ast.arrayIndex, d.T, ast.isPointerAccess);
             SA.parent = ast.parent;
             SA.isLHSOfAssignment = ast.isLHSOfAssignment;
             SA.visit(this, o);
@@ -2186,9 +2203,9 @@ public class Checker implements Visitor {
 
     public StructAccessList generateStructAccessList(DotExpr ast) {
         if (ast.E instanceof EmptyExpr) {
-            return new StructAccessList(ast.I, new EmptyStructAccessList(ast.pos), ast.pos, ast.arrayIndex);
+            return new StructAccessList(ast.I, new EmptyStructAccessList(ast.pos), ast.pos, ast.arrayIndex, ast.isPointerAccess);
         }
-        return new StructAccessList(ast.I, generateStructAccessList((DotExpr) ast.E), ast.pos, ast.arrayIndex);
+        return new StructAccessList(ast.I, generateStructAccessList((DotExpr) ast.E), ast.pos, ast.arrayIndex, ast.isPointerAccess);
     }
 
 

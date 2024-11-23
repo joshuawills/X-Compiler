@@ -148,6 +148,10 @@
 *23.11.2024*
 
 - structs correctly pasted onto stack when passed through functions
+- malloc and free moved to lib/std.x
+- explicit type casting with 'as' keyword
+- documentation updated
+- pointers to struct accesses!
 
 # TODO
 

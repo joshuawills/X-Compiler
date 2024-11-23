@@ -11,14 +11,16 @@ public class StructAccess extends Expr {
     public StructAccessList L;
     public Optional<Expr> arrayIndex;
     public Type sourceType;
+    public boolean isPointerAccess;
 
-    public StructAccess(Struct refAST, Ident varNameAST, StructAccessList lAST, Position pos, Optional<Expr> arrayIndexAST, Type sourceTypeAST) {
+    public StructAccess(Struct refAST, Ident varNameAST, StructAccessList lAST, Position pos, Optional<Expr> arrayIndexAST, Type sourceTypeAST, boolean isPointerAST) {
         super(pos);
         ref = refAST;
         varName = varNameAST;
         L = lAST;
         arrayIndex = arrayIndexAST;
         sourceType = sourceTypeAST;
+        isPointerAccess = isPointerAST;
         sourceType.parent = ref.parent = varName.parent = L.parent = this;
         if (arrayIndex.isPresent()) {
             arrayIndex.get().parent = this;

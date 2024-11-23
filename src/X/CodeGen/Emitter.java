@@ -1597,11 +1597,16 @@ public class Emitter implements Visitor {
                 v = f.getNewIndex();
             }
 
+            if (ast.isPointerAccess) {
+                emit("\t%" + v + " = load %" + structName + "*, ptr %" + localRef);
+                localRef = String.valueOf(v);
+                v = f.getNewIndex();
+            }
+
             String currentVal = ast.L.SA.spelling;
             int index = ast.ref.getNum(currentVal);
             emit("\t%" + v + " = getelementptr %" + structName + ", %" + structName + "* %" + localRef);
             emitN(", i32 0, i32 " + index);
-
             ast.L.visit(this, o);
             ast.tempIndex = v;
 
@@ -1621,6 +1626,12 @@ public class Emitter implements Visitor {
                 emit(", ");
                 ast.sourceType.visit(this, o);
                 emitN("* %" + localRef + ", i32 0, i32 %" + arrayIndexNum);
+                localRef = String.valueOf(v);
+                v = f.getNewIndex();
+            }
+
+          if (ast.isPointerAccess) {
+                emit("\t%" + v + " = load %" + structName + "*, ptr %" + localRef);
                 localRef = String.valueOf(v);
                 v = f.getNewIndex();
             }

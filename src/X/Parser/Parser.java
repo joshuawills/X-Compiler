@@ -880,10 +880,10 @@ public class Parser {
             return (Expr) E;
         }
         return switch(currentToken.kind) {
-            case PERIOD -> {
-                // Assumes E is an Ident, may come back to bite me
+            case PERIOD, ARROW-> {
+                boolean isPointerAccess = currentToken.kind == TokenType.ARROW;
                 finish(pos);
-                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.empty());
+                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.empty(), isPointerAccess);
             }
             case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);
@@ -902,9 +902,10 @@ public class Parser {
                 match(TokenType.LEFT_SQUARE);
                 Expr eAST = parseExpr();
                 match(TokenType.RIGHT_SQUARE);
-                if (currentToken.kind == TokenType.PERIOD) {
+                if (currentToken.kind == TokenType.PERIOD || currentToken.kind == TokenType.ARROW) {
+                    boolean isPointerAccess = currentToken.kind == TokenType.ARROW;
                     finish(pos);
-                    yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.of(eAST));
+                    yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.of(eAST), isPointerAccess);
                 }
                 finish(pos);
                 yield new ArrayIndexExpr((Ident) E, eAST, pos);
@@ -925,7 +926,11 @@ public class Parser {
     private Expr parsePostFixExpressionTwo() throws SyntaxError {
         Position pos = new Position();
         start(pos);
-        if (tryConsume(TokenType.PERIOD)) {
+        if (currentToken.kind == TokenType.ARROW || currentToken.kind == TokenType.PERIOD) { 
+            boolean isPointerAccess = tryConsume(TokenType.ARROW);
+            if (!isPointerAccess) {
+                match(TokenType.PERIOD);
+            }
             acceptableModuleAccess = true;
             Ident I = parseIdent();
             acceptableModuleAccess = false;
@@ -935,7 +940,7 @@ public class Parser {
                 match(TokenType.RIGHT_SQUARE);
             }
             finish(pos);
-            return new DotExpr(I, parsePostFixExpressionTwo(), pos, E);
+            return new DotExpr(I, parsePostFixExpressionTwo(), pos, E, isPointerAccess);
         }
         finish(pos);
         return new EmptyExpr(pos);

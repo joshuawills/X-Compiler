@@ -63,6 +63,10 @@ public abstract class Type extends AST {
         return this instanceof PointerType;
     }
 
+    public boolean isPointerToStruct() {
+        return this instanceof PointerType && ((PointerType) this).t instanceof StructType;
+    }
+
     public boolean isVoidPointer() {
         return this instanceof PointerType && ((PointerType) this).t.isVoid();
     }
