@@ -143,6 +143,12 @@
 - accessing lib c through '@' prefix of call expressions
 - various bug fixes in expression evaluation
 
+- passing struct types into functions
+
+*23.11.2024*
+
+- structs correctly pasted onto stack when passed through functions
+
 # TODO
 
 - in-compilation expression everywhere possible

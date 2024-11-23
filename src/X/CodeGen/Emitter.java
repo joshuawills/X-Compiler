@@ -122,7 +122,7 @@ public class Emitter implements Visitor {
         while (!PL.isEmptyParaList()) {
             ParaDecl P = ((ParaList) PL).P;
             Type t = P.T;
-            if ((P.isMut && !t.isArray()) || t.isPointer()) {
+            if ((P.isMut && !t.isArray() && !t.isStruct()) || t.isPointer()) {
                 emit("\t%" + P.I.spelling + "0 = alloca ");
                 t.visit(this, o);
                 emit("\n\tstore ");
@@ -131,6 +131,16 @@ public class Emitter implements Visitor {
                 t.visit(this, o);
                 emitN("* %" + P.I.spelling + "0");
             }
+
+            if (t.isStruct()) {
+                emit("\t%" + P.I.spelling + "0 = alloca ");
+                t.visit(this, o);
+                emitN("");
+               
+                int v = handleSizeOfExpr(t, f);
+                emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + P.I.spelling + "0, ptr %" + P.I.spelling + ", i64 %" + v + ", i1 false)");
+            }
+
             PL = ((ParaList) PL).PL;
         }
 
@@ -198,19 +208,8 @@ public class Emitter implements Visitor {
 
             if (!ast.E.isStructExpr()) {
                 int srcIndex = ast.E.tempIndex;
-
-                int v3 = f.getNewIndex();
-                int v4 = f.getNewIndex();
-
-                emit("\t%" + v3 + " = getelementptr ");
-                ast.T.visit(this, o);
-                emit(", ");
-                ast.T.visit(this, o);
-                emitN("* null, i32 1");
-                emit("\t%" + v4 + " = ptrtoint ");
-                ast.T.visit(this, o);
-                emitN("* %" + v3 + " to i64");
-                
+                int v4 = handleSizeOfExpr(ast.T, f);
+               
                 emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + ast.I.spelling + depth + ", ptr %" + srcIndex
                 + ", i64 %" + v4 + ", i1 false)");
 
@@ -663,17 +662,21 @@ public class Emitter implements Visitor {
             return null;
         } else {
             ast.T.visit(this, o);
+            if (ast.T.isStruct()) {
+                emit("*");
+            }
         }
 
         if (inLibCDeclarations) {
             return null;
         }
 
-        if (!ast.isMut && !ast.T.isPointer()) {
+        if (!ast.isMut && !ast.T.isPointer() && !ast.T.isStruct()) {
             emit(" %" + ast.I.spelling + "0");
         } else {
             emit(" %" + ast.I.spelling);
         }
+        ast.index = "0";
         return null;
     }
 
@@ -709,7 +712,7 @@ public class Emitter implements Visitor {
             } else if (l.T.isStruct()) {
 
                 newIndex = handleBitCast(l.T, ast.I.spelling + l.index, f);
-                if (!ast.inDeclaringLocalVar) {
+                if (!ast.inDeclaringLocalVar && !ast.inCallExpr) {
                     int v2 = f.getNewIndex();
                     handleLoad(l.T, newIndex, v2, f);
                 }
@@ -923,6 +926,9 @@ public class Emitter implements Visitor {
                     }
                 } else {
                     E.type.visit(this, o);
+                    if (E.type.isStruct()) {
+                        emit("*");
+                    }
                 }
                 emit(" %" + index);
                 if (AL.EL.isEmptyArgList()) {
@@ -1395,19 +1401,7 @@ public class Emitter implements Visitor {
         ast.E.visit(this, o);
         if ((!ast.E.isStructExpr() && ast.E.type.isStruct()) || (!ast.E.isArrayInitExpr() && ast.E.type.isArray())) {
             int srcIndex = ast.E.tempIndex;
-
-            int v3 = f.getNewIndex();
-            int v4 = f.getNewIndex();
-
-            emit("\t%" + v3 + " = getelementptr ");
-            ast.E.type.visit(this, o);
-            emit(", ");
-            ast.E.type.visit(this, o);
-            emitN("* null, i32 1");
-            emit("\t%" + v4 + " = ptrtoint ");
-            ast.E.type.visit(this, o);
-            emitN("* %" + v3 + " to i64");
-
+            int v4 = handleSizeOfExpr(ast.E.type, f);
             emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + v + ", ptr %" + srcIndex
                 + ", i64 %" + v4 + ", i1 false)");
         }
@@ -1462,17 +1456,7 @@ public class Emitter implements Visitor {
                 t = ((ArrayType) ast.RHS.type).t;
             }
 
-            int v3 = f.getNewIndex();
-            int v4 = f.getNewIndex();
-
-            emit("\t%" + v3 + " = getelementptr ");
-            t.visit(this, o);
-            emit(", ");
-            t.visit(this, o);
-            emitN("* null, i32 1");
-            emit("\t%" + v4 + " = ptrtoint ");
-            t.visit(this, o);
-            emitN("* %" + v3 + " to i64");
+            int sizeOfExpr = calculatingSizeOf(t, f);
 
             String src;
             if (ast.LHS instanceof VarExpr V) {
@@ -1486,7 +1470,7 @@ public class Emitter implements Visitor {
             }
             
             emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + src + ", ptr %" + rhsIndex 
-            + ", i64 %" + v4 + ", i1 false)");
+            + ", i64 %" + sizeOfExpr + ", i1 false)");
             ast.tempIndex = rhsIndex;
             return null;
         }
@@ -1582,7 +1566,6 @@ public class Emitter implements Visitor {
           
         }
 
-
         int v = f.getNewIndex();
         if (ast.varName.decl instanceof LocalVar L) {
 
@@ -1614,7 +1597,6 @@ public class Emitter implements Visitor {
         } else if (ast.varName.decl instanceof GlobalVar G) {
 
         } else if (ast.varName.decl instanceof ParaDecl P) {
-
             String localRef = P.I.spelling + "0";
             if (ast.sourceType.isArray()) {
                 emit("\t%" + v + " = getelementptr ");
@@ -1639,7 +1621,6 @@ public class Emitter implements Visitor {
                 ast.tempIndex = f.getNewIndex();
                 handleLoad(ast.type, oldV, ast.tempIndex, f);
             }
-
         }
 
         return null;
@@ -1765,6 +1746,20 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    private int calculatingSizeOf(Type t, Frame f) {
+        int v = f.getNewIndex();
+        int v2 = f.getNewIndex();
+        emit("\t%" + v + " = getelementptr ");
+        t.visit(this, f);
+        emit(", ");
+        t.visit(this, f);
+        emitN("* null, i32 1");
+        emit("\t%" + v2 + " = ptrtoint ");
+        t.visit(this, f);
+        emitN("* %" + v + " to i64");
+        return v2;
+    }
+
     private int handleSizeOfExpr(Type t, Object o) {
         Frame f = (Frame) o;
         int size = -1;
@@ -1779,21 +1774,7 @@ public class Emitter implements Visitor {
             size = 8;
         } else if (t.isStruct()) {
             StructType T = (StructType) t;
-
-            int v = f.getNewIndex();
-            int v4 = f.getNewIndex();
-
-            emit("\t%" + v + " = getelementptr ");
-            T.visit(this, o);
-            emit(", ");
-            T.visit(this, o);
-            emitN("* null, i32 1");
-            emit("\t%" + v4 + " = ptrtoint ");
-            T.visit(this, o);
-            emitN("* %" + v + " to i64");
-
-            return v4;
-
+            return calculatingSizeOf(T, f);
         } else if (t.isArray()) {
             Type innerT = ((ArrayType) t).t;
             int v2 = handleSizeOfExpr(innerT, o);

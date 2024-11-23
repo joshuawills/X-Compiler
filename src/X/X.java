@@ -135,9 +135,8 @@ public class X {
 
         Instant cStart = Instant.now();
         Checker checker = new Checker(handler);
-        ArrayList<Module> modules = new ArrayList<>();
         try {
-            modules = checker.check(ast, file_name, true);
+            checker.check(ast, file_name, true);
         } catch (Exception s) {
             s.printStackTrace();
             System.out.println(s);

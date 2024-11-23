@@ -107,6 +107,7 @@ public class Checker implements Visitor {
     private boolean hasReturn = false;
     private boolean inMain = false;
     private boolean declaringLocalVar = false;
+    private boolean inCallExpr = false;
 
     // Used for checking break/continue stmt
     private int loopDepth = 0;
@@ -748,8 +749,9 @@ public class Checker implements Visitor {
         Type condT;
         
         if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
-            Expr e1 = (Expr) ast.E.visit(this, ast);
-            condT = e1.type;
+            ast.E = (Expr) ast.E.visit(this, ast);
+            ast.E.parent = ast;
+            condT = ast.E.type;
         } else {
             condT = (Type) ast.E.visit(this, ast);
         }
@@ -1188,6 +1190,7 @@ public class Checker implements Visitor {
         } else {
             E.type = Environment.i64Type;
         }
+        E.type.parent = ast.parent;
 
         if (currentNumericalType != null) {
             E = checkCast(currentNumericalType, E, ast);
@@ -1312,6 +1315,9 @@ public class Checker implements Visitor {
 
         if (declaringLocalVar) {
             ast.setDeclaringLocalVar();
+        }
+        if (inCallExpr) {
+            ast.setInCallExpr();
         }
 
         if (ast.I.isModuleAccess) {
@@ -1677,6 +1683,7 @@ public class Checker implements Visitor {
     }
 
     public Object visitCallExpr(CallExpr ast, Object o) {
+        inCallExpr = true;
         if (inMain && ast.I.spelling.equals("main")) {
             handler.reportError(errors[17], "", ast.I.pos);
             return Environment.errorType;
@@ -1757,6 +1764,7 @@ public class Checker implements Visitor {
         ast.I.decl = function;
         function.setUsed();
         ast.AL.visit(this, function.PL);
+        inCallExpr = false;
         ast.type = function.T;
         return function.T;
     }
@@ -1917,6 +1925,7 @@ public class Checker implements Visitor {
         currentNumericalType = null; 
 
         ast.E.type = realType;
+        ast.E.parent = ast;
         if (!realType.assignable(expectedType)) {
             String message = "member '" + L.S.I.spelling + "' should be of type " +
                 expectedType + ", but received " + realType;

@@ -8,6 +8,7 @@ public abstract class AST {
     public AST parent;
 
     public boolean inDeclaringLocalVar = false;
+    public boolean inCallExpr = false;
 
     public AST(Position pos) {
         this.pos = pos;
@@ -22,6 +23,10 @@ public abstract class AST {
     public void setDeclaringLocalVar() {
         inDeclaringLocalVar = true;
     } 
+
+    public void setInCallExpr() {
+        inCallExpr = true;
+    }
 
     public boolean isLocalVar() {
         return this instanceof LocalVar;
