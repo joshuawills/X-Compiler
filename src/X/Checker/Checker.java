@@ -1142,6 +1142,10 @@ public class Checker implements Visitor {
             handler.reportMinorError(errors[18], "", ast.SL.pos);
         }
         ast.SL.visit(this, o);
+
+        if (ast.SL.containsExit) {
+            ast.containsExit = true;
+        }
         return null;
     }
 
