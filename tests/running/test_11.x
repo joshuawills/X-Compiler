@@ -9,7 +9,7 @@ fn foo(x: Data) -> void {}
 
 fn fooP(x: Data*) -> void {}
 
-fn main() -> i64 {
+fn main() -> void {
 
     let mut y = Data { 2, 3 };
     foo(y);

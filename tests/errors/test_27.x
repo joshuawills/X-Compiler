@@ -1,6 +1,6 @@
 // Address of operand only applicable to variables
 
-fn main() -> i64 {
+fn main() -> void {
 
     let x: i64* = &2;
 

@@ -78,7 +78,7 @@ fn listContainsValue(list: LinkedList*, val: i64) -> bool {
 	return false;
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let list: LinkedList* = makeLinkedList();
 	loop 1000 {

@@ -9,7 +9,7 @@ struct BoxOfMany -> {
     val3: bool
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     let a = IntBox { 3 };
     let b = BoxOfMany { a, 2 == 3 };

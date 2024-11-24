@@ -2,7 +2,7 @@
 
 let y;
 
-fn main() -> i64 {
+fn main() -> void {
 
     let x;
 

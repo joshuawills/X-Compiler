@@ -1,6 +1,6 @@
 // Incompatible type for this binary operator
 
-fn main() -> i64 {
+fn main() -> void {
 
     let x: i64 = 1 + true;
 

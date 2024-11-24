@@ -5,14 +5,12 @@ struct Box -> {
     cond: bool
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     let var = Box { 2, false };
 
     if !var.cond {
         outI64(var.num);
     }
-
-    return 0;
 
 }

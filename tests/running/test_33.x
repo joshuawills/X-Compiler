@@ -27,7 +27,7 @@ fn printDeeperData(mut data: DeeperStruct) -> void {
 }
 
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let data = Test { 1, 2 };
 	outStr("should be 1: ");
@@ -43,6 +43,4 @@ fn main() -> i64 {
     let data3 = DeeperStruct { false, Test { 1, 2 } };
     printDeeperData(data3);
 
-
-	return 0;
 }

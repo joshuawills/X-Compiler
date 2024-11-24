@@ -1,7 +1,7 @@
 // inappropriate use of the '$' operator
 
 
-fn main() -> i64 {
+fn main() -> void {
 
     let $: i64 = 21;
 

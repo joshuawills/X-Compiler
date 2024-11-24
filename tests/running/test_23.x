@@ -4,7 +4,7 @@ struct A -> {
 	mut v: i64
 }
 
-fn main() -> i64 {
+fn main() -> void {
 	let mut b = A { 2 };
 	let mut v = b;
 	b.v = 3;

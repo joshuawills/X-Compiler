@@ -2,7 +2,7 @@
 
 int y = 21;
 
-fn main() -> i64 {
+fn main() -> void {
 
     out(y);
     int z = 21 + 19 - (12 / 3);

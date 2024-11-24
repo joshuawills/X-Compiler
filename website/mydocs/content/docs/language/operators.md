@@ -32,7 +32,7 @@ precedence, check out the [grammar page](/docs/grammar), but it can be summarise
 X supports some shorthand syntax for redeclaring numeric types
 
 ```Rust
-fn main() -> i64 {
+fn main() -> void {
     let mut x = 21;
     x += 21; // '+=', '-=', '*=' and '/=' are all supported
 }

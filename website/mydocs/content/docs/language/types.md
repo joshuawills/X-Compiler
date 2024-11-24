@@ -12,7 +12,7 @@ enum DaysOfWeek -> {
     MON, TUE, WED, THU, FRI, SAT, SUN
 }
 
-fn main() -> i64 {
+fn main() -> void {
     let x: i64 = 21;
     
     let y: bool = true && false; // true and false are reserved keywords in X
@@ -75,7 +75,7 @@ struct Data -> {
     num: i64
 }
 
-fn main() -> i64 {
+fn main() -> void {
     let a = Data {
         BoolBox { 
             false

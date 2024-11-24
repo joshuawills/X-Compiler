@@ -4,7 +4,7 @@ fn foo() -> void {
 
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     foo[0] = 19;
 

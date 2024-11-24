@@ -2,4 +2,4 @@
 
 let x: i64[] = ['a', true, 19];
 
-fn main() -> i64 {}
+fn main() -> void {}

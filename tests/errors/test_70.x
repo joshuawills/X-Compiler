@@ -6,7 +6,7 @@ struct Node -> {
     value: i64
 }
 
-fn main() -> i64{
+fn main() -> void{
 
     let what = What->A;
 

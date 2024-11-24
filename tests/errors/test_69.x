@@ -2,7 +2,7 @@
 
 struct B -> { a: i64, b: i32 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     let a = 12 as bool;
 

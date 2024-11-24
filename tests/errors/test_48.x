@@ -2,4 +2,4 @@
 
 struct foo -> {}
 
-fn main() -> i64 {}
+fn main() -> void {}

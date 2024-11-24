@@ -2,7 +2,7 @@
 
 import "math-what.x" as Math;
 
-fn main() -> i64 {
+fn main() -> void {
 
         let mut val = Math::Boolean.TRUE;
 

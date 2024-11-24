@@ -1,4 +1,4 @@
-fn main() -> i64 {
+fn main() -> void {
     let x: i64 = 5;
     outI64(factorial(x));
 }

@@ -2,7 +2,7 @@
 
 let mut x: i64[] = [1, 2, 3];
 
-fn main() -> i64 {
+fn main() -> void {
 
     x = [2, 3, 4];
 

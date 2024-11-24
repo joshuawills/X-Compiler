@@ -2,7 +2,7 @@
 
 import "../../lib/math.x" as Math;
 
-fn main() -> i64 {
+fn main() -> void {
 
     let pi = Math::PI;
 

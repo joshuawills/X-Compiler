@@ -5,6 +5,6 @@ struct Data -> {
     x: i8*
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 }

@@ -8,7 +8,7 @@ struct B -> {
 	x: i64[10]
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let a: A[2] = [
 		A { 2 },

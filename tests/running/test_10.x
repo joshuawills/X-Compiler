@@ -18,7 +18,7 @@ struct StructWithPointers -> {
     data: i64*
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     let data = BasicStruct { 2, 3 };
 

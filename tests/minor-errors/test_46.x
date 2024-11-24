@@ -5,6 +5,6 @@ struct Person -> {
     likesChicken: bool
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 }

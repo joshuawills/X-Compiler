@@ -1,6 +1,6 @@
 // Char expr greater than one character;
 
-fn main() -> i64 {
+fn main() -> void {
 
     let x: i8 = 'ab';
 }

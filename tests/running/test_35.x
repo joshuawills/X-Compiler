@@ -1,6 +1,6 @@
 // Casting with different numeric types
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let what = 21 as i8;
 

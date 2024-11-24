@@ -6,10 +6,10 @@ date = 2024-08-14T11:49:05+10:00
 # X Programming Language
 
 ```Rust
-fn main() -> i64 {
+fn main() -> void {
     let val = "hello, world\n";
     outStr(val);
-    return 0;
+    return;
 }
 ```
 

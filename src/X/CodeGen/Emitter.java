@@ -22,6 +22,7 @@ public class Emitter implements Visitor {
 
     String formattedCurrentPath;
     boolean inMainModule = true;
+    boolean inMainFunction = false;
 
     public Emitter(String outputName) {
         this.outputName = outputName;
@@ -95,6 +96,7 @@ public class Emitter implements Visitor {
     public Object visitFunction(Function ast, Object o) {
 
         Frame f = new Frame(ast.I.spelling.equals("main"));
+        inMainFunction = ast.I.spelling.equals("main");
         if (inLibCDeclarations) {
             handleLibC(ast, f);
             return null;
@@ -104,7 +106,11 @@ public class Emitter implements Visitor {
             return null;
         }
         emit("define ");
-        ast.T.visit(this, f);
+        if (ast.I.spelling.equals("main")) {
+            emit("i64");
+        } else {
+            ast.T.visit(this, f);
+        }
         if (inMainModule) {
             emit(" @" + ast.I.spelling);
         } else {
@@ -152,11 +158,12 @@ public class Emitter implements Visitor {
            emitN("\tret i64 0");
         }
 
-        if (!ast.S.containsExit && ast.T.isVoid()) {
+        if (!ast.S.containsExit && ast.T.isVoid() && !inMainFunction) {
             emitN("\t ret void");
         }
 
         emitN("}");
+        inMainFunction = false;
         return null;
     }
 
@@ -377,7 +384,11 @@ public class Emitter implements Visitor {
     public Object visitReturnStmt(ReturnStmt ast, Object o) {
         Frame f = (Frame) o;
         if (ast.E.type.isVoid()) {
-            emitN("    ret void");
+            if (inMainFunction) {
+                emitN("ret i64 0");
+            } else {
+                emitN("    ret void");
+            }
             return null;
         }
         ast.E.visit(this, o);

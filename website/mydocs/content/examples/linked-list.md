@@ -72,7 +72,7 @@ fn freeLinkedList(list: LinkedList*) -> void {
 }
 
 
-fn main() -> i64 {
+fn main() -> void {
 
     let list: LinkedList* = makeLinkedList();
     loop 1000 {

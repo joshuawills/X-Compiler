@@ -1,6 +1,6 @@
 // Loop constructs in their different forms
 
-fn main() -> i64 {
+fn main() -> void {
 
     let mut i: i64 = 0;
     while i < 10 {

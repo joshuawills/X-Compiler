@@ -4,7 +4,7 @@ let x: i64[] = [1, 19, 9];
 let x1: bool[] = [true, false, true];
 let mut x2: i8[] = ['a', 'b', 'c'];
 
-fn main() -> i64 {
+fn main() -> void {
 
     loop i in 3 {
         outI64(x[i]);

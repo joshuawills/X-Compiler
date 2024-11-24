@@ -1,3 +1,3 @@
-// Return type of main is not int
+// Return type of main is not void 
 
-fn main() -> void {}
+fn main() -> i64 {}

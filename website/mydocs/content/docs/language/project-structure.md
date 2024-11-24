@@ -53,7 +53,7 @@ export fn logBoolean(b: Boolean) -> void {
 // Here the type is specified by you could alternatively do let myFavNumber = (i32) 21;
 let myFavNumber: i32 = 21;
 
-fn main() -> i64 {
+fn main() -> void {
     let d = myData {
         Math::Vec2 {2, 3},
         Boolean.TRUE,

@@ -13,7 +13,7 @@ let mut aA: i64[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 let mut aB: bool[] = [true, false, true, false];
 let mut aC: i8[] = ['a', 'b', 'c', 'd'];
 
-fn main() -> i64 {
+fn main() -> void {
     outI64(x); // 20
     outI64(x1); // 19
     x1 += 1;

@@ -1,16 +1,16 @@
 // Euclid
 
-fn main() -> i64 {
+fn main() -> void {
 
     let x: i64 = 6;
     let y: i64 = 2;
 
     if x <= 0 || y <= 0 {
-        return 1;
+        return;
     }
 
     outI64(euclid(x, y));
-    return 0;
+    return;
 }
 
 fn euclid(x: i64, y: i64) -> i64 {

@@ -18,7 +18,7 @@ fn setNodeInNodeValueTo42(node: NodeInNode*) -> void {
 	node->node.value = 42;
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let mut node = Node { 21 };
 	outI64(node.value);

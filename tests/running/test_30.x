@@ -2,7 +2,7 @@
 
 import "../../lib/std.x" as std;
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let x: void* = std::malloc(size(i64));
 

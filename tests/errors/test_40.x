@@ -1,6 +1,6 @@
 // Unknown type
 
-fn main() -> i64 {
+fn main() -> void {
 
     let x: WHAT;
 

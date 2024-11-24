@@ -19,7 +19,7 @@ struct BasicStruct2 -> {
     y: i64
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     let y = BasicStruct { IntBox { 2 }, 3 };
 

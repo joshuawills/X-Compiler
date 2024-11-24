@@ -8,7 +8,7 @@ struct B -> {
     mut c: A
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     let mut val = A { 3 };
 

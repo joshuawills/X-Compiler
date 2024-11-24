@@ -4,7 +4,7 @@ struct A -> {
 	B: bool
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let var = A { false };
 

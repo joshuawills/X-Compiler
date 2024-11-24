@@ -4,13 +4,13 @@ weight: 1
 ---
 
 ```Rust
-fn main() -> i64 {
+fn main() -> void {
 
     let x = 6;
     let y = 2;
 
     outI64(euclid(x, y));
-    return 0;
+    return;
 }
 
 fn euclid(x: i64, y: i64) -> i64 {

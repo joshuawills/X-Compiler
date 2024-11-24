@@ -8,7 +8,7 @@ fn getBooleanString(val: bool) -> i8* {
 	return "false\n";
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let a = true;
 	outStr(getBooleanString(a));

@@ -1,4 +1,4 @@
-fn main() -> i64 {
+fn main() -> void {
     let mut x;
     loop {
         inInt("Enter a number: ", x);
@@ -8,7 +8,6 @@ fn main() -> i64 {
             break;
         }
     }
-    return 0;
 }
 
 fn is_prime(x: i64) -> bool {

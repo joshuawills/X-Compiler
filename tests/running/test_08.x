@@ -2,7 +2,7 @@
 
 let i: i64 = 0;
 
-fn main() -> i64 {
+fn main() -> void {
     outI64(i);
     let i: i64 = 21;
     outI64(i);

@@ -1,6 +1,6 @@
 // while conditional is not boolean
 
-fn main() -> i64 {
+fn main() -> void {
 
     while 1 {
     }

@@ -1,4 +1,4 @@
-fn main() -> i64 {
+fn main() -> void {
     let mut x: i64[] = [2, 3, 1, 4, 5, 9, 8, 7, 6, 0];
     print_arr(x, 10);
     bubble_sort(x, 10);

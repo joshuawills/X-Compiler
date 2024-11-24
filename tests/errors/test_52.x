@@ -5,7 +5,7 @@ struct DataBox -> {
     b: i8 
 }
 
-fn main() -> i64 {
+fn main() -> void {
     let data = DataBox { false, 'c' };
     let data2 = DataBox { 2, true };
 }

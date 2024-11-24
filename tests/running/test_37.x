@@ -10,7 +10,7 @@ struct NodeInNode -> {
 	mut node: Node
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let mut node = Node { 10 };
 
@@ -30,6 +30,5 @@ fn main() -> i64 {
 	outI64(nodeInNode.node.value);
 	outI64(nodeInNodePtr->node.value);
 
-	return 0;
 
 }

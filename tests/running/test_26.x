@@ -2,7 +2,7 @@
 
 struct A -> { b: i64, c: bool}
 
-fn main() -> i64 {
+fn main() -> void {
 	
 	let a = A { 2, false };
 

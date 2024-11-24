@@ -6,7 +6,7 @@ struct Node -> {
 	value: i64
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 	let value: Node* = std::malloc(size(Node));
 	outStr(type(value));

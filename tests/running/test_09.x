@@ -7,7 +7,7 @@ let y = true;
 let z = 'a';
 let a = Boolean.TRUE;
 
-fn main() -> i64 {
+fn main() -> void {
 
     if y {
         outI64(x);

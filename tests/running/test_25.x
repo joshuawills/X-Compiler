@@ -1,6 +1,6 @@
 // Redeclaring char*
 
-fn main() -> i64 {
+fn main() -> void {
     let mut val = "hello, world\n";
 
     outStr(val);
@@ -9,5 +9,4 @@ fn main() -> i64 {
 
     outStr(val);
 
-    return 0;
 }

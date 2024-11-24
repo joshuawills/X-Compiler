@@ -1,6 +1,6 @@
 // Inappropriate dereference of variable
 
-fn main() -> i64 {
+fn main() -> void {
 
     let mut x: i64 = 2;
 

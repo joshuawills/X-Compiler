@@ -1,4 +1,4 @@
-fn main() -> i64 {
+fn main() -> void {
 
     let x: i64 = 6;
     let y: i64 = 2;
@@ -8,7 +8,6 @@ fn main() -> i64 {
     }
 
     outI64(euclid(x, y));
-    return 0;
 }
 
 fn euclid(x: i64, y: i64) -> i64 {

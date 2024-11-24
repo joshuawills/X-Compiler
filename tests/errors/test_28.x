@@ -2,7 +2,7 @@
 
 let x: i64 = -1;
 
-fn main() -> i64 {
+fn main() -> void {
 
     let y: i64* = &x;
 

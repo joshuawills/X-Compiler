@@ -6,7 +6,7 @@ struct A -> {
     mut x: i64
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     y[0] = 21;
 

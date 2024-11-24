@@ -12,7 +12,7 @@ fn add(x: i64, y: i64) -> i64 {
     return x + y;
 }
 
-fn main() -> i64 {
+fn main() -> void {
     outI64(add()); // 3
     outI64(add(2)); // 2
     outI64(add(2, 2)); // 4

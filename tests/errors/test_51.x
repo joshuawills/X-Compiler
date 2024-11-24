@@ -6,6 +6,6 @@ struct DataBox -> {
     c: bool
 }
 
-fn main() -> i64 {
+fn main() -> void {
     let data = DataBox { 1, 'c', 1 == 1, 2 };
 }

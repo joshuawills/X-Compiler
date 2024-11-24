@@ -3,4 +3,4 @@
 let x: i64 = 21;
 let x: i64 = 21;
 
-fn main() -> i64 {}
+fn main() -> void {}

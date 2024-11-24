@@ -4,7 +4,7 @@ struct Box -> {
 	a: i64
 }
 
-fn main() -> i64 {
+fn main() -> void {
 	let b = Box { 2 };
 	let c = b.d;
 }

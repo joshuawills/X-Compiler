@@ -12,6 +12,6 @@ enum C -> { WHAT }
 enum D -> { WHAT }
 struct D -> { x: i64 }
 
-fn main() -> i64 {
+fn main() -> void {
 
 }

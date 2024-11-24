@@ -1,6 +1,6 @@
 // operator precedence and maths
 
-fn main() -> i64 {
+fn main() -> void {
 
     let x: i64 = 19;
     let y: i64 = 21;

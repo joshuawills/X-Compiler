@@ -1,6 +1,6 @@
 // Invalid unary operator
 
-fn main() -> i64
+fn main() -> void
 {
 
     let x: i64 = !1;

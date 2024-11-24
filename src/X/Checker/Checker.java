@@ -30,7 +30,7 @@ public class Checker implements Visitor {
 
     private final String[] errors = {
         "*0: main function is missing",
-        "*1: return type of 'main' is not int",
+        "*1: return type of 'main' is not void",
         "*2: identifier redeclared",
         "*3: identifier declared void",
         "*4: identifier undeclared",
@@ -398,6 +398,20 @@ public class Checker implements Visitor {
                 new ParaDecl(Environment.i64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
         ));
+        Environment.calloc = stdFunctionLibC(Environment.voidPointerType, "calloc", new ParaList(
+                new ParaDecl(Environment.i64Type, i, dummyPos, false),
+                new ParaList(
+                    new ParaDecl(Environment.i64Type, i, dummyPos, false),
+                    new EmptyParaList(dummyPos), dummyPos
+                ), dummyPos
+        ));
+        Environment.realloc = stdFunctionLibC(Environment.voidPointerType, "realloc", new ParaList(
+            new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
+            new ParaList(
+                new ParaDecl(Environment.i64Type, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+            ), dummyPos
+        ));
         Environment.sin = stdFunctionLibC(Environment.f64Type, "sin", new ParaList(
                 new ParaDecl(Environment.f64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
@@ -466,7 +480,7 @@ public class Checker implements Visitor {
         this.currentFunctionType = ast.T;
         if (ast.I.spelling.equals("main")) {
             inMain = hasMain = true;
-            if (!ast.T.isI64()) {
+            if (!ast.T.isVoid()) {
                 String message = "set to " + ast.T.toString();
                 handler.reportError(errors[1] + ": %", message, ast.I.pos);
             }
@@ -1862,7 +1876,7 @@ public class Checker implements Visitor {
         }
 
         if (ast.arrayIndex.isPresent()) {
-            if (!elem.get().T.isArray()) {
+            if (!elem.get().T.isArray() && !elem.get().T.isPointer()) {
                 String message = "key " + ast.SA.spelling + " on struct " + ref.I.spelling;
                 handler.reportError(errors[59] + ": %", message, ast.pos);
                 return Environment.errorType;
@@ -1878,7 +1892,10 @@ public class Checker implements Visitor {
         if (ast.SAL.isEmptyStructAccessList()) {
             // Reached the end
             if (ast.arrayIndex.isPresent()) {
-                return ((ArrayType) elem.get().T).t;
+                if (elem.get().T.isArray()) {
+                    return ((ArrayType) elem.get().T).t;
+                }
+                return ((PointerType) elem.get().T).t;
             }
             return elem.get().T;
         }

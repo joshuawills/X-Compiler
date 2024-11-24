@@ -4,7 +4,7 @@ struct Data -> {
     x: i32
 }
 
-fn main() -> i64 {
+fn main() -> void {
 
     // Testing default types of expressions
     outStr(type(true)); // bool

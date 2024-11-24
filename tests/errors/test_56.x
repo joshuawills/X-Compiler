@@ -4,8 +4,7 @@ struct IntBox -> {
     a: i64
 }
 
-fn main() -> i64 {
+fn main() -> void {
     let b = IntBox.c;
 
-    return 0;
 }

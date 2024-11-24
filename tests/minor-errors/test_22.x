@@ -2,7 +2,7 @@
 
 let mut x: i8[] = ['a', 'b', 'c'];
 
-fn main() -> i64 {
+fn main() -> void {
 
     let mut y: bool = false;
 

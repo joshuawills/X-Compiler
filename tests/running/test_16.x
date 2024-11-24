@@ -1,6 +1,6 @@
 // Fibonacci iterative
 
-fn main() -> i64 {
+fn main() -> void {
     let x: i64 = 9;
 	outI64(fib(x));
 }

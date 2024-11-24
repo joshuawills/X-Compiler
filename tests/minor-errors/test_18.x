@@ -1,10 +1,10 @@
 // Statements not reached
 
-fn main() -> i64 {
+fn main() -> void {
     if true {
-        return 1;
+        return;
         outI64(2);
     }
-    return 0;
+    return;
     outI64(1);
 }

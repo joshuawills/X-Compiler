@@ -4,7 +4,7 @@ weight: 1
 ---
 
 ```Rust
-fn main() -> i64 {
+fn main() -> void {
     let x = 9;
 	
     outI64(fib(x));

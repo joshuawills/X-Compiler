@@ -4,10 +4,10 @@ title: "Your First Program"
 
 ```Rust
 // A hello world application :)
-fn main() -> i64 {
+fn main() -> void {
     let val = "hello, world\n";
     outStr(val);
-    return 0;
+    return;
 }
 ```
 

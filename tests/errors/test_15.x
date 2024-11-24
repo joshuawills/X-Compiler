@@ -1,6 +1,6 @@
 // Continue must be in a loop construct
 
-fn main() -> i64 {
+fn main() -> void {
 
     continue;
 

@@ -2,7 +2,7 @@
 
 import "../../lib/math.x" as Math;
 
-fn main() -> i64 {
+fn main() -> void {
 
     outF64(Math::power(2.0, 3.0));
     outF64(Math::power(2.0, 0.0));
