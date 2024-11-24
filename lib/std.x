@@ -13,3 +13,7 @@ export fn free(v: void*) -> void {
 export fn realloc(v: void*, size_of: i64) -> void* {
 	return @realloc(v, size_of);
 }
+
+export fn exit(v: i64) -> void {
+	@exit(v);
+}

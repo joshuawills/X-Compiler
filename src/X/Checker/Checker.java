@@ -390,6 +390,10 @@ public class Checker implements Visitor {
 
 
         // Lib C ones
+        Environment.exit = stdFunctionLibC(Environment.voidType, "exit", new ParaList(
+                new ParaDecl(Environment.i64Type, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
         Environment.free = stdFunctionLibC(Environment.voidType, "free", new ParaList(
                 new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
