@@ -85,15 +85,15 @@ fn main() -> void {
 	printLinkedList(list);
 
 	if listContainsValue(list, 500) {
-		outStr("List contains 500");
+		outStr("List contains 500\n");
 	} else {
-		outStr("List does not contain 500");
+		outStr("List does not contain 500\n");
 	}
 
 	if listContainsValue(list, 2500) {
-		outStr("List contains 2500");
+		outStr("List contains 2500\n");
 	} else {
-		outStr("List does not contain 2500");
+		outStr("List does not contain 2500\n");
 	}
 
 	freeLinkedList(list);

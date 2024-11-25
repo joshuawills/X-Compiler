@@ -24,4 +24,7 @@ fn main() -> void {
 
 	outI64(r.v);
 	outI64(p.v);
+
+	outI64(vals[0].v);
+	outI64(vals[1].v);
 }

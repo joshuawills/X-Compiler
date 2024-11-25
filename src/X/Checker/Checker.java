@@ -386,9 +386,6 @@ public class Checker implements Visitor {
                 new EmptyParaList(dummyPos), dummyPos
         ));
       
-
-
-
         // Lib C ones
         Environment.exit = stdFunctionLibC(Environment.voidType, "exit", new ParaList(
                 new ParaDecl(Environment.i64Type, i, dummyPos, false),
@@ -1668,7 +1665,7 @@ public class Checker implements Visitor {
 
         // make sure that the index is of int type
         Type T;
-        currentNumericalType = Environment.i32Type;
+        currentNumericalType = Environment.i64Type;
         if (ast.index.isDotExpr() || ast.index.isIntOrDecimalExpr()) {
             ast.index = (Expr) ast.index.visit(this, o);
             T = ast.index.type;
@@ -1682,8 +1679,8 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
-        if (!T.isI32()) {
-            ast.index = new CastExpr(ast.index, T, Environment.i32Type, ast.index.pos, ast);
+        if (!T.isI64()) {
+            ast.index = new CastExpr(ast.index, T, Environment.i64Type, ast.index.pos, ast);
         }
 
         ast.type = binding.T;
