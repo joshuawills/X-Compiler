@@ -130,11 +130,12 @@ public class Emitter implements Visitor {
             if ((P.isMut && !t.isArray() && !t.isStruct()) || t.isPointer()) {
                 emit("\t%" + P.I.spelling + "0 = alloca ");
                 t.visit(this, o);
+
                 emit("\n\tstore ");
                 t.visit(this, o);
                 emit(" %" + P.I.spelling + ", ");
                 t.visit(this, o);
-                if (t.isPointer() && ((PointerType) t).t.isVoid()) {
+                if (t.isPointer()) {
                     emitN(" %" + P.I.spelling + "0");
                 } else {
                     emitN("* %" + P.I.spelling + "0");
@@ -253,7 +254,7 @@ public class Emitter implements Visitor {
         int value = f.localVarIndex - 1;
         emit(" %" + value + ", ");
         ast.T.visit(this, o);
-        if (ast.T.isPointer() && ((PointerType) ast.T).t.isVoid()) {
+        if (ast.T.isPointer()) {
             emitN(" %" + ast.I.spelling + depth);
         } else {
             emitN("* %" + ast.I.spelling + depth);
@@ -759,14 +760,10 @@ public class Emitter implements Visitor {
             if (l.T.isArray()) {
                 newIndex = f.getNewIndex();
                 emitN("\t%" + newIndex + " = bitcast ptr %" + l.I.spelling + l.index + " to ptr");
-                // ArrayType t = (ArrayType) l.T;
-                // emit("\t%" + newIndex + " = getelementptr inbounds ");
-                // int length = t.length;
-                // l.T.visit(this, length);
-                // emit(", ");
-                // l.T.visit(this, length);
-                // emitN("* %" + ast.I.spelling + l.index + ", i32 0, i32 0");
-                return null;
+                if (inCallExpr || ast.inDeclaringLocalVar) {
+                    return null;
+                }
+                newIndex = f.getNewIndex();
             } else if (l.T.isStruct()) {
 
                 newIndex = handleBitCast(l.T, ast.I.spelling + l.index, f);
@@ -786,12 +783,10 @@ public class Emitter implements Visitor {
 
             if (p.T.isStruct()) {
                 int newIndex = handleBitCast(p.T, ast.I.spelling + 0, f);
-
                 if (!ast.inDeclaringLocalVar) {
                     int v2 = f.getNewIndex();
                     handleLoad(p.T, newIndex, v2, f);
                 }
-
                 return null;
             }
 
@@ -1134,12 +1129,7 @@ public class Emitter implements Visitor {
     }
 
     public Object visitPointerType(PointerType ast, Object o) {
-        if (ast.t.isVoid()) {
-            emit("ptr");
-            return null;
-        }
-        ast.t.visit(this, o);
-        emit("*");
+        emit("ptr");
         return null;
     }
 
@@ -1246,6 +1236,19 @@ public class Emitter implements Visitor {
             innerT = ((PointerType) t).t;
         }
         Frame f = (Frame) o;
+
+        int pointerV = -1;
+        if (t.isPointer()) {
+            pointerV = f.getNewIndex();
+            emit("\t%" + pointerV + " = load ptr, ptr ");
+            if (ast.I.decl instanceof LocalVar L) {
+                emit(" %" + ast.I.spelling + L.index);
+            } else if (ast.I.decl.isParaDecl()) {
+                emit(" %" + ast.I.spelling);
+            }
+            emitN("");
+        }
+
         ast.index.visit(this, o);
 
         int indexV = f.localVarIndex - 1;
@@ -1256,9 +1259,12 @@ public class Emitter implements Visitor {
             t.visit(this, o);
             emitN(", ptr @" + ast.I.spelling + ", i64 0, i64 %" + indexV);
         } else {
+
             innerT.visit(this, o);
             emit(", ptr");
-            if (ast.I.decl instanceof LocalVar L) {
+            if (t.isPointer()) {
+                emit(" %" + pointerV);
+            } else if (ast.I.decl instanceof LocalVar L) {
                 emit(" %" + ast.I.spelling + L.index);
             } else if (ast.I.decl.isParaDecl()) {
                 emit(" %" + ast.I.spelling);
@@ -1476,7 +1482,10 @@ public class Emitter implements Visitor {
             ast.E.type.visit(this, o);
             emit(" %" + v2 + ", ");
             ast.E.type.visit(this, o);
-            emitN("* %" + v);
+            if (!ast.E.type.isPointer()) {
+                emit("*");
+            }
+            emitN(" %" + v);
         }
 
         ast.SL.visit(this, o);
@@ -1569,15 +1578,19 @@ public class Emitter implements Visitor {
         ast.type.visit(this, o);
         emit(" %" + rhsIndex + ", ");
         ast.type.visit(this, o);
+        if (!ast.type.isPointer()) {
+            emit("*");
+        }
         if (!val.isEmpty()) {
+            
             if (!isGlobal) {
-                emit("* %");
+                emit(" %");
             } else {
-                emit("* @");
+                emit(" @");
             }
             emitN(val);
         } else {
-            emit("* %");
+            emit(" %");
             emitN(String.valueOf(lhsIndex));
         }
         ast.tempIndex = rhsIndex;
@@ -1615,7 +1628,7 @@ public class Emitter implements Visitor {
                     elem = ref.getElem(ast.SA.spelling);
                 }
 
-                emit("\t%" + v + " = getelementptr inbounds");
+                emit("\t%" + v + " = getelementptr inbounds ");
                 elem.get().T.visit(this, o);
                 emit(", ");
                 elem.get().T.visit(this, o);
@@ -1734,12 +1747,15 @@ public class Emitter implements Visitor {
             ast.E.type.visit(this, o);
             emit(", ");
             ast.E.type.visit(this, o);
+            if (!ast.E.type.isPointer()) {
+                emit("*");
+            }
             if (VS.I.decl instanceof LocalVar L) {
-                emitN("* %" + VS.I.spelling + L.index);
+                emitN(" %" + VS.I.spelling + L.index);
             } else if (VS.I.decl.isGlobalVar()) {
-                emitN("* @" + VS.I.spelling);
+                emitN(" @" + VS.I.spelling);
             } else if (VS.I.decl.isParaDecl()) {
-                emitN("* %" + VS.I.spelling + "0");
+                emitN(" %" + VS.I.spelling + "0");
             }
             // Need to load the actual value;
             if (!ast.isLHSOfAssignment) {
@@ -1788,7 +1804,7 @@ public class Emitter implements Visitor {
         t.visit(this, o);
         emit(", ");
         t.visit(this, o);
-        if (t.isPointer() && ((PointerType)t).t.isVoid()) {
+        if (t.isPointer()) {
             emitN(" %" + v1);
         } else {
             emitN("* %" + v1);
@@ -1800,7 +1816,7 @@ public class Emitter implements Visitor {
         t.visit(this, o);
         emit(", ");
         t.visit(this, o);
-        if (t.isPointer() && ((PointerType)t).t.isVoid()) {
+        if (t.isPointer()) {
             emitN(" %" + v1);
         } else {
             emitN("* %" + v1);
@@ -1812,7 +1828,7 @@ public class Emitter implements Visitor {
         t.visit(this, o);
         emit(", ");
         t.visit(this, o);
-        if (t.isPointer() && ((PointerType)t).t.isVoid()) {
+        if (t.isPointer()) {
             emitN(" %" + v1);
         } else {
             emitN("* %" + v1);

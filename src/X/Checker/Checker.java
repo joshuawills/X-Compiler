@@ -694,8 +694,12 @@ public class Checker implements Visitor {
         }
 
         Type t = expr.type;
-        if (expr instanceof ArrayIndexExpr) {
-            t = ((ArrayType) expr.type).t;
+        if (expr.isArrayIndexExpr()) {
+            if (expr.type.isArray()) {
+                t = ((ArrayType) expr.type).t;
+            } else {
+                t = ((PointerType) expr.type).t;
+            }
         }
 
         if (t == null || expectedT.assignable(t) || t.isError() || expectedT.equals(t)) {
@@ -1398,7 +1402,9 @@ public class Checker implements Visitor {
         ast.I.decl = decl;
         boolean isFnCall = ast.parent.parent.isArgs();
         boolean isStructDecl = ast.parent.parent.isStructArgs();
-        if (decl.T.isArray() && !isFnCall && !isStructDecl) {
+        boolean isLocalVar = ast.parent.parent.isLocalVar();
+        boolean isAssignmentExpr = ast.parent.parent.isAssignmentExpr();
+        if (decl.T.isArray() && !isFnCall && !isStructDecl && !isLocalVar && !isAssignmentExpr) {
             handler.reportError(errors[31] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
@@ -1652,7 +1658,7 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
-        if (binding.isFunction() || !binding.T.isArray()) {
+        if (binding.isFunction() || !(binding.T.isArray() || binding.T.isPointer())) {
             handler.reportError(errors[32] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
@@ -1684,7 +1690,10 @@ public class Checker implements Visitor {
         }
 
         ast.type = binding.T;
-        return ((ArrayType) binding.T).t;
+        if (binding.T.isArray()) {
+            return ((ArrayType) binding.T).t;
+        }
+        return ((PointerType) binding.T).t;
     }
 
     public Object visitI8Type(I8Type ast, Object o) {

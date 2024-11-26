@@ -37,6 +37,12 @@ public class PointerType extends Type {
     public boolean assignable(Object obj) {
         assert(obj instanceof Type);
         Type t1 = (Type) obj;
+
+        if (t1.isArray()) {
+            Type innerT = ((ArrayType) t1).t;
+            return t.equals(innerT);
+        }
+
         if (t1.isVoidPointer()) {
             return true;
         }

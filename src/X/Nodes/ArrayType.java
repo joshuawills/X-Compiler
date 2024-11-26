@@ -29,6 +29,9 @@ public class ArrayType extends Type {
     }
 
     public boolean assignable(Object obj) {
+        if (obj instanceof PointerType) {
+            return ((PointerType) obj).t.equals(t);
+        }
         return equals(obj);
     }
 
