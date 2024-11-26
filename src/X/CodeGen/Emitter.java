@@ -254,11 +254,10 @@ public class Emitter implements Visitor {
         int value = f.localVarIndex - 1;
         emit(" %" + value + ", ");
         ast.T.visit(this, o);
-        if (ast.T.isPointer()) {
-            emitN(" %" + ast.I.spelling + depth);
-        } else {
-            emitN("* %" + ast.I.spelling + depth);
+        if (!ast.T.isPointer()) {
+            emit("*");
         }
+        emitN(" %" + ast.I.spelling + depth);
         return null;
     }
 
@@ -395,9 +394,9 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         if (ast.E.type.isVoid()) {
             if (inMainFunction) {
-                emitN("ret i64 0");
+                emitN("\tret i64 0");
             } else {
-                emitN("    ret void");
+                emitN("\tret void");
             }
             return null;
         }
@@ -413,43 +412,52 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         switch (ast.spelling) {
             case "i8-", "i64-", "i32-", "f32-", "f64-" -> {
-                if (ast.parent instanceof BinaryExpr parent) {
-                    int numOne = parent.E1.tempIndex;
-                    int numTwo = parent.E2.tempIndex;
-                    int newNum = f.getNewIndex();
-                    parent.tempIndex = newNum;
-
-                    emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
-                        " %" + numOne + ", %" + numTwo);
-                } else if (ast.parent instanceof UnaryExpr parent) {
-                    int numOne = parent.E.tempIndex;
-                    int newNum = f.getNewIndex();
-                    if (parent.E.type.isFloat()) {
+                switch (ast.parent) {
+                    case BinaryExpr B -> {
+                        int numOne = B.E1.tempIndex;
+                        int numTwo = B.E2.tempIndex;
+                        int newNum = f.getNewIndex();
+                        B.tempIndex = newNum;
                         emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
-                            " 0.0, %" + numOne);
-                    } else {
-                        emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
-                            " 0, %" + numOne);
+                            " %" + numOne + ", %" + numTwo);
                     }
-                    parent.tempIndex = newNum;
+                    case UnaryExpr U -> {
+                        int numOne = U.E.tempIndex;
+                        int newNum = f.getNewIndex();
+                        emit("\t%" + newNum + " = " + opToCommand(ast.spelling) + " ");
+                        if (U.E.type.isFloat()) {
+                            emitN("0.0");
+                        } else {
+                            emitN("0");
+                        }
+                        emitN(", %" + numOne);
+                        U.tempIndex = newNum;
+                    }
+                    default -> {}
                 }
             }
             case "b!" -> {
-                if (ast.parent instanceof UnaryExpr parent) {
-                    int numOne = parent.E.tempIndex;
-                    int newNum = f.getNewIndex();
-                    parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = " +  "xor i1 1, " + " %" + numOne);
+                switch (ast.parent) {
+                    case UnaryExpr U -> {
+                        int numOne = U.E.tempIndex;
+                        int newNum = f.getNewIndex();
+                        U.tempIndex = newNum;
+                        emitN("\t%" + newNum + " = " +  "xor i1 1, " + " %" + numOne);
+                    }
+                    default -> {}
                 }
             }
             default -> {
-                if (ast.parent instanceof BinaryExpr parent) {
-                    int numOne = parent.E1.tempIndex;
-                    int numTwo = parent.E2.tempIndex;
-                    int newNum = f.getNewIndex();
-                    parent.tempIndex = newNum;
-                    emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
-                        " %" + numOne + ", %" + numTwo);
+                switch (ast.parent) {
+                    case BinaryExpr B -> {
+                        int numOne = B.E1.tempIndex;
+                        int numTwo = B.E2.tempIndex;
+                        int newNum = f.getNewIndex();
+                        B.tempIndex = newNum;
+                        emitN("\t%" + newNum + " = " +  opToCommand(ast.spelling) +
+                            " %" + numOne + ", %" + numTwo);
+                    }
+                    default -> {}
                 }
             }
         }
@@ -754,81 +762,81 @@ public class Emitter implements Visitor {
         }
 
         AST d = ast.I.decl;
-        if (d.isLocalVar()) {
-            LocalVar l = (LocalVar) d;
-            int newIndex = -1;
-            if (l.T.isArray()) {
+
+        switch (d) {
+            case LocalVar L -> {
+                int newIndex = -1;
                 newIndex = f.getNewIndex();
-                emitN("\t%" + newIndex + " = bitcast ptr %" + l.I.spelling + l.index + " to ptr");
-                if (inCallExpr || ast.inDeclaringLocalVar) {
+                if (L.T.isArray()) {
+                    emitN("\t%" + newIndex + " = bitcast ptr %" + L.I.spelling + L.index + " to ptr");
+                    if (inCallExpr || ast.inDeclaringLocalVar) {
+                        return null;
+                    }
+                    newIndex = f.getNewIndex();
+                } else if (L.T.isStruct()) {
+                    newIndex = handleBitCast(L.T, ast.I.spelling + L.index, f);
+                    if (!ast.inDeclaringLocalVar && !ast.inCallExpr) {
+                        int v2 = f.getNewIndex();
+                        handleLoad(L.T, newIndex, v2, f);
+                    }
+                    return null;
+                } else {
+                    newIndex = f.getNewIndex();
+                }
+                handleLoad(L.T, ast.I.spelling + L.index, newIndex, f);
+            }
+            case ParaDecl P -> {
+                if (P.T.isStruct()) {
+                    int newIndex = handleBitCast(P.T, ast.I.spelling + 0, f);
+                    if (!ast.inDeclaringLocalVar) {
+                        int v2 = f.getNewIndex();
+                        handleLoad(P.T, newIndex, v2, f);
+                    }
                     return null;
                 }
-                newIndex = f.getNewIndex();
-            } else if (l.T.isStruct()) {
 
-                newIndex = handleBitCast(l.T, ast.I.spelling + l.index, f);
-                if (!ast.inDeclaringLocalVar && !ast.inCallExpr) {
-                    int v2 = f.getNewIndex();
-                    handleLoad(l.T, newIndex, v2, f);
-                }
-
-                return null;
-            } else {
-                newIndex = f.getNewIndex();
-            }
-
-            handleLoad(l.T, ast.I.spelling + l.index, newIndex, f);
-        } else if (d.isParaDecl()) {
-            ParaDecl p = (ParaDecl) d;
-
-            if (p.T.isStruct()) {
-                int newIndex = handleBitCast(p.T, ast.I.spelling + 0, f);
-                if (!ast.inDeclaringLocalVar) {
-                    int v2 = f.getNewIndex();
-                    handleLoad(p.T, newIndex, v2, f);
-                }
-                return null;
-            }
-
-            if (p.isMut) {
-                int newIndex = f.getNewIndex();
-                handleLoad(p.T, ast.I.spelling + p.index, newIndex, f);
-                return null;
-            }
-
-            if (p.T.isPointer()) {
-                Type innerT = ((PointerType) p.T).t;
-                if (innerT.isVoid() || innerT.isStruct()) {
+                if (P.isMut) {
                     int newIndex = f.getNewIndex();
-                    handleLoad(p.T, ast.I.spelling + p.index, newIndex, f);
+                    handleLoad(P.T, ast.I.spelling + P.index, newIndex, f);
                     return null;
                 }
-            }
 
-            int newIndex = f.getNewIndex();
-            emit("\t%" + newIndex + " = ");
-            Type T = p.T;
-            if (T.isFloat()) {
-                emit("fadd ");
-                T.visit(this, o);
-                emit(" 0.0, ");
-            }
-            else if (T.isNumeric() || T.isBoolean() || T.isEnum()) {
-                emit("add ");
-                T.visit(this, o);
-                emit(" 0, ");
-            }
+                if (P.T.isPointer()) {
+                    Type innerT = ((PointerType) P.T).t;
+                    if (innerT.isVoid() || innerT.isStruct()) {
+                        int newIndex = f.getNewIndex();
+                        handleLoad(P.T, ast.I.spelling + P.index, newIndex, f);
+                        return null;
+                    }
+                }
 
-            emitN(" %" + ast.I.spelling + "0");
-        } else if (d.isGlobalVar()) {
-            GlobalVar g = (GlobalVar) d;
-            int newIndex = f.getNewIndex();
-            emit("\t%" + newIndex + " = load ");
-            g.T.visit(this, o);
-            emit(", ");
-            g.T.visit(this, o);
-            emitN("* @" + ast.I.spelling);
+                int newIndex = f.getNewIndex();
+                emit("\t%" + newIndex + " = ");
+                Type T = P.T;
+                if (T.isFloat()) {
+                    emit("fadd ");
+                    T.visit(this, o);
+                    emit(" 0.0, ");
+                } else if (T.isNumeric() || T.isBoolean() || T.isEnum()) {
+                    emit("add ");
+                    T.visit(this, o);
+                    emit(" 0, ");
+                }
+
+                emitN(" %" + ast.I.spelling + "0");
+
+            }
+            case GlobalVar G -> {
+                int newIndex = f.getNewIndex();
+                emit("\t%" + newIndex + " = load ");
+                G.T.visit(this, o);
+                emit(", ");
+                G.T.visit(this, o);
+                emitN("* @" + ast.I.spelling);
+            }
+            default -> {}
         }
+
         return null;
    }
 
@@ -1241,12 +1249,11 @@ public class Emitter implements Visitor {
         if (t.isPointer()) {
             pointerV = f.getNewIndex();
             emit("\t%" + pointerV + " = load ptr, ptr ");
-            if (ast.I.decl instanceof LocalVar L) {
-                emit(" %" + ast.I.spelling + L.index);
-            } else if (ast.I.decl.isParaDecl()) {
-                emit(" %" + ast.I.spelling);
+            switch (ast.I.decl) {
+                case LocalVar L -> emitN("%" + ast.I.spelling + L.index);
+                case ParaDecl _ -> emitN("%" + ast.I.spelling);
+                default -> System.out.println("ArrayIndexExpr not implemented");
             }
-            emitN("");
         }
 
         ast.index.visit(this, o);
@@ -1322,62 +1329,52 @@ public class Emitter implements Visitor {
         }
 
         if (from.isI64()) {
-            if (to.isI32()) {
-                emitN("trunc i64 %" + numOne + " to i32");
-            } else if (to.isI8()) {
-                emitN("trunc i64 %" + numOne + " to i8");
-            } else if (to.isF32()) {
-                emitN("sitofp i64 %" + numOne + " to float");
-            } else if (to.isF64()) {
-                emitN("sitofp i64 %" + numOne + " to double");
+            switch (to) {
+                case I32Type _ -> emit("trunc i64 %" + numOne + " to i32");
+                case I8Type  _ -> emit("trunc i64 %" + numOne + " to i8");
+                case F32Type _ -> emit("sitofp i64 %" + numOne + " to float");
+                case F64Type _ -> emit("sitofp i64 %" + numOne + " to double");
+                default -> System.out.println("CastExpr not implemented");
             }
         }
 
         if (from.isI32()) {
-            if (to.isI64()) {
-                emitN("sext i32 %" + numOne + " to i64");
-            } else if (to.isI8()) {
-                emitN("trunc i32 %" + numOne + " to i8");
-            } else if (to.isF32()) {
-                emitN("sitofp i32 %" + numOne + " to float");
-            } else if (to.isF64()) {
-                emitN("sitofp i32 %" + numOne + " to double");
+            switch (to) {
+                case I64Type _ -> emit("sext i32 %" + numOne + " to i64");
+                case I8Type  _ -> emit("trunc i32 %" + numOne + " to i8");
+                case F32Type _ -> emit("sitofp i32 %" + numOne + " to float");
+                case F64Type _ -> emit("sitofp i32 %" + numOne + " to double");
+                default -> System.out.println("CastExpr not implemented");
             }
         }
 
         if (from.isI8()) {
-            if (to.isI64()) {
-                emitN("sext i8 %" + numOne + " to i64");
-            } else if (to.isI32()) {
-                emitN("sext i8 %" + numOne + " to i32");
-            } else if (to.isF32()) {
-                emitN("sitofp i8 %" + numOne + " to float");
-            } else if (to.isF64()) {
-                emitN("sitofp i8 %" + numOne + " to double");
+            switch (to) {
+                case I64Type _ -> emit("sext i8 %" + numOne + " to i64");
+                case I32Type _ -> emit("sext i8 %" + numOne + " to i32");
+                case F32Type _ -> emit("sitofp i8 %" + numOne + " to float");
+                case F64Type _ -> emit("sitofp i8 %" + numOne + " to double");
+                default -> System.out.println("CastExpr not implemented");
             }
         }
 
         if (from.isF32()) {
-            if (to.isI64()) {
-                emitN("fptosi float %" + numOne + " to i64");
-            } else if (to.isI32()) {
-                emitN("fptosi float %" + numOne + " to i32");
-            } else if (to.isI8()) {
-                emitN("fptosi float %" + numOne + " to i8");
-            } else if (to.isF64()) {
-                emitN("fpext float %" + numOne + " to double");
+            switch (to) {
+                case I64Type _ -> emit("fptosi float %" + numOne + " to i64");
+                case I32Type _ -> emit("fptosi float %" + numOne + " to i32");
+                case I8Type  _ -> emit("fptosi float %" + numOne + " to i8");
+                case F64Type _ -> emit("fpext float %" + numOne + " to double");
+                default -> System.out.println("CastExpr not implemented");
             }
         }
 
         if (from.isF64()) {
-            if (to.isI64()) {
-                emitN("fptosi double %" + numOne + " to i64");
-            } else if (to.isI32()) {
-                emitN("fptosi double %" + numOne + " to i32");
-            } else if (to.isI8()) {
-                emitN("fptosi double %" + numOne + " to i8");
-            } else if (to.isF32()) {
-                emitN("fptrunc double %" + numOne + " to float");
+            switch (to) {
+                case I64Type _ -> emit("fptosi double %" + numOne + " to i64");
+                case I32Type _ -> emit("fptosi double %" + numOne + " to i32");
+                case I8Type  _ -> emit("fptosi double %" + numOne + " to i8");
+                case F32Type _ -> emit("fptrunc double %" + numOne + " to float");
+                default -> System.out.println("CastExpr not implemented");
             }
         }
 
@@ -1582,7 +1579,6 @@ public class Emitter implements Visitor {
             emit("*");
         }
         if (!val.isEmpty()) {
-            
             if (!isGlobal) {
                 emit(" %");
             } else {
@@ -1750,13 +1746,14 @@ public class Emitter implements Visitor {
             if (!ast.E.type.isPointer()) {
                 emit("*");
             }
-            if (VS.I.decl instanceof LocalVar L) {
-                emitN(" %" + VS.I.spelling + L.index);
-            } else if (VS.I.decl.isGlobalVar()) {
-                emitN(" @" + VS.I.spelling);
-            } else if (VS.I.decl.isParaDecl()) {
-                emitN(" %" + VS.I.spelling + "0");
+
+            switch(VS.I.decl) {
+                case LocalVar L -> emitN(" %" + VS.I.spelling + L.index);
+                case GlobalVar _ -> emitN(" @" + VS.I.spelling);
+                case ParaDecl _ -> emitN(" %" + VS.I.spelling + "0");
+                default -> System.out.println("DerefExpr not implemented");
             }
+        
             // Need to load the actual value;
             if (!ast.isLHSOfAssignment) {
                 Type innerT = ((PointerType) ast.E.type).t;
@@ -1777,14 +1774,17 @@ public class Emitter implements Visitor {
     public void emitBase(Type t, Object o) {
         // TODO: handle other cases
         Expr I;
-        if (t.isI64()) {
-            I = new I64Expr(new IntLiteral("0", dummyPos), dummyPos);
-        } else if (t.isBoolean()) {
-            I = new BooleanExpr(new BooleanLiteral("false", dummyPos), dummyPos);
-        } else if (t.isF32()) {
-            I = new F32Expr(new DecimalLiteral("1.0", dummyPos), dummyPos);
-        } else {
-            return;
+        switch (t) {
+            case I8Type  _ -> I = new CharExpr(new CharLiteral("0", dummyPos), dummyPos);
+            case I32Type _ -> I = new I32Expr(new IntLiteral("0", dummyPos), dummyPos);
+            case I64Type _ -> I = new I64Expr(new IntLiteral("0", dummyPos), dummyPos);
+            case F32Type _ -> I = new F32Expr(new DecimalLiteral("0.0", dummyPos), dummyPos);
+            case F64Type _ -> I = new F64Expr(new DecimalLiteral("0.0", dummyPos), dummyPos);
+            case BooleanType _ -> I = new BooleanExpr(new BooleanLiteral("false", dummyPos), dummyPos);
+            default -> {
+                I = new I64Expr(new IntLiteral("0", dummyPos), dummyPos);
+                System.out.println("Not implemented");
+            }
         }
         I.visit(this, o);
     }

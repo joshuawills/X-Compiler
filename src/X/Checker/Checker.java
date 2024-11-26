@@ -198,11 +198,13 @@ public class Checker implements Visitor {
 
     private void loadUniqueTypes(DeclList L) {
         while (true) {
-            if (L.D instanceof Enum E) {
 
-                if (E.isEmpty()) {
-                    handler.reportError(errors[49] + ": %", E.I.spelling, E.I.pos);
-                } else {
+            switch (L.D) {
+                case Enum E -> {
+                    if (E.isEmpty()) {
+                        handler.reportError(errors[49] + ": %", E.I.spelling, E.I.pos);
+                    }
+
                     // Duplicate enum keys
                     ArrayList<String> duplicates = E.findDuplicates();
                     if (!duplicates.isEmpty()) {
@@ -210,45 +212,47 @@ public class Checker implements Visitor {
                                 + "' in enum '" + E.I.spelling + "'";
                         handler.reportError(errors[42] + ": %", message, E.I.pos);
                     }
+
+                    // Duplicate type definitions
+                    String message = "enum '" + E.I.spelling + "' clashes with previously declared ";
+                    if (mainModule.enumExists(E.I.spelling)) {
+                        message += "enum";
+                        handler.reportError(errors[47] + ": %", message, E.I.pos);
+                    } else if (mainModule.structExists(E.I.spelling)) {
+                        message += "struct";
+                        handler.reportError(errors[47] + ": %", message, E.I.pos);
+                    }
+
+                    mainModule.addEnum(E);
                 }
+                case Struct S -> {
+                    S.fileName = currentFileName;
+                    if (S.isEmpty()) {
+                        handler.reportError(errors[48] + ": %", S.I.spelling, S.I.pos);
+                    }
 
-                // Duplicate type definitions
-                if (mainModule.enumExists(E.I.spelling)) {
-                    String message = "enum '" +E.I.spelling + "' clashes with previously declared enum";
-                    handler.reportError(errors[47] + ": %", message, E.I.pos);
-                } else if (mainModule.structExists(E.I.spelling)) {
-                    String message = "enum '" +E.I.spelling + "' clashes with previously declared struct";
-                    handler.reportError(errors[47] + ": %", message, E.I.pos);
-                }
-
-                mainModule.addEnum(E);
-
-            } else if (L.D instanceof Struct S) {
-
-                S.fileName = currentFileName;
-                if (S.isEmpty()) {
-                    handler.reportError(errors[48] + ": %", S.I.spelling, S.I.pos);
-                } else {
                     ArrayList<String> duplicates = S.findDuplicates();
                     if (!duplicates.isEmpty()) {
                         String message = "found members '" + String.join(", ", duplicates)
                                 + "' in struct '" + S.I.spelling + "'";
                         handler.reportError(errors[45] + ": %", message, S.I.pos);
                     }
-                }
 
-                // Duplicate type definitions
-                if (mainModule.enumExists(S.I.spelling)) {
-                    String message = "struct '" + S.I.spelling + "' clashes with previously declared enum";
-                    handler.reportError(errors[47] + ": %", message, S.I.pos);
-                } else if (mainModule.structExists(S.I.spelling)) {
-                    String message = "struct '" + S.I.spelling + "' clashes with previously declared struct";
-                    handler.reportError(errors[47] + ": %", message, S.I.pos);
-                }
+                    // Duplicate type definitions
+                    String message = "struct '" + S.I.spelling + "' clashes with previously declared ";
+                    if (mainModule.enumExists(S.I.spelling)) {
+                        message += "enum";
+                        handler.reportError(errors[47] + ": %", message, S.I.pos);
+                    } else if (mainModule.structExists(S.I.spelling)) {
+                        message += "struct";
+                        handler.reportError(errors[47] + ": %", message, S.I.pos);
+                    }
 
-                // header type is validated here
-                // potential subtypes that are user-created types will be validated when struct's initialised
-                mainModule.addStruct(S);
+                    // header type is validated here
+                    // potential subtypes that are user-created types will be validated when struct's initialised
+                    mainModule.addStruct(S);
+                }
+                default -> {}
             }
 
             if (L.DL instanceof EmptyDeclList) {
@@ -260,61 +264,69 @@ public class Checker implements Visitor {
 
     private void loadFunctionsAndGlobalVars(DeclList L) {
         while (true) {
-            if (L.D instanceof GlobalVar V) {
-                V.index = "";
-                visitVarDecl(V, V.T, V.I, V.E);
-            } else if (L.D instanceof Struct S) {
-                List P = S.SL;
-                // Recalculating struct members for abstract types
-                if (!P.isEmptyStructList()) {
-                    while (true) {
-                        StructElem SE = ((StructList) P).S;
-                        Type T = SE.T;
-                        if (T.isArray()) {
-                            if (((ArrayType) T).length == -1) {
-                                handler.reportError(errors[53] + ": %", SE.I.spelling, S.I.pos);
+
+            switch (L.D) {
+                case GlobalVar G -> {
+                    G.index = "";
+                    visitVarDecl(G, G.T, G.I, G.E);
+                }
+                case Struct S -> {
+                    List P = S.SL;
+                    // Recalculating struct members for abstract types
+                    if (!P.isEmptyStructList()) {
+                        while (true) {
+                            StructElem SE = ((StructList) P).S;
+                            Type T = SE.T;
+                            if (T.isArray()) {
+                                if (((ArrayType) T).length == -1) {
+                                    handler.reportError(errors[53] + ": %", SE.I.spelling, S.I.pos);
+                                }
                             }
+                            checkMurking(SE);
+                            if (((StructList) P).SL.isEmptyStructList()) {
+                                break;
+                            }
+                            P = ((StructList) P).SL;
                         }
-                        checkMurking(SE);
-                        if (((StructList) P).SL.isEmptyStructList()) {
-                            break;
-                        }
-                        P = ((StructList) P).SL;
                     }
                 }
-            } else if (L.D instanceof Function F) {
-                List P = F.PL;
+                case Function F -> {
+                    List P = F.PL;
 
-                // Recalculating params for abstract types
-                if (!P.isEmptyParaList()) {
-                    while (true) {
-                        ParaDecl PE = ((ParaList) P).P;
-                        checkMurking(PE);
-                        if (((ParaList) P).PL.isEmptyParaList()) {
-                            break;
+                    // Recalculating params for abstract types
+                    if (!P.isEmptyParaList()) {
+                        while (true) {
+                            ParaDecl PE = ((ParaList) P).P;
+                            checkMurking(PE);
+                            if (((ParaList) P).PL.isEmptyParaList()) {
+                                break;
+                            }
+                            P = ((ParaList) P).PL;
                         }
-                        P = ((ParaList) P).PL;
                     }
-                }
 
-                if (F.T.isMurky()) {
-                    F.T = unMurk((MurkyType) F.T);
-                }
-
-                if (mainModule.functionExists(F.I.spelling)) {
-                    Function e = mainModule.getFunction(F.I.spelling + "." + F.TypeDef);
-                    String tOne = F.TypeDef;
-                    String tTwo = ((Function) e).TypeDef;
-                    if (tOne.equals(tTwo)) {
-                        String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
-                                e.pos.lineStart);
-                        handler.reportError(errors[2] + ": %", message, F.I.pos);
+                    if (F.T.isMurky()) {
+                        F.T = unMurk((MurkyType) F.T);
                     }
-                }
 
-                F.setTypeDef();
-                stdFunction(F);
+                    if (mainModule.functionExists(F.I.spelling)) {
+                        Function e = mainModule.getFunction(F.I.spelling + "." + F.TypeDef);
+                        String tOne = F.TypeDef;
+                        String tTwo = ((Function) e).TypeDef;
+                        if (tOne.equals(tTwo)) {
+                            String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
+                                    e.pos.lineStart);
+                            handler.reportError(errors[2] + ": %", message, F.I.pos);
+                        }
+                    }
+
+                    F.setTypeDef();
+                    stdFunction(F);
+                }
+                default -> {}
+                
             }
+
             if (L.DL.isEmptyDeclList()) {
                 break;
             }
@@ -561,9 +573,9 @@ public class Checker implements Visitor {
     private void checkMurking(Decl ast) {
         if (ast.T.isMurky()) {
             unMurk(ast);
-        } else if (ast.T.isArray() && ((ArrayType) ast.T).t.isMurky()) {
+        } else if (ast.T.isMurkyArray()) {
             unMurkArr(ast);
-        } else if (ast.T.isPointer() && ((PointerType) ast.T).t.isMurky()) {
+        } else if (ast.T.isMurkyPointer()) {
             unMurkPointer(ast);
         }
     }
@@ -618,10 +630,10 @@ public class Checker implements Visitor {
             } catch (Exception e) {
                 return Environment.errorType;
             }
-            if (ast instanceof LocalVar L) {
-                L.E = E;
-            } else if (ast instanceof GlobalVar G) {
-                G.E = E;
+            switch (ast) {
+                case LocalVar L -> L.E = E;
+                case GlobalVar G -> G.E = E;
+                default -> {}
             }
             returnType = E.type;
         } else {
@@ -649,10 +661,10 @@ public class Checker implements Visitor {
 
         // May need to cast
         Expr e2AST = checkCast(ast.T, E, null);
-        if (ast instanceof LocalVar V) {
-            V.E = e2AST;
-        } else if (ast instanceof GlobalVar V) {
-            V.E = e2AST;
+        switch (ast) {
+            case LocalVar L -> L.E = e2AST;
+            case GlobalVar G -> G.E = e2AST;
+            default -> {}
         }
         return existingType;
     }
@@ -833,14 +845,14 @@ public class Checker implements Visitor {
     }
 
     public Object visitWhileStmt(WhileStmt ast, Object o) {
-        Type conditionType;
+        Type t;
         if (ast.E.isStructAccess() || ast.E.isIntOrDecimalExpr()) {
             ast.E = (Expr) ast.E.visit(this, ast);
-            conditionType = ast.E.type;
+            t= ast.E.type;
         } else {
-            conditionType = (Type) ast.E.visit(this, ast);
+            t= (Type) ast.E.visit(this, ast);
         }
-        if (!conditionType.isBoolean()) {
+        if (!t.isBoolean()) {
             handler.reportError(errors[13], "", ast.E.pos);
         }
         loopDepth++;
@@ -858,10 +870,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[14], "", ast.pos);
         }
         ast.containsExit = true;
-        if (ast.parent instanceof Stmt S) {
-            S.containsExit = true;
-        } else if (ast.parent instanceof List S) {
-            S.containsExit = true;
+        switch (ast.parent) {
+            case Stmt S -> S.containsExit = true;
+            case List S -> S.containsExit = true;
+            default -> {}
         }
         return null;
     }
@@ -871,10 +883,10 @@ public class Checker implements Visitor {
             handler.reportError(errors[15], "", ast.pos);
         }
         ast.containsExit = true;
-        if (ast.parent instanceof Stmt S) {
-            S.containsExit = true;
-        } else if (ast.parent instanceof List S) {
-            S.containsExit = true;
+        switch (ast.parent) {
+            case Stmt S -> S.containsExit = true;
+            case List S -> S.containsExit = true;
+            default -> {}
         }
         return null;
     }
@@ -912,12 +924,10 @@ public class Checker implements Visitor {
         }
 
         ast.containsExit = true;
-        if (ast.parent instanceof Stmt S) {
-            S.containsExit = true;
-        } else if (ast.parent instanceof List S) {
-            S.containsExit = true;
-        } else {
-            System.out.println("WHAT");
+        switch (ast.parent) {
+            case Stmt S -> S.containsExit = true;
+            case List S -> S.containsExit = true;
+            default -> {}
         }
         return null;
     }
@@ -2332,7 +2342,7 @@ public class Checker implements Visitor {
             Type T = ast.typeV.get();
             if (T.isMurky()) {
                 ast.typeV = Optional.of(unMurk((MurkyType) T));
-            } else if (T.isArray() && ((ArrayType) T).t.isMurky()) {
+            } else if (T.isMurkyArray()) {
                 MurkyType MT = (MurkyType) ((ArrayType)T).t;
                 Type T2 = unMurk(MT);
                 ((ArrayType) T).t = T2;
