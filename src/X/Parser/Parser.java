@@ -605,6 +605,16 @@ public class Parser {
             }
             // Murky type -> TBD during type evaluation
             default -> {
+
+                // Parse a tuple type
+                if (currentToken.kind == TokenType.OPEN_PAREN) {
+                    match(TokenType.OPEN_PAREN);
+                    List tL = parseTypeList();
+                    match(TokenType.CLOSE_PAREN);
+                    finish(pos);
+                    yield new TupleType(tL, pos);
+                }
+
                 if (currentToken.kind != TokenType.IDENT) {
                     syntacticError("Expected a type, received \"%\"", currentToken.kind.toString().strip());
                     yield null;
@@ -632,6 +642,21 @@ public class Parser {
             t = new PointerType(pos, t);
         }
         return t;
+    }
+
+    List parseTypeList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        if (currentToken.kind == TokenType.CLOSE_PAREN) {
+            finish(pos);
+            return new EmptyTypeList(pos);
+        }
+        
+        Type T = parseType();
+        if (currentToken.kind != TokenType.CLOSE_PAREN) {
+            match(TokenType.COMMA);
+        }
+        return new TypeList(T, parseTypeList(), pos);
     }
 
 
@@ -884,10 +909,17 @@ public class Parser {
         if (!(E instanceof Ident)) {
             return (Expr) E;
         }
+
         return switch(currentToken.kind) {
             case PERIOD, ARROW-> {
                 boolean isPointerAccess = currentToken.kind == TokenType.ARROW;
                 finish(pos);
+                if (lookAhead().kind == TokenType.INT_LIT) {
+                    match(TokenType.PERIOD);
+                    IntLiteral IL = parseIntLiteral();
+                    finish(pos);
+                    yield new TupleAccess((Ident) E, new IntExpr(IL, pos), pos);
+                }
                 yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.empty(), isPointerAccess);
             }
             case OPEN_PAREN -> {
@@ -984,8 +1016,14 @@ public class Parser {
             case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);
                 Expr exprAST = parseExpr();
-                match(TokenType.CLOSE_PAREN);
-                yield exprAST;
+                if (tryConsume(TokenType.COMMA)) {
+                    List TEL = parseTupleExprList();
+                    finish(pos);
+                    yield new TupleExpr(new TupleExprList(exprAST, TEL, pos), pos);
+                } else {
+                    match(TokenType.CLOSE_PAREN);
+                    yield exprAST;
+                }
             }
             case IDENT, DOLLAR -> {
                 acceptableModuleAccess = true;
@@ -998,6 +1036,20 @@ public class Parser {
                 yield null;
             }
         };
+    }
+
+    private List parseTupleExprList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Expr E = parseExpr();
+        if (tryConsume(TokenType.COMMA)) {
+            finish(pos);
+            return new TupleExprList(E, parseTupleExprList(), pos);
+        } else {
+            match(TokenType.CLOSE_PAREN);
+            finish(pos);
+            return new TupleExprList(E, new EmptyTupleExprList(pos), pos);
+        }
     }
 
     private DecimalLiteral parseDecimalLiteral() throws SyntaxError {

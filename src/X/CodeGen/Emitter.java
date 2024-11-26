@@ -32,6 +32,7 @@ public class Emitter implements Visitor {
     public Module currentModule;
 
     private boolean inLibCDeclarations = false;
+    private boolean inTupleDeclarations = false;
 
     public final void gen() {
 
@@ -53,6 +54,14 @@ public class Emitter implements Visitor {
             f.visit(this, null);
         }
         inLibCDeclarations = false;
+
+        // Instantiate all the tuple types
+        inTupleDeclarations = true;
+        for (TupleType t: modules.getTupleTypes()) {
+            t.visit(this, null);
+        }
+        inTupleDeclarations = false;
+
 
         // Visiting all the structs
         for (Module m: mainModule) {
@@ -127,7 +136,7 @@ public class Emitter implements Visitor {
         while (!PL.isEmptyParaList()) {
             ParaDecl P = ((ParaList) PL).P;
             Type t = P.T;
-            if ((P.isMut && !t.isArray() && !t.isStruct()) || t.isPointer()) {
+            if ((P.isMut && !t.isArray() && !t.isStruct() && !t.isTuple()) || t.isPointer()) {
                 emit("\t%" + P.I.spelling + "0 = alloca ");
                 t.visit(this, o);
 
@@ -142,7 +151,7 @@ public class Emitter implements Visitor {
                 }
             }
 
-            if (t.isStruct()) {
+            if (t.isStruct() || t.isTuple()) {
                 emit("\t%" + P.I.spelling + "0 = alloca ");
                 t.visit(this, o);
                 emitN("");
@@ -239,6 +248,21 @@ public class Emitter implements Visitor {
                 emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + ast.I.spelling + depth + ", ptr %" + srcIndex
                 + ", i64 %" + v4 + ", i1 false)");
 
+            }
+            return null;
+        } else if (ast.T.isTuple()) {
+            if (ast.E.isEmptyExpr()) {
+                return null;
+            }
+
+            handleBitCast(ast.T, ast.I.spelling + depth, f);
+            ast.E.visit(this, o);
+
+            if (!ast.E.isTupleExpr()) {
+                int srcIndex = ast.E.tempIndex;
+                int v4 = handleSizeOfExpr(ast.T, f);
+                emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + ast.I.spelling + depth + ", ptr %" + srcIndex
+                + ", i64 %" + v4 + ", i1 false)");
             }
             return null;
         }
@@ -728,7 +752,7 @@ public class Emitter implements Visitor {
             return null;
         } else {
             ast.T.visit(this, o);
-            if (ast.T.isStruct()) {
+            if (ast.T.isStruct() || ast.T.isTuple()) {
                 emit("*");
             }
         }
@@ -737,7 +761,7 @@ public class Emitter implements Visitor {
             return null;
         }
 
-        if (!ast.isMut && !ast.T.isPointer() && !ast.T.isStruct()) {
+        if (!ast.isMut && !ast.T.isPointer() && !ast.T.isStruct() && !ast.T.isTuple()) {
             emit(" %" + ast.I.spelling + "0");
         } else {
             emit(" %" + ast.I.spelling);
@@ -773,9 +797,9 @@ public class Emitter implements Visitor {
                         return null;
                     }
                     newIndex = f.getNewIndex();
-                } else if (L.T.isStruct()) {
+                } else if (L.T.isStruct() || L.T.isTuple()) {
                     newIndex = handleBitCast(L.T, ast.I.spelling + L.index, f);
-                    if (!ast.inDeclaringLocalVar && !ast.inCallExpr) {
+                    if (!ast.inDeclaringLocalVar && !ast.inCallExpr && !L.T.isTuple()) {
                         int v2 = f.getNewIndex();
                         handleLoad(L.T, newIndex, v2, f);
                     }
@@ -786,7 +810,7 @@ public class Emitter implements Visitor {
                 handleLoad(L.T, ast.I.spelling + L.index, newIndex, f);
             }
             case ParaDecl P -> {
-                if (P.T.isStruct()) {
+                if (P.T.isStruct() || P.T.isTuple()) {
                     int newIndex = handleBitCast(P.T, ast.I.spelling + 0, f);
                     if (!ast.inDeclaringLocalVar) {
                         int v2 = f.getNewIndex();
@@ -803,7 +827,7 @@ public class Emitter implements Visitor {
 
                 if (P.T.isPointer()) {
                     Type innerT = ((PointerType) P.T).t;
-                    if (innerT.isVoid() || innerT.isStruct()) {
+                    if (innerT.isVoid() || innerT.isStruct() || innerT.isTuple()) {
                         int newIndex = f.getNewIndex();
                         handleLoad(P.T, ast.I.spelling + P.index, newIndex, f);
                         return null;
@@ -972,7 +996,7 @@ public class Emitter implements Visitor {
                     }
                 } else {
                     E.type.visit(this, o);
-                    if (E.type.isStruct()) {
+                    if (E.type.isStruct() || E.type.isTuple()) {
                         emit("*");
                     }
                 }
@@ -1280,7 +1304,7 @@ public class Emitter implements Visitor {
         }
 
         int oldV = newV;
-        if (!(innerT.isStruct() && ast.inDeclaringLocalVar)) {
+        if (!((innerT.isStruct() || innerT.isTuple()) && ast.inDeclaringLocalVar)) {
             newV = f.getNewIndex();
 
             emit("\t%" + newV + " = load ");
@@ -1467,7 +1491,7 @@ public class Emitter implements Visitor {
         }
 
         ast.E.visit(this, o);
-        if ((!ast.E.isStructExpr() && ast.E.type.isStruct()) || (!ast.E.isArrayInitExpr() && ast.E.type.isArray())) {
+        if ((!ast.E.isStructExpr() && ast.E.type.isStruct()) || (!ast.E.isArrayInitExpr() && ast.E.type.isArray()) || (!ast.E.isTupleExpr() && ast.E.type.isTuple())) {
             int srcIndex = ast.E.tempIndex;
             int v4 = handleSizeOfExpr(ast.E.type, f);
             emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + v + ", ptr %" + srcIndex
@@ -1535,10 +1559,10 @@ public class Emitter implements Visitor {
 
         int lhsIndex = f.localVarIndex - 1;
         if (ast.RHS.type.isStruct() || (ast.RHS.isArrayIndexExpr() && 
-            ((ArrayType) ast.RHS.type).t.isStruct())) {
+            ((ArrayType) ast.RHS.type).t.isStruct()) || ast.RHS.type.isTuple()) {
                
             Type t;
-            if (ast.RHS.type.isStruct()) {
+            if (ast.RHS.type.isStruct() || ast.RHS.type.isTuple()) {
                 t = ast.RHS.type;
             } else {
                 t = ((ArrayType) ast.RHS.type).t;
@@ -1611,8 +1635,11 @@ public class Emitter implements Visitor {
 
                 ast.arrayIndex.get().visit(this, o);
                 int arrayV = f.localVarIndex - 1;
-                int newV = f.getNewIndex();
-                emitN("\t%" + newV + " = trunc i64 %" + arrayV + " to i32");
+                int newV = -1;
+                if (!ast.isPointerAccess) {
+                    newV = f.getNewIndex();
+                    emitN("\t%" + newV + " = trunc i64 %" + arrayV + " to i32");
+                }
 
                 int v = f.getNewIndex();
                 Optional <StructElem> elem = null;
@@ -1624,11 +1651,27 @@ public class Emitter implements Visitor {
                     elem = ref.getElem(ast.SA.spelling);
                 }
 
-                emit("\t%" + v + " = getelementptr inbounds ");
-                elem.get().T.visit(this, o);
-                emit(", ");
-                elem.get().T.visit(this, o);
-                emitN("* %" + prevIndex + ", i32 0, i32 %" + newV);
+                if (ast.isPointerAccess) {
+
+                    emitN("\t%" + v + " = load ptr, ptr %" + prevIndex);
+                    prevIndex = v;
+                    v = f.getNewIndex();
+                    Type innerT = ((PointerType) elem.get().T).t;
+                    emit("\t%" + v + " = getelementptr ");
+                    innerT.visit(this, o);
+                    emitN("*, ptr %" + prevIndex + ", i64 %" + arrayV);
+
+                } else {
+                    emit("\t%" + v + " = getelementptr inbounds ");
+                    elem.get().T.visit(this, o);
+                    emit(", ");
+                    elem.get().T.visit(this, o);
+                    if (!elem.get().T.isPointer()) {
+                        emit("*");
+                    }
+                    emitN(" %" + prevIndex + ", i32 0, i32 %" + newV);
+                }
+
             }
 
             return null;
@@ -1641,6 +1684,26 @@ public class Emitter implements Visitor {
         emit("\t%" + newV + " = getelementptr %" + structName + ", %" + structName + "* %" + prevIndex);
         emitN(", i32 0, i32 " + index);
         ast.SAL.visit(this, o);
+        return null;
+    }
+
+    public Object visitTupleAccess(TupleAccess ast, Object o) {
+        Frame f = (Frame) o;
+        TupleType ref = ast.ref;
+        ast.V.visit(this, o);
+        int prevIndex = f.localVarIndex - 1;
+        String name = "%tuple." + ref.index;
+        int newV = f.getNewIndex();
+        String index = ast.index.IL.spelling;
+        emit("\t%" + newV + " = getelementptr " + name + ", " + name + "* %" + prevIndex);
+        emitN(", i32 0, i32 " + index);
+        ast.tempIndex = newV;
+
+        if (!(ast.parent.isAssignmentExpr() && ast.isLHSOfAssignment)) {
+            int oldV = f.localVarIndex - 1;
+            ast.tempIndex = f.getNewIndex();
+            handleLoad(ast.type, oldV, ast.tempIndex, f);
+        }
         return null;
     }
 
@@ -2008,6 +2071,96 @@ public class Emitter implements Visitor {
     }   
 
     public Object visitDecimalExpr(DecimalExpr ast, Object o) {
+        return null;
+    }
+
+    public Object visitTypeList(TypeList ast, Object o) {
+        ast.T.visit(this, o);
+        if (ast.TL.isTypeList()) {
+            emit(", ");
+        }
+        ast.TL.visit(this, o);
+        return null;
+    }
+
+    public Object visitEmptyTypeList(EmptyTypeList ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleType(TupleType ast, Object o) {
+    
+        if (inTupleDeclarations) {
+            emit("%tuple." + ast.index);
+            emit(" = type { ");
+            ast.TL.visit(this, o);
+            emitN("}");
+        } else {
+            emit("%tuple." + ast.index);
+        }
+
+        return null;
+    }
+
+    private Stack<Integer> tupleIndex = new Stack<>();
+    private Stack<TupleType> currentTupleType = new Stack<>();
+    private Stack<Integer> currentTuplePointer = new Stack<>();
+
+    public Object visitTupleExpr(TupleExpr ast, Object o) {
+        TupleType T = (TupleType) ast.type;
+
+        tupleIndex.push(0);
+        currentTupleType.push(T);
+        currentTuplePointer.push(((Frame) o).localVarIndex - 1);
+
+        ast.EL.visit(this, o);
+
+        tupleIndex.pop();
+        currentTupleType.pop();
+        currentTuplePointer.pop();
+
+        return null;
+    }
+
+    public Object visitTupleExprList(TupleExprList ast, Object o) {
+        Frame f = (Frame) o;
+
+        int originalPointer = currentTuplePointer.peek();
+        int tupleTypeIndex = currentTupleType.peek().index;
+        int v = f.getNewIndex();
+        emitN("\t%" + v + " = getelementptr %tuple." + tupleTypeIndex + ", %tuple." + tupleTypeIndex +
+            "* %" + originalPointer + ", i32 0, i32 " + tupleIndex.peek());
+
+        tupleIndex.push(tupleIndex.pop() + 1);
+
+        if (ast.E.type.isArray()) {
+            arrName = String.valueOf(v);
+            arrayDetails = (ArrayType) ast.E.type;
+        }
+
+        ast.E.visit(this, o);
+        if ((!ast.E.isStructExpr() && ast.E.type.isStruct()) || (!ast.E.isArrayInitExpr() && ast.E.type.isArray()) || (!ast.E.isTupleExpr() && ast.E.type.isTuple())) {
+            int srcIndex = ast.E.tempIndex;
+            int v4 = handleSizeOfExpr(ast.E.type, f);
+            emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + v + ", ptr %" + srcIndex
+                + ", i64 %" + v4 + ", i1 false)");
+        }
+        else if (!(ast.E.isStructExpr() || ast.E.isArrayInitExpr())) {
+            int v2 = f.localVarIndex - 1;
+            emit("\tstore ");
+            ast.E.type.visit(this, o);
+            emit(" %" + v2 + ", ");
+            ast.E.type.visit(this, o);
+            if (!ast.E.type.isPointer()) {
+                emit("*");
+            }
+            emitN(" %" + v);
+        }
+
+        ast.EL.visit(this, o);
+        return null;
+    }
+
+    public Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o) {
         return null;
     }
 }

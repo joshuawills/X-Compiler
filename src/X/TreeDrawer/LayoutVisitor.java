@@ -613,4 +613,32 @@ public class LayoutVisitor implements Visitor {
     public Object visitNullExpr(NullExpr ast, Object o) {
         return layoutNullary("null");
     }
+
+    public Object visitEmptyTypeList(EmptyTypeList ast, Object o) {
+        return layoutNullary("EmptyTypeList");
+    }
+
+    public Object visitTypeList(TypeList ast, Object o) {
+        return layoutBinary("TypeList", ast.T, ast.TL);
+    }
+
+    public Object visitTupleType(TupleType ast, Object o) {
+        return layoutUnary("TupleType", ast.TL);
+    }
+
+    public Object visitTupleExpr(TupleExpr ast, Object o) {
+        return layoutUnary("TupleExpr", ast.EL);
+    }
+
+    public Object visitTupleExprList(TupleExprList ast, Object o) {
+        return layoutBinary("TupleExprList", ast.E, ast.EL);
+    }
+
+    public Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o) {
+        return layoutNullary("EmptyTupleExprList");
+    }
+
+    public Object visitTupleAccess(TupleAccess ast, Object o) {
+        return layoutBinary("TupleAccess", ast.I, ast.index);
+    }
 }

@@ -529,4 +529,32 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitTypeList(TypeList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyTypeList(EmptyTypeList ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleType(TupleType ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleExpr(TupleExpr ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleExprList(TupleExprList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleAccess(TupleAccess ast, Object o) {
+        return null;
+    }
+
 }

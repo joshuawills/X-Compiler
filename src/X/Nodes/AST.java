@@ -132,4 +132,16 @@ public abstract class AST {
         return this instanceof BinaryExpr;
     }
 
+    public boolean isEmptyTypeList() {
+        return this instanceof EmptyTypeList;
+    }
+
+    public boolean isTypeList() {
+        return this instanceof TypeList;
+    }
+
+    public boolean isTupleExpr() {
+        return this instanceof TupleExpr;
+    }
+
 }

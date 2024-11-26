@@ -100,7 +100,11 @@ public class Checker implements Visitor {
         "*68: no such lib C function",
         "*69: incompatible type for cast expression",
         "*70: innapropriate use of pointer access",
-        "*71: inappropriate use of 'null'"
+        "*71: inappropriate use of 'null'",
+        "*72: empty tuple type",
+        "*73: only one type in tuple type",
+        "*74: may only perform tuple access on tuples",
+        "*75: tuple access index out of bounds"
     };
 
     private final SymbolTable idTable;
@@ -581,7 +585,11 @@ public class Checker implements Visitor {
     }
 
     private Object visitVarDecl(Decl ast, Type existingType, Ident I, Expr E) {
-        checkMurking(ast);
+        if (ast.T.isTuple()) {
+            ast.T.visit(this, null);
+        } else {
+            checkMurking(ast);
+        }
         existingType = ast.T;
 
         declareVariable(ast.I, ast);
@@ -2510,4 +2518,104 @@ public class Checker implements Visitor {
         return null;
     }
 
+    public Object visitTypeList(TypeList ast, Object o) {
+
+        if (ast.T.isMurky()) {
+            ast.T = unMurk((MurkyType) ast.T);
+        } else if (ast.T.isMurkyPointer()) {
+            MurkyType MT = (MurkyType) ((PointerType) ast.T).t;
+            Type T = unMurk(MT);
+            ((PointerType) ast.T).t = T;
+        } else if (ast.T.isMurkyArray()) {
+            MurkyType MT = (MurkyType) ((ArrayType) ast.T).t;
+            Type T = unMurk(MT);
+            ((ArrayType) ast.T).t = T;
+        }
+        ast.T.parent = ast;
+        ast.TL.visit(this, o);
+        return null;
+
+    }
+
+    public Object visitEmptyTypeList(EmptyTypeList ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleType(TupleType ast, Object o) {
+        if (!ast.cachedMurky) {
+            if (ast.TL.isEmptyTypeList()) {
+                handler.reportError(errors[72], "", ast.pos);
+            } else {
+                List subList = ((TypeList) ast.TL).TL;
+                if (subList.isEmptyTypeList()) {
+                    handler.reportError(errors[73], "", ast.pos);
+                }
+            }
+
+            ast.TL.visit(this, o);
+            ast.cachedMurky = true;
+
+            if (!modules.tupleTypeExists(ast)) {
+                modules.addTupleType(ast);
+            }
+            ast.index = modules.getTupleTypeIndex(ast);
+        }
+        return null;
+    }
+
+    public Object visitTupleExpr(TupleExpr ast, Object o) {
+        TypeList TL = (TypeList) ast.EL.visit(this, o);
+        Type T = new TupleType(TL, ast.pos);
+        T.visit(this, o);
+        ast.type = T;
+        T.parent = ast;
+        return T;
+    }
+
+    public Object visitTupleExprList(TupleExprList ast, Object o) {
+        if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
+            ast.E = (Expr) ast.E.visit(this, o);
+        } else {
+            ast.E.visit(this, o);
+        }
+        Type T = ast.E.type;
+        return new TypeList(T, (List) ast.EL.visit(this, o), ast.pos);
+    }
+
+    public Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o) {
+        return new EmptyTypeList(ast.pos);
+    }
+
+    public Object visitTupleAccess(TupleAccess ast, Object o) {
+        
+        Decl d = idTable.retrieve(ast.I.spelling);
+
+        if (d == null) {
+            handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        }
+
+        if (!d.T.isTuple()) {
+            handler.reportError(errors[74] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        }
+
+        ast.I.decl = d;
+        SimpleVar VS = new SimpleVar(ast.I, ast.I.pos);
+        ast.V = VS;
+
+        TupleType T = (TupleType) d.T;
+        ast.ref = T;
+        int tupleLen = T.getLength();
+        int providedLen = Integer.parseInt(ast.index.IL.spelling);
+
+        if (providedLen > (tupleLen - 1)) {
+            handler.reportError(errors[75] + ": %", ast.I.spelling, ast.I.pos);
+            return Environment.errorType;
+        }
+
+        Type innerT = T.getNthType(providedLen);
+        ast.type = innerT;
+        return innerT;
+    }
 }

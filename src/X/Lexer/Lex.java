@@ -101,13 +101,7 @@ public class Lex {
         return switch (currChar) {
             case '.' -> {
                 acceptWithSpelling();
-                if (!isDigit()) {
-                    yield TokenType.PERIOD;
-                }
-                while (isDigit()) {
-                    acceptWithSpelling();
-                }
-                yield TokenType.FLOAT_LIT;
+                yield TokenType.PERIOD;
             }
             case '@' -> {
                 acceptWithSpelling();

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import X.Nodes.Function;
 import X.Nodes.Module;
+import X.Nodes.TupleType;
 
 public class AllModules {
 
@@ -12,6 +13,8 @@ public class AllModules {
 
     private ArrayList<Module> modules = new ArrayList<Module>();
     private static AllModules instance = null;
+
+    private ArrayList<TupleType> tupleTyples = new ArrayList<>();
 
     private AllModules() {
     }
@@ -29,6 +32,22 @@ public class AllModules {
 
     public void addModule(Module mainModule) {
         modules.add(mainModule);
+    }
+
+    public void addTupleType(TupleType tupleType) {
+        tupleTyples.add(tupleType);
+    }
+
+    public boolean tupleTypeExists(TupleType tupleType) {
+        return tupleTyples.contains(tupleType);
+    }
+
+    public int getTupleTypeIndex(TupleType tupleType) {
+        return tupleTyples.indexOf(tupleType);
+    }
+
+    public ArrayList<TupleType> getTupleTypes() {
+        return tupleTyples;
     }
 
     public void addLibCFunction(Function f) {

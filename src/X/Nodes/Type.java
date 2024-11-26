@@ -99,4 +99,8 @@ public abstract class Type extends AST {
         return this instanceof StructType;
     }
 
+    public boolean isTuple() {
+        return this instanceof TupleType;
+    }
+
 }

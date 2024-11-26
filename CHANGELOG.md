@@ -153,6 +153,12 @@
 - documentation updated
 - pointers to struct accesses!
 
+*26.11.2024*
+
+- can use array indexes on pointers
+- all arrays types bound to pointer variables
+- basic tuple instantiation work
+
 # TODO
 
 - in-compilation expression everywhere possible
@@ -168,7 +174,6 @@
 
 - errors messages regarding mutability/reassignment w/ pointers
 
-- pointers and dynamic memory
 - generics
 
 - clean up all the todos
@@ -178,6 +183,6 @@
 HERE
 
 - pointer arithmetic
-- assigning string literals
 
 - do struct accesses in grammar
+- remove need for 'as void*' everywhere

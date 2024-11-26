@@ -1,4 +1,6 @@
-import "lib/std.x" as std;
+// Array list i64
+
+import "../../lib/std.x" as std;
 
 let SECTION_SIZE: i64 = 100;
 

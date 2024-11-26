@@ -4,7 +4,7 @@ import X.Lexer.Position;
 
 public class StructType extends Type {
 
-    // Reference to the 'Enum'
+    // Reference to the 'Struct'
     // Includes name and members
     public Struct S;
 

@@ -1,5 +1,6 @@
 Kind = PERIOD [.], Position = 3(1)..3(1)
-Kind = FLOAT_LIT [.21], Position = 4(1)..4(3)
+Kind = PERIOD [.], Position = 4(1)..4(1)
+Kind = INT_LIT [21], Position = 4(2)..4(3)
 Kind = FLOAT_LIT [21.19], Position = 5(1)..5(5)
 Kind = FLOAT_LIT [21.], Position = 6(1)..6(3)
 Kind = INT_LIT [192], Position = 7(1)..7(3)

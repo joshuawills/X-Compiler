@@ -174,4 +174,18 @@ public interface Visitor {
     Object visitNullExpr(NullExpr ast, Object o);
 
     Object visitImportStmt(ImportStmt ast, Object o);
+
+    Object visitTypeList(TypeList ast, Object o);
+
+    Object visitEmptyTypeList(EmptyTypeList ast, Object o);
+
+    Object visitTupleType(TupleType ast, Object o);
+
+    Object visitTupleExpr(TupleExpr ast, Object o);
+
+    Object visitTupleExprList(TupleExprList ast, Object o);
+
+    Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o);
+
+    Object visitTupleAccess(TupleAccess ast, Object o);
 }

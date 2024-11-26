@@ -704,4 +704,57 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitEmptyTypeList(EmptyTypeList ast, Object o) {
+        print(indentString() + "EmptyTypeList");
+        return null;
+    }
+
+    public Object visitTypeList(TypeList ast, Object o) {
+        print(indentString() + "TypeList");
+        ++indent;
+        ast.T.visit(this, o);
+        ast.TL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitTupleType(TupleType ast, Object o) {
+        print(indentString() + "TupleType");
+        ++indent;
+        ast.TL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitTupleExpr(TupleExpr ast, Object o) {
+        print(indentString() + "TupleExpr");
+        ++indent;
+        ast.EL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitTupleExprList(TupleExprList ast, Object o) {
+        print(indentString() + "TupleExprList");
+        ++indent;
+        ast.E.visit(this, o);
+        ast.EL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o) {
+        print(indentString() + "EmptyTupleExprList");
+        return null;
+    }
+
+    public Object visitTupleAccess(TupleAccess ast, Object o) {
+        print(indentString() + "TupleAccess");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.index.visit(this, o);
+        --indent;
+        return null;
+    }
+
 }
