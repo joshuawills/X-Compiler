@@ -23,7 +23,6 @@ import java.util.Optional;
 public class Checker implements Visitor {
 
     private final HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
-    private int strCount = 0;
     private boolean isStructLHS = false;
 
     private Type currentNumericalType = null;
@@ -309,9 +308,7 @@ public class Checker implements Visitor {
                         }
                     }
 
-                    if (F.T.isMurky()) {
-                        F.T = unMurk((MurkyType) F.T);
-                    }
+                    checkMurking(F);
 
                     if (mainModule.functionExists(F.I.spelling)) {
                         Function e = mainModule.getFunction(F.I.spelling + "." + F.TypeDef);
@@ -403,6 +400,17 @@ public class Checker implements Visitor {
         ));
       
         // Lib C ones
+        Environment.fmod = stdFunctionLibC(Environment.f64Type, "fmod", new ParaList(
+                new ParaDecl(Environment.f64Type, i, dummyPos, false),
+                new ParaList(
+                    new ParaDecl(Environment.f64Type, i, dummyPos, false),
+                    new EmptyParaList(dummyPos), dummyPos
+                ), dummyPos
+        ));
+        Environment.fabs = stdFunctionLibC(Environment.f64Type, "fabs", new ParaList(
+                new ParaDecl(Environment.f64Type, i, dummyPos, false),
+                new EmptyParaList(dummyPos), dummyPos
+        ));
         Environment.exit = stdFunctionLibC(Environment.voidType, "exit", new ParaList(
                 new ParaDecl(Environment.i64Type, i, dummyPos, false),
                 new EmptyParaList(dummyPos), dummyPos
@@ -581,6 +589,24 @@ public class Checker implements Visitor {
             unMurkArr(ast);
         } else if (ast.T.isMurkyPointer()) {
             unMurkPointer(ast);
+        } else if (ast.T.isTuple()) {
+            
+            // Loop over the types
+            TypeList TL = (TypeList) ((TupleType) ast.T).TL;
+            while (true) {
+                if (TL.T.isMurky()) {
+                    TL.T = unMurk((MurkyType) TL.T);
+                } else if (TL.T.isMurkyArray()) {
+                    ((ArrayType) TL.T).t = unMurk((MurkyType) ((ArrayType) TL.T).t);
+                } else if (TL.T.isMurkyPointer()) {
+                    ((PointerType) TL.T).t = unMurk((MurkyType) ((PointerType) TL.T).t);
+                }
+                if (TL.TL.isEmptyTypeList()) {
+                    break;
+                }
+                TL = (TypeList) TL.TL;
+            }
+
         }
     }
 
@@ -910,6 +936,7 @@ public class Checker implements Visitor {
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
         }
         Type conditionType;
+
         if (ast.E.isEmptyExpr()) {
             conditionType = new VoidType(new Position());
             ast.E.type = Environment.voidType;
@@ -1051,6 +1078,10 @@ public class Checker implements Visitor {
                     break;
                 }
                 ast.type = t1;
+            }
+            default -> {
+                // Not sure why it goes in here sometimes
+                return ast.type;
             }
         }
         if (ast.type.isBoolean()) {
@@ -1845,8 +1876,8 @@ public class Checker implements Visitor {
             ast.needToEmit = false;
         } else {
             ast.needToEmit = true;
-            stringConstantsMapping.put(v, strCount);
-            ast.index = strCount++;
+            stringConstantsMapping.put(v, modules.strCount);
+            ast.index = modules.strCount++;
         }
         ast.type = new PointerType(ast.pos, new I8Type(ast.pos));
         return ast.type;

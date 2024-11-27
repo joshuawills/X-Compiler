@@ -988,16 +988,16 @@ public class Emitter implements Visitor {
            ast.tempIndex = num; 
            emit("\t%" + num + " = alloca ");
            functionRef.T.visit(this, o);
-           emit("\n\tcall ");
+           emit("\n\tcall void");
            f.getNewIndex();
         } else if (functionRef.T.isVoid()) {
-            emit("\tcall ");
+            emit("\tcall void");
         } else {
             int num = f.getNewIndex();
             ast.tempIndex = num;
             emit("\t%" + num + " = call ");
+            functionRef.T.visit(this, o);
         }
-        functionRef.T.visit(this, o);
         if (ast.I.isModuleAccess) {
             Module refMod = currentModule.getModuleFromAlias(ast.I.module.get());
             String path = refMod.fileName.replace("/", ".");
@@ -1751,7 +1751,7 @@ public class Emitter implements Visitor {
         emitN(", i32 0, i32 " + index);
         ast.tempIndex = newV;
 
-        if (!(ast.parent.isAssignmentExpr() && ast.isLHSOfAssignment)) {
+        if (!ast.parent.isLocalVar() && !(ast.parent.isAssignmentExpr() && ast.isLHSOfAssignment)) {
             int oldV = f.localVarIndex - 1;
             ast.tempIndex = f.getNewIndex();
             handleLoad(ast.type, oldV, ast.tempIndex, f);

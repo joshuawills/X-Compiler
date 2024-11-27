@@ -1,3 +1,14 @@
+export enum StdErrors -> {
+	MEMORY_ERROR,
+	NUMBER_ERROR
+}
+
+export struct error -> {
+	isError: bool, 
+	code: StdErrors,
+	message: i8*
+}
+
 export fn malloc(v: i64) -> void* {
 	return @malloc(v);
 }

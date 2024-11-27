@@ -16,6 +16,8 @@ public class AllModules {
 
     private ArrayList<TupleType> tupleTyples = new ArrayList<>();
 
+    public int strCount = 0;
+
     private AllModules() {
     }
 
