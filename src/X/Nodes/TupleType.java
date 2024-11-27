@@ -101,7 +101,7 @@ public class TupleType extends Type {
 
     // TODO: may need to update
     public String getMini() {
-        return this.toString();
+        return "tuple." + index;
     }
 
 }

@@ -2031,7 +2031,7 @@ public class Checker implements Visitor {
 
     private boolean validLHS(Object o) {
         return o instanceof ArrayIndexExpr || o instanceof VarExpr
-            || o instanceof DerefExpr || o instanceof DotExpr;
+            || o instanceof DerefExpr || o instanceof DotExpr || o instanceof TupleAccess;
     }
 
     public Object visitAssignmentExpr(AssignmentExpr ast, Object o) {
@@ -2598,6 +2598,15 @@ public class Checker implements Visitor {
         if (!d.T.isTuple()) {
             handler.reportError(errors[74] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
+        }
+
+        d.isUsed = true;
+        if (ast.isLHSOfAssignment) {
+            if (!d.isMut) {
+                handler.reportError(errors[20] + ": %", ast.I.spelling, ast.I.pos);
+                return Environment.errorType;
+            }
+            d.isReassigned = true;
         }
 
         ast.I.decl = d;

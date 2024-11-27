@@ -98,8 +98,9 @@ public class Emitter implements Visitor {
         ast.T.visit(this, f);
         emit(" @");
         emit(ast.I.spelling);
+        emit("(");
         ast.PL.visit(this, f);
-        emitN("");
+        emitN(")");
     }
 
     public Object visitFunction(Function ast, Object o) {
@@ -115,7 +116,9 @@ public class Emitter implements Visitor {
             return null;
         }
         emit("define ");
-        if (ast.I.spelling.equals("main")) {
+        if (ast.T.isStruct() || ast.T.isTuple()) {
+            emit("void");
+        } else if (ast.I.spelling.equals("main")) {
             emit("i64");
         } else {
             ast.T.visit(this, f);
@@ -128,7 +131,17 @@ public class Emitter implements Visitor {
         if (!ast.I.spelling.equals("main")) {
             emit("." + ast.TypeDef);
         }
+
+        emit("(");
+        if (ast.T.isStruct() || ast.T.isTuple()) {
+            emit("ptr %.ret"); 
+            if (!ast.PL.isEmptyParaList()) {
+                emit(", ");
+            }
+        }
         ast.PL.visit(this, f);
+        emit(")");
+
         emitN(" {");
 
         // Bind mutable variables to a local variable
@@ -424,7 +437,20 @@ public class Emitter implements Visitor {
             }
             return null;
         }
+
         ast.E.visit(this, o);
+        if (ast.E.type.isStruct() || ast.E.type.isTuple()) {
+            int index = (ast.E.isStructExpr() || ast.E.isTupleExpr()) ? f.localVarIndex - 1 : f.localVarIndex - 2;
+            if (!ast.E.isTupleExpr() && ast.E.type.isTuple()) {
+                index = f.localVarIndex -1;
+            }
+            int v4 = handleSizeOfExpr(ast.E.type, f);
+            emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %.ret, ptr %" + index 
+                + ", i64 %" + v4 + ", i1 false)");
+            emitN("\tret void");
+            return null;
+        }
+
         emit("\tret ");
         int index = f.localVarIndex - 1;
         ast.E.type.visit(this, o);
@@ -722,7 +748,6 @@ public class Emitter implements Visitor {
     }
 
     public Object visitParaList(ParaList ast, Object o) {
-        emit("(");
         List list = ast;
         while (true) {
             ParaList PL = (ParaList) list;
@@ -734,12 +759,10 @@ public class Emitter implements Visitor {
                 break;
             }
         }
-        emit(")");
         return null;
     }
 
     public Object visitEmptyParaList(EmptyParaList ast, Object o) {
-        emit("()");
         return null;
     }
 
@@ -790,8 +813,8 @@ public class Emitter implements Visitor {
         switch (d) {
             case LocalVar L -> {
                 int newIndex = -1;
-                newIndex = f.getNewIndex();
                 if (L.T.isArray()) {
+                    newIndex = f.getNewIndex();
                     emitN("\t%" + newIndex + " = bitcast ptr %" + L.I.spelling + L.index + " to ptr");
                     if (inCallExpr || ast.inDeclaringLocalVar) {
                         return null;
@@ -812,7 +835,7 @@ public class Emitter implements Visitor {
             case ParaDecl P -> {
                 if (P.T.isStruct() || P.T.isTuple()) {
                     int newIndex = handleBitCast(P.T, ast.I.spelling + 0, f);
-                    if (!ast.inDeclaringLocalVar) {
+                    if (!ast.inDeclaringLocalVar && !ast.inCallExpr && !P.T.isTuple()) {
                         int v2 = f.getNewIndex();
                         handleLoad(P.T, newIndex, v2, f);
                     }
@@ -959,7 +982,15 @@ public class Emitter implements Visitor {
         inCallExpr = false;
 
         Function functionRef = (Function) ast.I.decl;
-        if (functionRef.T.isVoid()) {
+
+        if (functionRef.T.isTuple() || functionRef.T.isStruct()) {
+           int num = f.getNewIndex();
+           ast.tempIndex = num; 
+           emit("\t%" + num + " = alloca ");
+           functionRef.T.visit(this, o);
+           emit("\n\tcall ");
+           f.getNewIndex();
+        } else if (functionRef.T.isVoid()) {
             emit("\tcall ");
         } else {
             int num = f.getNewIndex();
@@ -980,6 +1011,15 @@ public class Emitter implements Visitor {
         }
 
         emit("(");
+
+        if (functionRef.T.isStruct() || functionRef.T.isTuple()) {
+            emit("ptr");
+            emit(" %" + ast.tempIndex);
+            if (!ast.AL.isEmptyArgList()) {
+                emit(", ");
+            }
+        }
+
         if (!ast.AL.isEmptyArgList()) {
             Args AL = (Args) ast.AL;
             while (true) {
@@ -1520,9 +1560,21 @@ public class Emitter implements Visitor {
         exprDepthValues.push(0);
         String path = ref.fileName.replace("/", ".");
         currentStructName.push("struct." + path + "." + ast.I.spelling);
+
+        int lV = -1;
+        if (ast.parent.isReturnStmt()) {
+            lV = f.getNewIndex();
+            emitN("\t%" + lV + " = alloca %" + currentStructName.peek());
+        }
         currentStructPointers.push(f.localVarIndex - 1);
 
         ast.SA.visit(this, o);
+
+        if (ast.parent.isReturnStmt()) {
+            int v2 = f.getNewIndex();
+            emitN("\t%" + v2 + " = bitcast %" + currentStructName.peek()
+                 + "* %" + lV + " to %" + currentStructName.peek()  + "*");
+        }
 
         currentStructName.pop();
         currentStructPointers.pop();
@@ -1964,6 +2016,9 @@ public class Emitter implements Visitor {
         } else if (t.isStruct()) {
             StructType T = (StructType) t;
             return calculatingSizeOf(T, f);
+        } else if (t.isTuple()) {
+            TupleType T = (TupleType) t;
+            return calculatingSizeOf(T, f);
         } else if (t.isArray()) {
             Type innerT = ((ArrayType) t).t;
             int v2 = handleSizeOfExpr(innerT, o);
@@ -2108,11 +2163,24 @@ public class Emitter implements Visitor {
     public Object visitTupleExpr(TupleExpr ast, Object o) {
         TupleType T = (TupleType) ast.type;
 
+        Frame f = (Frame) o;
+        int v = -1;
+        if (ast.parent.isReturnStmt()) {
+            v = f.getNewIndex();
+            emitN("\t%" + v + " = alloca %tuple." + T.index);
+        }
+        
         tupleIndex.push(0);
         currentTupleType.push(T);
         currentTuplePointer.push(((Frame) o).localVarIndex - 1);
 
         ast.EL.visit(this, o);
+
+        if (ast.parent.isReturnStmt()) {
+            int v2 = f.getNewIndex();
+            emitN("\t%" + v2 + " = bitcast %tuple." + T.index + "* %"
+                + v + " to %tuple." + T.index + "*");
+        }
 
         tupleIndex.pop();
         currentTupleType.pop();

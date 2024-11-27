@@ -10,9 +10,12 @@ fn main() -> void {
 
 	let val2 = 20.0 as i32;
 
+	let hmm = (21, false, "hello world");
+
 	outStr(type(what));
 	outStr(type(real));
 	outStr(type(val));
 	outStr(type(val2));
+	outStr(type(hmm));
 
 }

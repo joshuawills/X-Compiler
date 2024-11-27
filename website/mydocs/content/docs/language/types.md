@@ -89,3 +89,23 @@ fn main() -> void {
 }
 
 ```
+
+### Tuples
+
+Tuple types operate in much the same way they do in other languages. A tuple type is a collection of values, potentially of 
+different types. At a low level, a tuple gets treated in the same way a struct does. These types are useful to return potential error values 
+from a function. Elements from a tuple can be accessed using a period *.* and an integer following. This value will be checked to ensure it's in
+bounds, and is zero-indexed.
+
+```Rust
+fn main() -> void {
+
+    let myTuple = (21, true, "hello, world!\n");
+
+    if myTuple.1 {
+        outStr(myTuple.2);
+    }
+
+    myTuple.0 += 1; // cause a compilation error as the tuple is defined as immutable
+}
+```

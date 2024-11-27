@@ -144,4 +144,8 @@ public abstract class AST {
         return this instanceof TupleExpr;
     }
 
+    public boolean isReturnStmt() {
+        return this instanceof ReturnStmt;
+    }
+
 }

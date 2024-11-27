@@ -1,0 +1,2 @@
+You provided a positive number: 10
+You provided a negative number: 0

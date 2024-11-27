@@ -159,6 +159,10 @@
 - all arrays types bound to pointer variables
 - basic tuple instantiation work
 
+*27.11.2024*
+
+- more work on tuples and structs returning from functions etc.
+
 # TODO
 
 - in-compilation expression everywhere possible
@@ -184,5 +188,5 @@ HERE
 
 - pointer arithmetic
 
-- do struct accesses in grammar
+- do struct accesses, tuples in grammar
 - remove need for 'as void*' everywhere

@@ -20,7 +20,10 @@ public class TypeList extends List {
 
     @Override 
     public String toString() {
-        return T.toString() + " " + TL.toString();
+        if (TL.isEmptyTypeList()) {
+            return T.toString();
+        }
+        return T.toString() + ", " + TL.toString();
     }
 
     public boolean equals(Object obj) {

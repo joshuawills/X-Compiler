@@ -18,4 +18,8 @@ fn main() -> void {
 
     b.x = 2;
 
+    let c = (21, false);
+
+    c.0 = 19;
+
 }

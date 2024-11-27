@@ -23,4 +23,14 @@ fn main() -> void {
 
 	let b = [3, 4, 5];
 	outI64(size(b));
+
+	let c = (1, false, 2 as i8);
+	outI64(size(c));
+
+	let d = (32, false);
+	outI64(size(d));
+
+	let e = (false, A { 3, false });
+	outI64(size(e));
+
 }
