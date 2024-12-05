@@ -166,6 +166,8 @@
 *05.12.2024*
 
 - tuple destructuring support
+- proper type analysis
+  - remove need for 'as void*' everywhere
 
 # TODO
 
@@ -193,4 +195,3 @@ HERE
 - pointer arithmetic
 
 - do struct accesses, tuples in grammar
-- remove need for 'as void*' everywhere

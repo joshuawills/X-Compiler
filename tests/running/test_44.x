@@ -21,7 +21,7 @@ fn init_list() -> List* {
 fn add_to_list(list: List*, val: bool) -> void {
     if list->current_size != 0 && list->current_size % list->section_size == 0 {
         let num_iterations = list->current_size / list->section_size;
-        list->array = std::realloc(list->array as void*, (num_iterations + 1) * list->section_size * size(bool)) ;
+        list->array = std::realloc(list->array, (num_iterations + 1) * list->section_size * size(bool)) ;
     }
     list->array[list->current_size] = val;
     list->current_size += 1;
@@ -42,8 +42,8 @@ fn print_list(list: List*) -> void {
 }
 
 fn free_list(list: List*) -> void {
-    std::free(list->array as void*);
-    std::free(list as void*);
+    std::free(list->array);
+    std::free(list);
 }
 
 fn main() -> void {

@@ -10,6 +10,6 @@ fn main() -> void {
 
 	let value: Node* = std::malloc(size(Node));
 	outStr(type(value));
-	std::free(value as void*);
+	std::free(value);
 
 }

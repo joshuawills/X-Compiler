@@ -1,5 +1,6 @@
 package X.Nodes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import X.Environment;
@@ -9,7 +10,9 @@ import X.Lexer.Position;
 public class Module extends AST {
 
     public String fileName;
-    private HashMap<String, Function> functions = new HashMap<>();
+
+    private ArrayList<Function> functions = new ArrayList<>();
+
     private HashMap<String, GlobalVar> vars = new HashMap<>();
     private HashMap<String, Enum> enums = new HashMap<>();
     private HashMap<String, Struct> structs = new HashMap<>();
@@ -79,11 +82,11 @@ public class Module extends AST {
     }
 
     public void addFunction(Function f) {
-        functions.put(f.I.spelling + "." + f.TypeDef, f);
+        functions.add(f);
     }
 
     public boolean entityExists(String v) {
-        return vars.containsKey(v) || functions.containsKey(v)
+        return vars.containsKey(v) || functionWithNameExists(v)
             || enums.containsKey(v) || structs.containsKey(v);
     }
 
@@ -103,21 +106,31 @@ public class Module extends AST {
         return structs.get(v);
     }
 
-    public boolean functionExists(String v) {
-        return functions.containsKey(v);
-    }
-
-    public boolean functionWithNameExists(String v) {
-        for (String key : functions.keySet()) {
-            if (key.split("\\.")[0].equals(v)) {
+    public boolean functionExists(String v, List PL) {
+        for (Function f: functions) {
+            if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
                 return true;
             }
         }
         return false;
     }
 
-    public Function getFunction(String v) {
-        return functions.get(v);
+    public boolean functionWithNameExists(String v) {
+        for (Function f: functions) {
+            if (f.I.spelling.equals(v)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Function getFunction(String v, List PL) {
+        for (Function f: functions) {
+            if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
+                return f;
+            }
+        }
+        return null;
     }
 
     public HashMap<String, Struct> getStructs() {
@@ -128,16 +141,16 @@ public class Module extends AST {
         return vars;
     }
 
-    public HashMap<String, Function> getFunctions() {
+    public ArrayList<Function> getFunctions() {
         return functions;
     }
     
-    public HashMap<String, Function> getFunctionsBarStandard() {
-        HashMap<String, Function> functionsBarStandard = new HashMap<>();
-        for (String key : functions.keySet()) {
-            String functionName = key.split("\\.")[0];
+    public ArrayList<Function> getFunctionsBarStandard() {
+       ArrayList<Function> functionsBarStandard = new ArrayList<>();
+       for (Function f : functions) {
+            String functionName = f.I.spelling;
             if (!Environment.functionNames.contains(functionName)) {
-                functionsBarStandard.put(key, functions.get(key));
+                functionsBarStandard.add(f);
             }
         }
         return functionsBarStandard;
@@ -156,8 +169,8 @@ public class Module extends AST {
     }
 
     public void printAllFunctions() {
-        for (String key : functions.keySet()) {
-            System.out.println(key);
+        for (Function f : functions) {
+            System.out.println(f.I.spelling);
         }
     }
 

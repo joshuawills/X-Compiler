@@ -69,5 +69,6 @@ public enum TokenType {
     AS,
     DOUBLE_COLON,
     AT_SYMBOL,
-    NULL
+    NULL,
+    ELLIPSIS
 }

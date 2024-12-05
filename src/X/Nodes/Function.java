@@ -36,6 +36,57 @@ public class Function extends Decl {
         }
     }
 
+    public boolean equalTypeParameters(List providedL) {
+
+        boolean isArgs = providedL.isEmptyArgList() || providedL.isArgs();
+        
+        if (isArgs) {
+            if (providedL.isEmptyArgList() && this.PL.isEmptyParaList()) {
+                return true;
+            } else if (providedL.isEmptyArgList() || this.PL.isEmptyParaList()) {
+                return false;
+            }
+
+            Args provided = (Args) providedL;
+            ParaList real = (ParaList) this.PL;
+            while (true) {
+                if (!real.P.T.equals(provided.E.type)) {
+                    return false;
+                }
+                if (real.PL.isEmptyParaList() && provided.EL.isEmptyArgList()) {
+                    return true;
+                } else if (real.PL.isEmptyParaList() || provided.EL.isEmptyArgList()) {
+                    return false;
+                }
+                provided = (Args) provided.EL;
+                real = (ParaList) real.PL;
+            } 
+        } else {
+            if (providedL.isEmptyParaList() && this.PL.isEmptyParaList()) {
+                return true;
+            } else if (providedL.isEmptyParaList() || this.PL.isEmptyParaList()) {
+                return false;
+            }
+
+            ParaList provided = (ParaList) providedL;
+            ParaList real = (ParaList) this.PL;
+            while (true) {
+                if (!real.P.T.equals(provided.P.T)) {
+                    return false;
+                }
+                if (real.PL.isEmptyParaList() && provided.PL.isEmptyParaList()) {
+                    return true;
+                } else if (real.PL.isEmptyParaList() || provided.PL.isEmptyParaList()) {
+                    return false;
+                }
+                provided = (ParaList) provided.PL;
+                real = (ParaList) real.PL;
+            } 
+
+        }
+
+    }
+
     public void setUsed() {
         this.isUsed = true;
     }

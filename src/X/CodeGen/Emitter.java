@@ -95,7 +95,7 @@ public class Emitter implements Visitor {
         for (Module m: mainModule) {
             currentModule = m;
             formattedCurrentPath = m.fileName.replace("/", ".");
-            for (Function f: m.getFunctionsBarStandard().values()) {
+            for (Function f: m.getFunctionsBarStandard()) {
                 f.visit(this, null);
             }
             inMainModule = false;
@@ -1316,7 +1316,7 @@ public class Emitter implements Visitor {
 
     public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
 
-        Type t = ast.type;
+        Type t = ast.parentType;
         Type innerT = null;
         if (t.isArray()) {
             innerT = ((ArrayType) t).t;
@@ -1346,7 +1346,6 @@ public class Emitter implements Visitor {
             t.visit(this, o);
             emitN(", ptr @" + ast.I.spelling + ", i64 0, i64 %" + indexV);
         } else {
-
             innerT.visit(this, o);
             emit(", ptr");
             if (t.isPointer()) {
@@ -1627,7 +1626,7 @@ public class Emitter implements Visitor {
 
         int lhsIndex = f.localVarIndex - 1;
         if (ast.RHS.type.isStruct() || (ast.RHS.isArrayIndexExpr() && 
-            ((ArrayType) ast.RHS.type).t.isStruct()) || ast.RHS.type.isTuple()) {
+            ast.RHS.type.isStruct()) || ast.RHS.type.isTuple()) {
                
             Type t;
             if (ast.RHS.type.isStruct() || ast.RHS.type.isTuple()) {

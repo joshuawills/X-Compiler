@@ -8,8 +8,8 @@ struct Node -> {
 
 fn main() -> void {
 
-	let value = std::malloc(size(Node)) as Node*;
+	let value: Node* = std::malloc(size(Node));
 
-	std::free(value as void*);
+	std::free(value);
 
 }

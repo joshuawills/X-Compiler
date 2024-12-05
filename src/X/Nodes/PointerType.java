@@ -25,6 +25,9 @@ public class PointerType extends Type {
             return true;
         }
         if (obj instanceof PointerType) {
+            if (t.isVoid()) {
+                return true;
+            }
             return ((PointerType) obj).t != null && ((PointerType) obj).t.equals(t);
         }
         return false;

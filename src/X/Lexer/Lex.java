@@ -101,6 +101,11 @@ public class Lex {
         return switch (currChar) {
             case '.' -> {
                 acceptWithSpelling();
+                if (currChar == '.' && file.inspectChar(1) == '.') {
+                    acceptWithSpelling();
+                    acceptWithSpelling();
+                    yield TokenType.ELLIPSIS;
+                }
                 yield TokenType.PERIOD;
             }
             case '@' -> {

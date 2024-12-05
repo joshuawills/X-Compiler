@@ -7,6 +7,8 @@ public class ArrayIndexExpr extends Expr {
     public Ident I;
     public Expr index;
 
+    public Type parentType;
+
     public ArrayIndexExpr(Ident iAST, Expr eAST, Position pos) {
         super(pos);
         I = iAST;

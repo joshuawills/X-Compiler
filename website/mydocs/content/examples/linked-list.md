@@ -65,10 +65,10 @@ fn freeLinkedList(list: LinkedList*) -> void {
     let mut curr: Node* = list->head;
     while curr != null {
         let mut next: Node* = curr->next;
-        std::free(curr as void*);
+        std::free(curr);
         curr = next;
     }
-    std::free(list as void*);
+    std::free(list);
 }
 
 

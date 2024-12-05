@@ -312,15 +312,10 @@ public class Checker implements Visitor {
 
                     checkMurking(F);
 
-                    if (mainModule.functionExists(F.I.spelling)) {
-                        Function e = mainModule.getFunction(F.I.spelling + "." + F.TypeDef);
-                        String tOne = F.TypeDef;
-                        String tTwo = ((Function) e).TypeDef;
-                        if (tOne.equals(tTwo)) {
-                            String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
-                                    e.pos.lineStart);
-                            handler.reportError(errors[2] + ": %", message, F.I.pos);
-                        }
+                    if (mainModule.functionExists(F.I.spelling, F.PL)) {
+                        String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
+                                F.pos.lineStart);
+                        handler.reportError(errors[2] + ": %", message, F.I.pos);
                     }
 
                     F.setTypeDef();
@@ -354,7 +349,7 @@ public class Checker implements Visitor {
                 }
             }
 
-            for (Function f: M.getFunctions().values()) {
+            for (Function f: M.getFunctions()) {
                 if (!f.isUsed && !f.I.spelling.equals("main")) {
                     M.thisHandler.reportMinorError(errors[23] + ": %", f.I.spelling, f.I.pos);
                 }
@@ -715,6 +710,14 @@ public class Checker implements Visitor {
             return expr;
         }
 
+        if (expectedT.isVoidPointer()) {
+            if (!expr.type.isVoidPointer()) {
+                CastExpr E = new CastExpr(expr, expr.type, expectedT, expr.pos, parent);
+                E.visit(this, null);
+                return E;
+            }
+        }
+
         if (expr.type != null && expr.type.isVoidPointer()) {
             if (expectedT.isVoidPointer()) {
                 return expr;
@@ -746,14 +749,6 @@ public class Checker implements Visitor {
         }
 
         Type t = expr.type;
-        if (expr.isArrayIndexExpr()) {
-            if (expr.type.isArray()) {
-                t = ((ArrayType) expr.type).t;
-            } else {
-                t = ((PointerType) expr.type).t;
-            }
-        }
-
         if (t == null || expectedT.assignable(t) || t.isError() || expectedT.equals(t)) {
             return expr;
         }
@@ -1744,11 +1739,13 @@ public class Checker implements Visitor {
             ast.index = new CastExpr(ast.index, T, Environment.i64Type, ast.index.pos, ast);
         }
 
-        ast.type = binding.T;
+        ast.parentType = binding.T;
         if (binding.T.isArray()) {
-            return ((ArrayType) binding.T).t;
+            ast.type = ((ArrayType) binding.T).t;
+        } else {
+            ast.type = ((PointerType) binding.T).t;
         }
-        return ((PointerType) binding.T).t;
+        return ast.type;
     }
 
     public Object visitI8Type(I8Type ast, Object o) {
@@ -1777,9 +1774,8 @@ public class Checker implements Visitor {
             return Environment.errorType;
         }
 
-        String TL;
         if (ast.TypeDef == null) {
-            TL = genTypes(ast.AL, o);
+            String TL = genTypes(ast.AL, o);
             ast.setTypeDef(TL);
         }
 
@@ -1800,7 +1796,7 @@ public class Checker implements Visitor {
             } else {
                 Module specificModule = mainModule.getModuleFromAlias(moduleAlias);
 
-                if (!specificModule.functionExists(ast.I.spelling + "." + ast.TypeDef)) {
+                if (!specificModule.functionExists(ast.I.spelling, ast.AL)) {
                     if (specificModule.functionWithNameExists(ast.I.spelling)) {
                         handler.reportError(errors[43] + ": %", message, ast.I.pos);
                     } else {
@@ -1810,7 +1806,7 @@ public class Checker implements Visitor {
                     ast.type = Environment.errorType;
                     return ast.type;
                 } else {
-                    Function function = specificModule.getFunction(ast.I.spelling + "." + ast.TypeDef);
+                    Function function = specificModule.getFunction(ast.I.spelling, ast.AL);
                     if (!function.isExported) {
                         message = "function '" + ast.I.spelling + "' in module '" + moduleAlias + "'";
                         handler.reportError(errors[64] + ": %", message, ast.I.pos);
@@ -1820,12 +1816,13 @@ public class Checker implements Visitor {
                     ast.I.decl = function;
                     function.setUsed();
                     ast.AL.visit(this, function.PL);
+                    ast.setTypeDef(function.TypeDef);
                     ast.type = function.T;
                     return function.T;
                 }
             }
         }
-        else if (!mainModule.functionExists(ast.I.spelling + "." + ast.TypeDef)) {
+        else if (!mainModule.functionExists(ast.I.spelling, ast.AL)) {
             if (idTable.retrieve(ast.I.spelling) != null || mainModule.varExists(ast.I.spelling)) {
                 handler.reportError(errors[10] + ": %", ast.I.spelling, ast.I.pos);
             } else if (mainModule.functionWithNameExists(ast.I.spelling)) {
@@ -1841,8 +1838,9 @@ public class Checker implements Visitor {
         if (ast.isLibC) {
             function = modules.getLibCFunction(ast.I.spelling);
         } else {
-            function = mainModule.getFunction(ast.I.spelling + "." + ast.TypeDef);
+            function = mainModule.getFunction(ast.I.spelling, ast.AL);
         }
+        ast.setTypeDef(function.TypeDef);
         ast.I.decl = function;
         function.setUsed();
         ast.AL.visit(this, function.PL);
@@ -1863,6 +1861,7 @@ public class Checker implements Visitor {
             } else {
                 t = (Type) D.visit(this, o);
             }
+            ((Args) head).E.type = t;
             options.add(t.getMini());
             head = ((Args) head).EL;
         }
