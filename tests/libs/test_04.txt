@@ -1,0 +1,8 @@
+A string
+A string3.142.72
+truefalse
+3.142.72
+truefalse
+32
+32
+AB

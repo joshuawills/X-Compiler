@@ -1,65 +1,67 @@
 // Boolean logic and conditional branching
 
+import "../../lib/std.x" as std;
+
 fn doSomething() -> bool {
-    outChar('z');
+    std::println('z');
     return true;
 }
 
 fn main() -> void {
 
     if true && true {
-        outI64(1);
+        std::println(1);
     }
 
     if true && false {
-        outI64(2);
+        std::println(2);
     }
 
     if false && true {
-        outI64(3);
+        std::println(3);
     }
 
     if false && false {
-        outI64(4);
+        std::println(4);
     }
 
     if true && doSomething() {
-        outI64(5);
+        std::println(5);
     }
 
     if false && doSomething() {
-        outI64(6);
+        std::println(6);
     }
 
     if true || doSomething() {
-        outI64(7);
+        std::println(7);
     }
 
     if false || doSomething() {
-        outI64(8);
+        std::println(8);
     }
 
     if !false {
-        outI64(9);
+        std::println(9);
     }
 
     if !true {
-        outI64(10);
+        std::println(10);
     }
 
     if true || true {
-        outI64(11);
+        std::println(11);
     }
 
     if false || true {
-        outI64(12);
+        std::println(12);
     }
 
     if true || false {
-        outI64(13);
+        std::println(13);
     }
 
     if false || false {
-        outI64(14);
+        std::println(14);
     }
 }

@@ -1,5 +1,7 @@
 // Casting with different numeric types
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
 
 	let what = 21 as i8;
@@ -12,10 +14,10 @@ fn main() -> void {
 
 	let hmm = (21, false, "hello world");
 
-	outStr(type(what));
-	outStr(type(real));
-	outStr(type(val));
-	outStr(type(val2));
-	outStr(type(hmm));
+	std::print(type(what));
+	std::print(type(real));
+	std::print(type(val));
+	std::print(type(val2));
+	std::print(type(hmm));
 
 }

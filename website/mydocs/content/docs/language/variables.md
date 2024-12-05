@@ -32,8 +32,8 @@ fn main() -> void {
     let mut a = 2;
     let mut b = 3;
     swap(&a, &b);
-    outI64(a);
-    outI64(b);
+    std::println(a);
+    std::println(b);
     return;
 }
 ```

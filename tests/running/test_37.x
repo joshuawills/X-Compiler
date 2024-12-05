@@ -18,8 +18,8 @@ fn main() -> void {
 
 	nodePtr->value = 20;
 
-	outI64(node.value);
-	outI64(nodePtr->value);
+	std::println(node.value);
+	std::println(nodePtr->value);
 
 
 	let mut nodeInNode = NodeInNode { Node { 30 } };
@@ -27,8 +27,8 @@ fn main() -> void {
 
 	nodeInNodePtr->node.value = 40;
 
-	outI64(nodeInNode.node.value);
-	outI64(nodeInNodePtr->node.value);
+	std::println(nodeInNode.node.value);
+	std::println(nodeInNodePtr->node.value);
 
 
 }

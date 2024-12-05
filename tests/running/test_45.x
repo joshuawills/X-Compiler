@@ -1,9 +1,11 @@
 // Basic tuple operations
 
+import "../../lib/std.x" as std;
+
 fn takeInTuple(mut tuple: (i64, bool, i8*)) -> void {
-    outStr(tuple.2);
+    std::print(tuple.2);
     tuple.0 += 2;
-    outI64(tuple.0);
+    std::println(tuple.0);
 }
 
 fn main() -> void {
@@ -11,16 +13,16 @@ fn main() -> void {
     let mut a = (1, false, "hello world\n");
 
     if !a.1 {
-        outStr(a.2);
+        std::print(a.2);
     }
 
     a.0 += 2;
     
     if a.0 == 3 {
-        outStr("Success");
+        std::print("Success");
     }
 
     takeInTuple(a);
-    outI64(a.0);
+    std::println(a.0);
 
 }

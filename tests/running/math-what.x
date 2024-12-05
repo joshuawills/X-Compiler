@@ -1,3 +1,5 @@
+import "../../lib/std.x" as std;
+
 export struct Vec2 -> {
     mut x: i64,
     mut y: i64
@@ -14,6 +16,6 @@ export fn add(x: i64, y: i64) -> i64 {
 }
 
 export fn log_vec2(val: Vec2) -> void {
-    outI64(val.x);
-    outI64(val.y);
+    std::println(val.x);
+    std::println(val.y);
 }

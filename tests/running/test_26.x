@@ -1,36 +1,38 @@
 // Testing size of
 
+import "../../lib/std.x" as std;
+
 struct A -> { b: i64, c: bool}
 
 fn main() -> void {
 	
 	let a = A { 2, false };
 
-	outI64(size(char*));
-	outI64(size(i32*));
+	std::println(size(char*));
+	std::println(size(i32*));
 
-	outI64(size(i64));
-	outI64(size(i8));
-	outI64(size(i32));
+	std::println(size(i64));
+	std::println(size(i8));
+	std::println(size(i32));
 
-	outI64(size(bool));
+	std::println(size(bool));
 
-	outI64(size(f32));
-	outI64(size(f64));
+	std::println(size(f32));
+	std::println(size(f64));
 
-	outI64(size(A));
-	outI64(size(a));
+	std::println(size(A));
+	std::println(size(a));
 
 	let b = [3, 4, 5];
-	outI64(size(b));
+	std::println(size(b));
 
 	let c = (1, false, 2 as i8);
-	outI64(size(c));
+	std::println(size(c));
 
 	let d = (32, false);
-	outI64(size(d));
+	std::println(size(d));
 
 	let e = (false, A { 3, false });
-	outI64(size(e));
+	std::println(size(e));
 
 }

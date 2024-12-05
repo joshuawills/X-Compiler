@@ -1,6 +1,8 @@
 // super simple: printing 0
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
-    outI64(2);
+    std::println(2);
     return;
 }

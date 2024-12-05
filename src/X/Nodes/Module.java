@@ -144,17 +144,6 @@ public class Module extends AST {
     public ArrayList<Function> getFunctions() {
         return functions;
     }
-    
-    public ArrayList<Function> getFunctionsBarStandard() {
-       ArrayList<Function> functionsBarStandard = new ArrayList<>();
-       for (Function f : functions) {
-            String functionName = f.I.spelling;
-            if (!Environment.functionNames.contains(functionName)) {
-                functionsBarStandard.add(f);
-            }
-        }
-        return functionsBarStandard;
-    }
 
     public HashMap<String, Enum> getEnums() {
         return enums;

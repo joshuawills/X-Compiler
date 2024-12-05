@@ -1,12 +1,14 @@
 // Redeclaring char*
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
     let mut val = "hello, world\n";
 
-    outStr(val);
+    std::print(val);
     
     val = "goodbye, world!\n";
 
-    outStr(val);
+    std::print(val);
 
 }

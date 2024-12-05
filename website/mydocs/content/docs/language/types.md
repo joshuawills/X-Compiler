@@ -84,7 +84,7 @@ fn main() -> void {
     };
 
     if !a.vals.cond {
-        outI64(a.num);
+        std::println(a.num);
     }
 }
 
@@ -103,7 +103,7 @@ fn main() -> void {
     let myTuple = (21, true, "hello, world!\n");
 
     if myTuple.1 {
-        outStr(myTuple.2);
+        std::println(myTuple.2);
     }
 
     myTuple.0 += 1; // cause a compilation error as the tuple is defined as immutable
@@ -118,9 +118,9 @@ fn main() -> void {
 
     let val, err = functionThatMayFail();
     if err.isError {
-        outStr("handle error");
+        std::println("handle error");
     }
-    outStr("confident errors have been handled");
+    std::println("confident errors have been handled");
 
 }
 ```

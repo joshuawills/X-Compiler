@@ -29,7 +29,7 @@ fn add_to_list(list: List*, val: i64) -> void {
 
 fn print_list(list: List*) -> void {
     loop i in list->current_size {
-        outI64(list->array[i]);
+        std::println(list->array[i]);
     }
 }
 
@@ -42,12 +42,12 @@ fn main() -> void {
 
     let mut list: List* = init_list();
     
-    outStr("====\n");
+    std::print("====\n");
     loop i in 5 {
-        outI64(i);
+        std::println(i);
         add_to_list(list, i);
     }
-    outStr("====\n");
+    std::print("====\n");
 
     print_list(list);
 

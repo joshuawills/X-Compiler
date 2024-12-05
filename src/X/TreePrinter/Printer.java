@@ -407,6 +407,12 @@ public class Printer implements Visitor {
         return null;
     }
 
+    @Override 
+    public Object visitVariaticType(VariaticType ast, Object o) {
+        print(indentString() + "...");
+        return null;
+    }
+
     @Override
     public Object visitI32Type(I32Type ast, Object o) {
         print(indentString() + "i32");

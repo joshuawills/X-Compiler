@@ -1,8 +1,10 @@
 // Factorial
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
     let x: i64 = 5;
-    outI64(factorial(x));
+    std::println(factorial(x));
 }
 
 fn factorial(x: i64) -> i64 {

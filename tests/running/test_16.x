@@ -1,8 +1,10 @@
 // Fibonacci iterative
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
     let x: i64 = 9;
-	outI64(fib(x));
+	std::println(fib(x));
 }
 
 fn fib(x: i64) -> i64 {

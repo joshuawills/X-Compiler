@@ -6,9 +6,10 @@ date = 2024-08-14T11:49:05+10:00
 # X Programming Language
 
 ```Rust
+import "lib/std.x" as std;
+
 fn main() -> void {
-    let val = "hello, world\n";
-    outStr(val);
+    std::println("hello, world!");
     return;
 }
 ```

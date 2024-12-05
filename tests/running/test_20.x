@@ -1,5 +1,7 @@
 // Nested struct accesses with primitive types
 
+import "../../lib/std.x" as std;
+
 struct IntBox -> {
     val: i64
 }
@@ -14,6 +16,6 @@ fn main() -> void {
     let a = IntBox { 3 };
     let b = BoxOfMany { a, 2 == 3 };
 
-    outI64(b.val2.val);
+    std::println(b.val2.val);
 
 }

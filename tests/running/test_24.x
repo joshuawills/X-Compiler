@@ -1,10 +1,12 @@
 // Hello world
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
 
     let x = "hello, world!\n";
-    outStr(x);
+    std::print(x);
 
-    outStr("hello, world!\n");
+    std::print("hello, world!\n");
 
 }

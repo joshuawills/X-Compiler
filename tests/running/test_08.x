@@ -1,22 +1,24 @@
 // Allowing for multiple variables with the same name
 
+import "../../lib/std.x" as std;
+
 let i: i64 = 0;
 
 fn main() -> void {
-    outI64(i);
+    std::println(i);
     let i: i64 = 21;
-    outI64(i);
+    std::println(i);
     {
         let i: i64 = 19;
-        outI64(i);
+        std::println(i);
     }
 
     {
         let i: i64 = 34;
-        outI64(i);
+        std::println(i);
         {
             let i: i64 = -100;
-            outI64(i);
+            std::println(i);
         }
     }
 

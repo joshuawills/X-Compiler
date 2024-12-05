@@ -196,4 +196,6 @@ public interface Visitor {
     Object visitEmptyIdentsList(EmptyIdentsList ast, Object o);
 
     Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object o);
+
+    Object visitVariaticType(VariaticType ast, Object o);
 }

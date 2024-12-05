@@ -1,41 +1,43 @@
 // Testing if-else constructs
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
 
     if (true) {
-        outI64(-2);
+        std::println(-2);
     } else {
-        outI64(-1);
+        std::println(-1);
     }
 
     if (false) {
-        outI64(1);
+        std::println(1);
     } else {
-        outI64(2);
+        std::println(2);
     }
 
     if (false) {
-        outI64(5);
+        std::println(5);
     } else if (false) {
-        outI64(6);
+        std::println(6);
     } else {
-        outI64(7);
+        std::println(7);
     }
 
     if (true) {
-        outI64(8);
+        std::println(8);
     } else if (false) {
-        outI64(9);
+        std::println(9);
     } else {
-        outI64(10);
+        std::println(10);
     }
 
     if (true) {
-        outI64(11);
+        std::println(11);
     } else if (true) {
-        outI64(12);
+        std::println(12);
     } else {
-        outI64(13);
+        std::println(13);
     }
 
 }

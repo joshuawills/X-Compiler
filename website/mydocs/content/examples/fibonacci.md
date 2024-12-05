@@ -7,7 +7,7 @@ weight: 1
 fn main() -> void {
     let x = 9;
 	
-    outI64(fib(x));
+    std::println(fib(x));
 }
 
 

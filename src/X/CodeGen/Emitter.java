@@ -41,14 +41,12 @@ public class Emitter implements Visitor {
         modules = AllModules.getInstance();
         ArrayList<Module> mainModule = modules.getModules();
 
-        emitN("declare i32 @printf(i8*, ...)");
         emitN("declare i32 @scanf(i8*, ...)");
 
-        emitN("@.Istr = constant [4 x i8] c\"%d\\0A\\00\"");
-        emitN("@.Cstr = constant [4 x i8] c\"%c\\0A\\00\"");
-        emitN("@.IFstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
-        emitN("@.IDstr = constant [6 x i8] c\"%.2f\\0A\\00\"");
-        emitN("@.IIstr = private unnamed_addr constant [3 x i8] c\"%d\\00\"");       
+        for (String s: modules.stringConstantsMapping.keySet()) {
+            int l = s.length() + 1;
+            emitN("@..str" + modules.stringConstantsMapping.get(s) + " = private constant [" + l + " x i8] c\"" + s + "\\00\"");
+        }
 
         // Set up all the libc functions
         inLibCDeclarations = true;
@@ -95,7 +93,7 @@ public class Emitter implements Visitor {
         for (Module m: mainModule) {
             currentModule = m;
             formattedCurrentPath = m.fileName.replace("/", ".");
-            for (Function f: m.getFunctionsBarStandard()) {
+            for (Function f: m.getFunctions()) {
                 f.visit(this, null);
             }
             inMainModule = false;
@@ -752,6 +750,11 @@ public class Emitter implements Visitor {
         emit(LLVM.I64_TYPE);
         return null;
     }
+
+    public Object visitVariaticType(VariaticType ast, Object o) {
+        emit(LLVM.VARIATIC_TYPE);
+        return null;
+    }
     
     public Object visitI32Type(I32Type ast, Object o) {
         emit(LLVM.I32_TYPE);
@@ -860,12 +863,9 @@ public class Emitter implements Visitor {
                 }
 
                 if (P.T.isPointer()) {
-                    Type innerT = ((PointerType) P.T).t;
-                    if (innerT.isVoid() || innerT.isStruct() || innerT.isTuple()) {
-                        int newIndex = f.getNewIndex();
-                        handleLoad(P.T, ast.I.spelling + P.index, newIndex, f);
-                        return null;
-                    }
+                    int newIndex = f.getNewIndex();
+                    handleLoad(P.T, ast.I.spelling + P.index, newIndex, f);
+                    return null;
                 }
 
                 int newIndex = f.getNewIndex();
@@ -898,83 +898,8 @@ public class Emitter implements Visitor {
         return null;
    }
 
-    public void handleOutI64(CallExpr ast, Object o) {
-        Frame f = (Frame) o;
-        ((Args) ast.AL).E.visit(this, o);
-        int index = ((Args) ast.AL).E.tempIndex;
-        int indexStr = f.getNewIndex();
-        int newIndex = f.getNewIndex();
-        emitN("\t%" + indexStr + " = getelementptr [4 x i8], [4 x i8]* @.Istr, i32 0, i32 0");
-        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i64 %" + index + ")");
-    }
-
-    public void handleOutChar(CallExpr ast, Object o) {
-        Frame f = (Frame) o;
-        ((Args) ast.AL).E.visit(this, o);
-        int index = ((Args) ast.AL).E.tempIndex;
-        int indexStr = f.getNewIndex();
-        int newIndex = f.getNewIndex();
-        emitN("\t%" + indexStr + " = getelementptr [4 x i8], [4 x i8]* @.Cstr, i32 0, i32 0");
-        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", i8 %" + index + ")");
-    }
-
-    public void handleOutF32(CallExpr ast, Object o) {
-        Frame f = (Frame) o;
-        ((Args) ast.AL).E.visit(this, o);
-        int index = ((Args) ast.AL).E.tempIndex;
-        int valIndex = f.getNewIndex();
-        emitN("\t%" +valIndex + " = fpext float %" + index + " to double");
-        int indexStr = f.getNewIndex();
-        int newIndex = f.getNewIndex();
-        emitN("\t%" + indexStr + " = getelementptr [6 x i8], [6 x i8]* @.IFstr, i32 0, i32 0");
-        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", double %" + valIndex + ")");
-    }
-
-    public void handleOutF64(CallExpr ast, Object o) {
-        Frame f = (Frame) o;
-        ((Args) ast.AL).E.visit(this, o);
-        int index = ((Args) ast.AL).E.tempIndex;
-        int indexStr = f.getNewIndex();
-        int newIndex = f.getNewIndex();
-        emitN("\t%" + indexStr + " = getelementptr [6 x i8], [6 x i8]* @.IDstr, i32 0, i32 0");
-        emitN("\t%" + newIndex + " = call i32 (i8*, ...) @printf(i8* %" + indexStr + ", double %" + index + ")");
-    }
-
-    public void handleOutStr(CallExpr ast, Object o) {
-        Frame f = (Frame) o;
-        Expr arg = ((Args) ast.AL).E;
-        arg.visit(this, o);
-        int index = arg.tempIndex;
-        emitN("\tcall i32 (i8*, ...) @printf(i8* %" + index + ")");
-        f.getNewIndex();
-    }
 
     public Object visitCallExpr(CallExpr ast, Object o) {
-
-        if (ast.I.spelling.equals("outI64")) {
-            handleOutI64(ast, o);
-            return null;
-        }
-
-        if (ast.I.spelling.equals("outChar")) {
-            handleOutChar(ast, o);
-            return null;
-        }
-
-        if (ast.I.spelling.equals("outStr")) {
-            handleOutStr(ast, o);
-            return null;
-        }
-
-        if (ast.I.spelling.equals("outF32")) {
-            handleOutF32(ast, o);
-            return null;
-        }
-
-        if (ast.I.spelling.equals("outF64")) {
-            handleOutF64(ast, o);
-            return null;
-        }
 
         Frame f = (Frame) o;
 
@@ -1482,10 +1407,6 @@ public class Emitter implements Visitor {
         int v = f.getNewIndex();
         ast.tempIndex = v;
         emitN("\t%" + v + " = getelementptr [" + l + " x i8], [" + l + " x i8]* @..str" + ast.index + ", i32 0, i32 0");
-
-        if (ast.needToEmit) {
-            emitNConst("@..str" + ast.index + " = private constant [" + l + " x i8] c\"" + ast.SL.spelling + "\\00\"");
-        }
 
         return null;
     }

@@ -1,5 +1,7 @@
 // Global variables
 
+import "../../lib/std.x" as std;
+
 let x: i64 = 21;
 let mut x1: i64 = 19;
 
@@ -14,16 +16,16 @@ let mut aB: bool[] = [true, false, true, false];
 let mut aC: i8[] = ['a', 'b', 'c', 'd'];
 
 fn main() -> void {
-    outI64(x); // 20
-    outI64(x1); // 19
+    std::println(x); // 20
+    std::println(x1); // 19
     x1 += 1;
-    outI64(x1); // 20
+    std::println(x1); // 20
     printX1(); // 20
 
-    outChar(y); // 'a'
-    outChar(y1); // '&'
+    std::println(y); // 'a'
+    std::println(y1); // '&'
     y1 += 1;
-    outChar(y1); // '`';
+    std::println(y1); // '`';
     printY1(); // '`';
 
     outBool(z); // false
@@ -33,9 +35,9 @@ fn main() -> void {
     printZ1(); // false;
 
     loop i in 10 {
-        outI64(aA[i]);
+        std::println(aA[i]);
     }
-    outI64(aA[0]);
+    std::println(aA[0]);
     printaAZero();
     aA[0] = 19;
     printaAZero();
@@ -49,16 +51,16 @@ fn main() -> void {
     }
 
     loop whatj in 4 {
-        outChar(aC[whatj]);
+        std::println(aC[whatj]);
     }
     aC[0] = 'e';
     loop dummyd in 4 {
-        outChar(aC[dummyd]);
+        std::println(aC[dummyd]);
     }
 }
 
 fn printaAZero() -> void {
-    outI64(aA[0]);
+    std::println(aA[0]);
 }
 
 fn printZ1() -> void {
@@ -66,18 +68,18 @@ fn printZ1() -> void {
 }
 
 fn printX1() -> void {
-    outI64(x1);
+    std::println(x1);
 }
 
 fn printY1() -> void {
-    outChar(y1);
+    std::println(y1);
 }
 
 
 fn outBool(x: bool) -> void {
     if x {
-        outI64(1);
+        std::println(1);
     } else {
-        outI64(0);
+        std::println(0);
     }
 }

@@ -7,7 +7,7 @@ fn main() -> void {
         return 1;
     }
 
-    outI64(euclid(x, y));
+    std::println(euclid(x, y));
 }
 
 fn euclid(x: i64, y: i64) -> i64 {

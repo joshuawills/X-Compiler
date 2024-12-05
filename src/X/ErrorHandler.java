@@ -66,7 +66,8 @@ public class ErrorHandler {
         System.out.println(ANSI_YELLOW + this.fileName + ":" + line + ":" + col + ANSI_RESET + ":");
         for (int i = line - 2; i <= line + 2; i++) {
             if (i >= 1 && i <= this.numLines) {
-                System.out.printf("%5s | " + this.fileContents.split("\n")[i - 1] + "%n", i);
+                System.out.printf("%5s | ", i);
+                System.out.println(this.fileContents.split("\n")[i - 1]);
             }
         }
         System.out.println();

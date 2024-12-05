@@ -46,8 +46,10 @@ I recommend invoking the program with the `-h` flag to see all the options you c
 with. For a simple example, write the following content to a file called `hello.x`
 
 ```Rust
+import "lib/std.x" as std;
+
 fn main() -> void {
-    outStr("hello, world!\n");
+    std::println("hello, world!");
 }
 ```
 

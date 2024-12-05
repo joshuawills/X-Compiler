@@ -1,5 +1,6 @@
 // inappropriate use of the '$' operator
 
+import "../../lib/std.x" as std;
 
 fn main() -> void {
 
@@ -7,7 +8,7 @@ fn main() -> void {
 
 
     loop i in 10 {
-        outI64($);
+        std::println($);
     }
 
 }

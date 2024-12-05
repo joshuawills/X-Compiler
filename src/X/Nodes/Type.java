@@ -103,4 +103,7 @@ public abstract class Type extends AST {
         return this instanceof TupleType;
     }
 
+    public boolean isVariatic() {
+        return this instanceof VariaticType;
+    }
 }

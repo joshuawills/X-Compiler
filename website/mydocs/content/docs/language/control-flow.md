@@ -33,42 +33,42 @@ Below are some simple examples of using the various control flow statements
 ```Rust
 // Permissible
 if true {
-    outStr("A\n");    
+    std::print("A\n");    
 } else if false {
-    outStr("A\n");    
+    std::print("A\n");    
 } else {
-    outStr("A\n");    
+    std::print("A\n");    
 }
 
 // Permissible
 let mut i: i64 = 0;
 while i < 10 {
-    outI64(i);
+    std::println(i);
     i += 1;
 }
 
 // Permissible
 let mut i: i64 = 0;
 do {
-    outI64(i);
+    std::println(i);
     i += 1;
 } while (i < 10);
 
 // Permissible
 let mut i: i64;
 for i = 0; i < 10; i += 1 {
-    outI64(i);
+    std::println(i);
 }
 
 // Permissible, but not recommended from a style perspective
 while (true) {
-    outI64(2);
+    std::println(2);
 }
 
 // Curly braces must encompass any control flow, even for single statement conditions
 // Impermissible
 if true
-    outStr("A\n");
+    std::print("A\n");
 while false x = x + 1;
 ```
 
@@ -80,7 +80,7 @@ approach where possible. Semantically, the loop keyword has many forms, which ca
 ```Rust
 // Standard case
 loop {
-    outStr("This is an infinite loop");
+    std::print("This is an infinite loop");
 
     // The current value of the iteration is default to the reserved "$" keyword
     // This value starts at 0 and goes up once every iteration
@@ -93,23 +93,23 @@ loop {
 // Upper limit
 // This is semantically equivalent to "for $ = 0; $ < 10; $++"
 loop 10 {
-    outI64($);
+    std::println($);
 }
 
 // Upper and lower limit
 // This is semantically equivalent to "for $ = 1; $ < 10; $++"
 loop 1 10 {
-    outI64($);
+    std::println($);
 }
 
 // Custom variable
 // This overrides the $ value to allow for more expressiveness
 loop x {
-    outI64(x);
+    std::println(x);
 }
 
 // This case combines all these features into one example
 loop x in 1 10 {
-    outI64(x);
+    std::println(x);
 }
 ```

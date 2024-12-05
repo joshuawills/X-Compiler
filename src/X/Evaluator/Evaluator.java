@@ -258,6 +258,10 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitVariaticType(VariaticType ast, Object o) {
+        return null;
+    }
+
     public Object visitI32Type(I32Type ast, Object o) {
         return null;
     }

@@ -1,6 +1,7 @@
 package X;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import X.Nodes.Function;
 import X.Nodes.Module;
@@ -17,6 +18,7 @@ public class AllModules {
     private ArrayList<TupleType> tupleTyples = new ArrayList<>();
 
     public int strCount = 0;
+    public final HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
 
     private AllModules() {
     }

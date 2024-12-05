@@ -572,7 +572,13 @@ public class Parser {
         boolean isMut = tryConsume(TokenType.MUT);
         Ident idAST = parseIdent();
         match(TokenType.COLON);
-        Type tAST = parseType();
+        Type tAST;
+        if (tryConsume(TokenType.ELLIPSIS)) {
+            finish(pos);
+            tAST = new VariaticType(pos);
+        } else {
+            tAST = parseType();
+        }
         finish(pos);
         return new ParaDecl(tAST, idAST, pos, isMut);
     }

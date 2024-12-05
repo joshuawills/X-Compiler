@@ -258,6 +258,10 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("i64");
     }
 
+    public Object visitVariaticType(VariaticType ast, Object obj) {
+        return layoutNullary("...");
+    }
+
     public Object visitI32Type(I32Type ast, Object obj) {
         return layoutNullary("i32");
     }

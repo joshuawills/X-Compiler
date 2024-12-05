@@ -22,7 +22,6 @@ import java.util.Optional;
 
 public class Checker implements Visitor {
 
-    private final HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
     private boolean isStructLHS = false;
 
     private Type currentNumericalType = null;
@@ -372,31 +371,20 @@ public class Checker implements Visitor {
         Environment.f32Type = new F32Type(dummyPos);
         Environment.f64Type = new F64Type(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
+        Environment.variaticType = new VariaticType(dummyPos);
         Environment.voidPointerType = new PointerType(dummyPos, Environment.voidType);
         Environment.errorType = new ErrorType(dummyPos);
         Environment.charPointerType = new PointerType(dummyPos, Environment.i8Type);
-        Environment.outI64 = stdFunction(Environment.voidType, "outI64", new ParaList(
-                new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.outChar = stdFunction(Environment.voidType, "outChar", new ParaList(
-                new ParaDecl(Environment.i8Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.outStr = stdFunction(Environment.voidType, "outStr", new ParaList(
-                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.outF32 = stdFunction(Environment.voidType, "outF32", new ParaList(
-                new ParaDecl(Environment.f32Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.outF64 = stdFunction(Environment.voidType, "outF64", new ParaList(
-                new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
       
         // Lib C ones
+        Environment.printf = stdFunctionLibC(Environment.i32Type, "printf", new ParaList(
+                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
+                new ParaList(
+                    new ParaDecl(Environment.variaticType, i, dummyPos, false),
+                    new EmptyParaList(dummyPos), dummyPos
+                ), dummyPos
+        ));
+
         Environment.fmod = stdFunctionLibC(Environment.f64Type, "fmod", new ParaList(
                 new ParaDecl(Environment.f64Type, i, dummyPos, false),
                 new ParaList(
@@ -459,15 +447,6 @@ public class Checker implements Visitor {
         if (!modules.libCFunctionExists(id)) {
             modules.addLibCFunction(binding);
         }
-        return binding;
-    }
-
-    private Function stdFunction(Type resultType, String id, List pl) {
-        Function binding = new Function(resultType, new Ident(id, dummyPos),
-            pl, new EmptyStmt(dummyPos), dummyPos);
-        binding.setTypeDef();
-        binding.isUsed = true;
-        mainModule.addFunction(binding);
         return binding;
     }
 
@@ -705,6 +684,12 @@ public class Checker implements Visitor {
     }
 
     private Expr checkCast(Type expectedT, Expr expr, AST parent) {
+
+        if (expectedT.isVariatic() && expr.type.isF32()) {
+            CastExpr E = new CastExpr(expr, expr.type, new F64Type(expr.type.pos), expr.pos, parent);
+            E.visit(this, null);
+            return E;
+        }
 
         if (expr.isNullExpr()) {
             return expr;
@@ -1306,6 +1291,10 @@ public class Checker implements Visitor {
         return Environment.i32Type;
     }
 
+    public Object visitVariaticType(VariaticType ast, Object o) {
+        return Environment.variaticType;
+    }
+
     public Object visitArgList(Args ast, Object o) {
         List PL = (List) o;
         Type expectedType = ((ParaList) PL).P.T;
@@ -1881,12 +1870,11 @@ public class Checker implements Visitor {
 
     public Object visitStringExpr(StringExpr ast, Object o) {
         String v = ast.SL.spelling;
-        if (stringConstantsMapping.containsKey(v)) {
-            ast.index = stringConstantsMapping.get(v);
-            ast.needToEmit = false;
+
+        if (modules.stringConstantsMapping.containsKey(v)) {
+            ast.index = modules.stringConstantsMapping.get(v);
         } else {
-            ast.needToEmit = true;
-            stringConstantsMapping.put(v, modules.strCount);
+            modules.stringConstantsMapping.put(v, modules.strCount);
             ast.index = modules.strCount++;
         }
         ast.type = new PointerType(ast.pos, new I8Type(ast.pos));

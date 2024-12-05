@@ -1,12 +1,13 @@
 // Testing power in the math lib
 
 import "../../lib/math.x" as Math;
+import "../../lib/std.x" as std;
 
 fn main() -> void {
 
-    outF64(Math::power(2.0, 3.0));
-    outF64(Math::power(2.0, 0.0));
-    outF64(Math::power(2.0, 0.5));
-    outF64(Math::power(2.0, -1.0));
+    std::println(Math::power(2.0, 3.0));
+    std::println(Math::power(2.0, 0.0));
+    std::println(Math::power(2.0, 0.5));
+    std::println(Math::power(2.0, -1.0));
 
 }

@@ -21,13 +21,13 @@ fn setNodeInNodeValueTo42(node: NodeInNode*) -> void {
 fn main() -> void {
 
 	let mut node = Node { 21 };
-	outI64(node.value);
+	std::println(node.value);
 	setNodeValueTo42(&node);
-	outI64(node.value);
+	std::println(node.value);
 
 	let mut nodeInNode = NodeInNode { Node { 21 } };
-	outI64(nodeInNode.node.value);
+	std::println(nodeInNode.node.value);
 	setNodeInNodeValueTo42(&nodeInNode);
-	outI64(nodeInNode.node.value);
+	std::println(nodeInNode.node.value);
 
 }

@@ -1,5 +1,7 @@
 // Messing around with tuple destructuring
 
+import "../../lib/std.x" as std;
+
 struct Data -> {
 	mut x: i64
 }
@@ -10,16 +12,16 @@ fn main() -> void {
 
 	let mut b, c = a;
 
-	outStr(type(a));
-	outStr(type(b));
-	outStr(type(c));
+	std::print(type(a));
+	std::print(type(b));
+	std::print(type(c));
 
 	let mut d, e = b;	
 
 	b.0 = 19;
 	d = 21;
 	if b.0 != d {
-		outStr("It's worked!\n");
+		std::print("It's worked!\n");
 	}
 
 	let mut what = (true, Data { 21 });
@@ -28,8 +30,8 @@ fn main() -> void {
 	structure.x = 19;
 
 	let s = what.1;
-	outI64(s.x);
-	outI64(structure.x);
+	std::println(s.x);
+	std::println(structure.x);
 
 
 }

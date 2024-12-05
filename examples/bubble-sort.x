@@ -6,7 +6,7 @@ fn main() -> void {
 }
 
 fn print_arr(x: i64[], len: i64) -> void {
-     loop i in len { outI64(x[i]); }
+     loop i in len { std::println(x[i]); }
 }
 
 fn bubble_sort(mut x: i64[], len: i64) -> void {

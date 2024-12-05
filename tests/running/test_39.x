@@ -60,11 +60,11 @@ fn addNumToLinkedList(list: LinkedList*, val: i64) -> void {
 fn printLinkedList(list: LinkedList*) -> void {
 	let mut curr: Node* = list->head;
 	while curr != null {
-		outI64(curr->val);
+		std::println(curr->val);
 		curr = curr->next;
 	}
-	outStr("Size is: ");
-	outI64(list->len);
+	std::print("Size is: ");
+	std::println(list->len);
 }
 
 fn listContainsValue(list: LinkedList*, val: i64) -> bool {
@@ -87,15 +87,15 @@ fn main() -> void {
 	printLinkedList(list);
 
 	if listContainsValue(list, 500) {
-		outStr("List contains 500\n");
+		std::print("List contains 500\n");
 	} else {
-		outStr("List does not contain 500\n");
+		std::print("List does not contain 500\n");
 	}
 
 	if listContainsValue(list, 2500) {
-		outStr("List contains 2500\n");
+		std::print("List contains 2500\n");
 	} else {
-		outStr("List does not contain 2500\n");
+		std::print("List does not contain 2500\n");
 	}
 
 	freeLinkedList(list);

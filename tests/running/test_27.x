@@ -1,13 +1,14 @@
 // Basic file import work
 
+import "../../lib/std.x" as std;
 import "math-what.x" as math;
 
 fn main() -> void {
-    outI64(math::add(1, 2));
+    std::println(math::add(1, 2));
 
-    outI64(math::Zero);
+    std::println(math::Zero);
 
     let val = math::Vec2 { 1, 1 };
-    outI64(val.x);
+    std::println(val.x);
 
 }

@@ -1,3 +1,5 @@
+import "std.x" as std;
+
 export let PI: f64 = 3.14159265;
 export let E: f64 = 2.71828182;
 

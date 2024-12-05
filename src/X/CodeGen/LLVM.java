@@ -56,6 +56,7 @@ public class LLVM {
     public static final String F64_TYPE = "double";
     public static final String BOOL_TYPE = "i1";
     public static final String VOID_TYPE = "void";
+    public static final String VARIATIC_TYPE = "...";
 
 
 }

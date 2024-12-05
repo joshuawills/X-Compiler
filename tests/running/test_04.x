@@ -1,5 +1,7 @@
 // Messing around with functions and function overloading
 
+import "../../lib/std.x" as std;
+
 fn add() -> i64 {
     return add(1, 2);
 }
@@ -13,7 +15,7 @@ fn add(x: i64, y: i64) -> i64 {
 }
 
 fn main() -> void {
-    outI64(add()); // 3
-    outI64(add(2)); // 2
-    outI64(add(2, 2)); // 4
+    std::println(add()); // 3
+    std::println(add(2)); // 2
+    std::println(add(2, 2)); // 4
 }

@@ -9,7 +9,7 @@ struct Node -> {
 fn main() -> void {
 
 	let value: Node* = std::malloc(size(Node));
-	outStr(type(value));
+	std::print(type(value));
 	std::free(value);
 
 }

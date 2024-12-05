@@ -54,11 +54,11 @@ fn addNumToLinkedList(list: LinkedList*, val: i64) -> void {
 fn printLinkedList(list: LinkedList*) -> void {
     let mut curr: Node* = list->head;
     while curr != null {
-        outI64(curr->val);
+        std::println(curr->val);
         curr = curr->next;
     }
-    outStr("Size is: ");
-    outI64(list->len);
+    std::print("Size is: ");
+    std::println(list->len);
 }
 
 fn freeLinkedList(list: LinkedList*) -> void {

@@ -1,5 +1,7 @@
 // Euclid
 
+import "../../lib/std.x" as std;
+
 fn main() -> void {
 
     let x: i64 = 6;
@@ -9,7 +11,7 @@ fn main() -> void {
         return;
     }
 
-    outI64(euclid(x, y));
+    std::println(euclid(x, y));
     return;
 }
 
