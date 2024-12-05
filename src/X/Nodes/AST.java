@@ -148,4 +148,8 @@ public abstract class AST {
         return this instanceof ReturnStmt;
     }
 
+    public boolean isIdentsList() {
+        return this instanceof IdentsList;
+    }
+
 }

@@ -74,6 +74,10 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("L.VarStmt", ast.V);
     }
 
+    public Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object obj) {
+        return layoutUnary("TupleDestructureAssignStmt", ast.TDA);
+    }
+
     public Object visitStmtList(StmtList ast, Object obj) {
         return layoutBinary("StmtList", ast.S, ast.SL);
     }
@@ -640,5 +644,17 @@ public class LayoutVisitor implements Visitor {
 
     public Object visitTupleAccess(TupleAccess ast, Object o) {
         return layoutBinary("TupleAccess", ast.I, ast.index);
+    }
+
+    public Object visitTupleDestructureAssign(TupleDestructureAssign ast, Object o) {
+        return layoutBinary("TupleDestructureAssign", ast.idents, ast.E);
+    }
+
+    public Object visitIdentsList(IdentsList ast, Object o) {
+        return layoutBinary("IdentsList", ast.I, ast.IL);
+    }
+
+    public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
+        return layoutNullary("EmptyIdentsList");
     }
 }

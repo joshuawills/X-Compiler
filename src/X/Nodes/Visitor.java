@@ -188,4 +188,12 @@ public interface Visitor {
     Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o);
 
     Object visitTupleAccess(TupleAccess ast, Object o);
+
+    Object visitTupleDestructureAssign(TupleDestructureAssign ast, Object o);
+
+    Object visitIdentsList(IdentsList ast, Object o);
+
+    Object visitEmptyIdentsList(EmptyIdentsList ast, Object o);
+
+    Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object o);
 }

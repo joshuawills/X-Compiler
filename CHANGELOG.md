@@ -163,6 +163,10 @@
 
 - more work on tuples and structs returning from functions etc.
 
+*05.12.2024*
+
+- tuple destructuring support
+
 # TODO
 
 - in-compilation expression everywhere possible

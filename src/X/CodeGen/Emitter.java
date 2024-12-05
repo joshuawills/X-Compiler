@@ -33,6 +33,8 @@ public class Emitter implements Visitor {
 
     private boolean inLibCDeclarations = false;
     private boolean inTupleDeclarations = false;
+    private boolean inSubTuple = false;
+    private boolean declaringTopTuple = false;
 
     public final void gen() {
 
@@ -57,8 +59,17 @@ public class Emitter implements Visitor {
 
         // Instantiate all the tuple types
         inTupleDeclarations = true;
+        inSubTuple = true;
         for (TupleType t: modules.getTupleTypes()) {
+            if (t.inAnotherTupleType) {
+                t.visit(this, null);
+            }
+        }
+        inSubTuple = false;
+        for (TupleType t: modules.getTupleTypes()) {
+            declaringTopTuple = false;
             t.visit(this, null);
+            declaringTopTuple = false;
         }
         inTupleDeclarations = false;
 
@@ -1060,6 +1071,11 @@ public class Emitter implements Visitor {
 
     public Object visitLocalVarStmt(LocalVarStmt ast, Object o) {
         ast.V.visit(this, o);
+        return null;
+    }
+
+    public Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object o) {
+        ast.TDA.visit(this, o);
         return null;
     }
 
@@ -2145,8 +2161,27 @@ public class Emitter implements Visitor {
     public Object visitTupleType(TupleType ast, Object o) {
     
         if (inTupleDeclarations) {
+            
+            if (ast.inAnotherTupleType && inSubTuple) {
+                emit("%tuple." + ast.index);
+                emit(" = type { ");
+                declaringTopTuple = true;
+                ast.TL.visit(this, o);
+                emitN("}");
+                return null;
+            }
+
+            if (ast.inAnotherTupleType && !declaringTopTuple) {
+                return null;
+            }
+
+            if (ast.inAnotherTupleType && !inSubTuple) {
+                emit("%tuple." + ast.index);
+                return null;
+            }
             emit("%tuple." + ast.index);
             emit(" = type { ");
+            declaringTopTuple = true;
             ast.TL.visit(this, o);
             emitN("}");
         } else {
@@ -2212,7 +2247,7 @@ public class Emitter implements Visitor {
             emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + v + ", ptr %" + srcIndex
                 + ", i64 %" + v4 + ", i1 false)");
         }
-        else if (!(ast.E.isStructExpr() || ast.E.isArrayInitExpr())) {
+        else if (!(ast.E.isStructExpr() || ast.E.isArrayInitExpr() || ast.E.isTupleExpr())) {
             int v2 = f.localVarIndex - 1;
             emit("\tstore ");
             ast.E.type.visit(this, o);
@@ -2229,6 +2264,77 @@ public class Emitter implements Visitor {
     }
 
     public Object visitEmptyTupleExprList(EmptyTupleExprList ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleDestructureAssign(TupleDestructureAssign ast, Object o) {
+        Frame f = (Frame) o;
+        TupleType TT = (TupleType) ast.T;
+
+        int index;
+        if (ast.E.isTupleExpr()) {
+            String n = "tuplerand." + TT.index;
+            emitN("\t%" + n + "  = alloca %tuple." + TT.index);
+            index = handleBitCast(ast.T, "tuplerand." + TT.index, f);
+        } else {
+            ast.E.visit(this, o);
+            if (ast.E.isVarExpr()) {
+                index = f.localVarIndex - 1;
+            } else {
+                index = f.localVarIndex - 2;
+            }
+        }
+
+        ast.E.visit(this, o);
+
+        IdentsList IL = (IdentsList) ast.idents;
+        int i = 0;
+        while (true) {
+
+            String name = IL.I.spelling + IL.indexT;
+            emit("\t%" + name + " = alloca ");
+            IL.thisT.visit(this, o);
+            emitN("");
+
+            int newV = f.getNewIndex();
+            emitN("\t%" + newV + " = getelementptr %tuple." + TT.index + ", %tuple." + TT.index + "* %"
+                + index + ", i32 0, i32 " + i);
+
+            if (IL.thisT.isTuple() || IL.thisT.isStruct()) {
+                int v2 = handleSizeOfExpr(IL.thisT, f);
+                emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + name + ", ptr %" + newV
+                    + ", i64 %" + v2 + ", i1 false)");
+            } else {
+
+                int oldV = newV;
+                newV = f.getNewIndex();
+                handleLoad(IL.thisT, oldV, newV, f);
+
+                emit("\tstore ");
+                IL.thisT.visit(this, o);
+                emit(" %" + newV + ", ");
+                IL.thisT.visit(this, o);
+                if (!IL.thisT.isPointer()) {
+                    emit("*");
+                }
+                emitN(" %" + name);
+
+            }
+
+            if (!IL.IL.isIdentsList()) {
+                break;
+            }
+            IL = (IdentsList) IL.IL;
+            i += 1;
+        }
+        return null;
+    }
+
+    public Object visitIdentsList(IdentsList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
         return null;
     }
 }

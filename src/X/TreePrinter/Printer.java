@@ -514,6 +514,15 @@ public class Printer implements Visitor {
         return null;
     }
 
+    @Override
+    public Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object o) {
+        print(indentString() + "TupleDestructureAssignStmt");
+        ++indent;
+        ast.TDA.visit(this, o);
+        --indent;
+        return null;
+    }
+
     public Object visitLoopStmt(LoopStmt ast, Object o) {
         print(indentString() + "LoopStmt");
         ast.varName.ifPresent(var -> var.visit(this, o));
@@ -754,6 +763,29 @@ public class Printer implements Visitor {
         ast.I.visit(this, o);
         ast.index.visit(this, o);
         --indent;
+        return null;
+    }
+
+    public Object visitTupleDestructureAssign(TupleDestructureAssign ast, Object o) {
+        print(indentString() + "TupleDestructureAssign");
+        ++indent;
+        ast.idents.visit(this, o);
+        ast.E.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitIdentsList(IdentsList ast, Object o) {
+        print(indentString() + "IdentsList");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
+        print(indentString() + "EmptyIdentsList");
         return null;
     }
 

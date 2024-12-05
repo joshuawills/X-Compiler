@@ -220,12 +220,20 @@ public class Parser {
         }
     }
 
-    private LocalVar parseLocalVar() throws SyntaxError {
+    private Decl parseLocalVar() throws SyntaxError {
         Position pos = new Position();
         start(pos);
         match(TokenType.LET);
         boolean isMut = tryConsume(TokenType.MUT);
         Ident iAST = parseIdent();
+
+        List idents = null;
+        if (tryConsume(TokenType.COMMA)) {
+            idents = parseIdentsList();
+            finish(pos);
+            idents = new IdentsList(iAST, idents, pos);
+        }
+
         finish(pos);
         Type tAST = new UnknownType(pos);
         if (tryConsume(TokenType.COLON)) {
@@ -237,7 +245,25 @@ public class Parser {
             eAST = parseExpr();
         }
         match(TokenType.SEMI);
+        if (idents != null) {
+            return new TupleDestructureAssign(idents, eAST, tAST, pos, isMut);
+        }
         return new LocalVar(tAST, iAST, eAST, pos, isMut);
+    }
+
+    private List parseIdentsList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+
+        Ident I = parseIdent();
+        SimpleVar SV = new SimpleVar(I, pos);
+        if (currentToken.kind == TokenType.COLON || currentToken.kind == TokenType.ASSIGN) {
+            finish(pos);
+            return new IdentsList(I, new EmptyIdentsList(pos), pos);
+        }
+        match(TokenType.COMMA);
+
+        return new IdentsList(I, parseIdentsList(), pos);
     }
 
     private List parseStmtList() throws SyntaxError {
@@ -265,7 +291,7 @@ public class Parser {
             case BREAK -> parseBreakStmt();
             case CONTINUE -> parseContinueStmt();
             case RETURN -> parseReturnStmt();
-            case LET -> parseLocalVarStmt();
+            case LET -> parseVarDeclaration();
             default -> {
                 Position pos = new Position();
                 start(pos);
@@ -280,9 +306,20 @@ public class Parser {
     }
 
 
-    private LocalVarStmt parseLocalVarStmt() throws SyntaxError {
-        LocalVar vAST = parseLocalVar();
-        return new LocalVarStmt(vAST, vAST.pos);
+    private Stmt parseVarDeclaration() throws SyntaxError {
+        Decl vAST = parseLocalVar();
+        switch (vAST) {
+            case LocalVar l -> {
+                return new LocalVarStmt(l, l.pos);
+            }
+            case TupleDestructureAssign t -> {
+                return new TupleDestructureAssignStmt(t, t.pos);
+            }
+            default -> {
+                System.out.println("Unknown decl type");
+                throw new SyntaxError();
+            }
+        }
     }
 
     private IfStmt parseIfStmt() throws SyntaxError {

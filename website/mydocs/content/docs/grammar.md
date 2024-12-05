@@ -14,11 +14,12 @@ defined in other language documentation.
 
 \textit{global-var} &\to \textbf{export}? \textbf{ let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
+\textit{tuple-destructure} &\to \textbf{let } \textbf{mut}? \textit{ ident } ("," \textit{ident})? (\text{ ":" type})? \text{"="} expr \text{ ";"}\\
 \textit{function} &\to \textbf{export}? \textbf{ fn } (\text{"@"})? \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
 \textit{enum} &\to \textbf{export}? \textbf{ enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\
 \textit{struct} &\to \textbf{export}? \textbf{ struct} \textit{ ident } \textit{"->" "\{ "} \textbf{mut}? \textit{ ident}\text{ ":" type } (\textit{"," \textbf{mut}? \textit{ ident}\text{ ":" type }})^*\textit{ " \}"}\\ \\
 
-\text{compound-stmt} &\to \text{"\\\{" } (\textit{stmt } | \textit{ local-var})^* \text{ "\\\}"} \\
+\text{compound-stmt} &\to \text{"\\\{" } (\textit{stmt } | \textit{ local-var} | \textit{ tuple-destructure})^* \text{ "\\\}"} \\
 \text{stmt} &\to
 \begin{cases}
 \textit{compound-stmt} \\
@@ -44,7 +45,8 @@ stmt})? \\
 \textit{loop-stmt} &\to \textbf{ loop} ( \textit{ident } \textbf{in})? \textit{ INTLITERAL?} \textit{ INTLITERAL?} \textit{ compound-stmt}\\
 \textit{loop-stmt} &\to \textbf{ loop} \textit{ ident } \textit{ compound-stmt}\\ \\
 
-\textit{expr} &\to \textit{assignment-expr } (\textbf{as} \textit{ type})? || \textit{size-of-expr} || \textit{type-expr} \\
+\textit{expr} &\to \textit{assignment-expr } (\textbf{as} \textit{ type})? || \textit{size-of-expr} || \textit{type-expr} || \textit{tuple-expr} \\
+\textit{tuple-expr} &\to \text{"( "} expr (\text{"," } expr)?\text{" )"}\\
 \textit{size-of-expr} &\to \textbf{size} ( \textit{type | IDENT} ) \\ 
 \textit{type-expr} &\to \textbf{type} ( \textit{expr} ) \\ 
 \textit{type-expr} &\to \textbf{size} ( \textit{type | IDENT} ) \\ 

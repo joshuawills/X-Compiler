@@ -1,4 +1,4 @@
-import "lib/std.x" as std;
+import "../lib/std.x" as std;
 
 let SECTION_SIZE: i64 = 100;
 
@@ -40,12 +40,9 @@ fn main() -> void {
 
     let mut list: List* = init_list();
     
-    outStr("====\n");
-    loop i in 5 {
-        outI64(i);
+    loop i in 500 {
         add_to_list(list, i);
     }
-    outStr("====\n");
 
     print_list(list);
 

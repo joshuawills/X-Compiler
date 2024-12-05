@@ -109,3 +109,18 @@ fn main() -> void {
     myTuple.0 += 1; // cause a compilation error as the tuple is defined as immutable
 }
 ```
+
+A tuple variable may be destructured. This use case is particularly valuable when making a function call that may fail, where the failure will be embodied in the error type. For non primitive types, the value
+is copied, not passed by reference, in this process.
+
+```Rust
+fn main() -> void {
+
+    let val, err = functionThatMayFail();
+    if err.isError {
+        outStr("handle error");
+    }
+    outStr("confident errors have been handled");
+
+}
+```

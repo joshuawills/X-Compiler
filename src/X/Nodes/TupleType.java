@@ -8,6 +8,8 @@ public class TupleType extends Type {
     public boolean cachedMurky = false;
     public int index = 0;
 
+    public boolean inAnotherTupleType = false;
+
     public TupleType(List tlAST, Position pos) {
         super(pos);
         TL = tlAST;

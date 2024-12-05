@@ -28,3 +28,11 @@ export fn realloc(v: void*, size_of: i64) -> void* {
 export fn exit(v: i64) -> void {
 	@exit(v);
 }
+
+export fn outBool(v: bool) -> void {
+	if v {
+		outStr("true\n");
+	} else {
+		outStr("false\n");
+	}
+}

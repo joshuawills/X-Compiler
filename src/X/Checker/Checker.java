@@ -103,7 +103,9 @@ public class Checker implements Visitor {
         "*72: empty tuple type",
         "*73: only one type in tuple type",
         "*74: may only perform tuple access on tuples",
-        "*75: tuple access index out of bounds"
+        "*75: tuple access index out of bounds",
+        "*76: inappropriate tuple destructuring",
+        "*77: identifier redeclared in tuple destructuring"
     };
 
     private final SymbolTable idTable;
@@ -601,9 +603,13 @@ public class Checker implements Visitor {
                 } else if (TL.T.isMurkyPointer()) {
                     ((PointerType) TL.T).t = unMurk((MurkyType) ((PointerType) TL.T).t);
                 }
+                if (TL.T.isTuple()) {
+                    ((TupleType) TL.T).inAnotherTupleType = true;
+                }
                 if (TL.TL.isEmptyTypeList()) {
                     break;
                 }
+
                 TL = (TypeList) TL.TL;
             }
 
@@ -1869,6 +1875,11 @@ public class Checker implements Visitor {
         return null;
     }
 
+    public Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object o) {
+        ast.TDA.visit(this, o);
+        return null;
+    }
+
     public Object visitStringExpr(StringExpr ast, Object o) {
         String v = ast.SL.spelling;
         if (stringConstantsMapping.containsKey(v)) {
@@ -2562,6 +2573,9 @@ public class Checker implements Visitor {
             Type T = unMurk(MT);
             ((ArrayType) ast.T).t = T;
         }
+        if (ast.T.isTuple()) {
+            ((TupleType) ast.T).inAnotherTupleType = true;
+        }
         ast.T.parent = ast;
         ast.TL.visit(this, o);
         return null;
@@ -2658,4 +2672,90 @@ public class Checker implements Visitor {
         ast.type = innerT;
         return innerT;
     }
+
+    private boolean isCurrentTupleDestructureMut = false;
+
+    public Object visitTupleDestructureAssign(TupleDestructureAssign ast, Object o) {
+
+        // Checking the provided type
+        if (ast.T.isTuple()) {
+            ast.T.visit(this, o);
+        } else if (!ast.T.isUnknown()) {
+            checkMurking(ast);
+            if (!ast.T.isTuple()) {
+                String message = "expression is type: " + ast.T + ", not a tuple";
+                handler.reportError(errors[76] + ": %", message, ast.E.pos);
+                return Environment.errorType;
+            }
+        }
+        
+        // Visiting the expression 
+        if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
+            ast.E = (Expr) ast.E.visit(this, o);
+        } else {
+            ast.E.visit(this, o);
+        }
+
+        // Ensuring the provided expression is a tuple
+        Type realType = ast.E.type;
+        if (!realType.isTuple()) {
+            String message = "expression is type: " + realType + ", not a tuple";
+            handler.reportError(errors[76] + ": %", message, ast.E.pos);
+            return Environment.errorType;
+        }
+
+        // Now we know both types are tuples at least 
+        TupleType realTupleType = (TupleType) realType;
+        if (!ast.T.isUnknown()) {
+            if (!realTupleType.assignable(ast.T)) {
+                String message = "expected " + ast.T + ", received " + realTupleType;
+                handler.reportError(errors[5] + ": %", message, ast.E.pos);
+                return Environment.errorType;
+            }
+        } else {
+            // Need to make sure we have the right number of elements
+            int realLength = realTupleType.getLength();
+            int providedLength = ast.getLength();
+            if (realLength != providedLength) {
+                String message = "expected " + realLength + " elements, attempted to destructure" + providedLength + " elements.";
+                handler.reportError(errors[76] + ": %", message, ast.E.pos);
+                return Environment.errorType;
+            }
+        }
+        
+        if (ast.T.isUnknown()) {
+            ast.T = realTupleType;
+        }
+
+        isCurrentTupleDestructureMut = ast.isMut;
+        ast.idents.visit(this, realTupleType.TL);
+        return null;
+    }
+
+    public Object visitIdentsList(IdentsList ast, Object o) {
+        TypeList TL = (TypeList) o;
+        String s = ast.I.spelling;
+        Decl d = idTable.retrieve(s);
+        if (d != null || mainModule.varExists(s)) {
+            handler.reportError(errors[77] + ": %", s, ast.I.pos);
+            return null;
+        } 
+
+        LocalVar L = new LocalVar(TL.T, ast.I, new EmptyExpr(dummyPos), ast.pos, isCurrentTupleDestructureMut);
+        L.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter);
+        declareVariable(ast.I, L);
+
+        ast.indexT = String.format("%d_%d", loopAssignDepth, baseStatementCounter);
+        baseStatementCounter += 1;
+
+        ast.thisT = TL.T;
+        ast.I.visit(this, o);
+        ast.IL.visit(this, TL.TL);
+        return null;
+    }
+
+    public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
+        return null;
+    }
+
 }

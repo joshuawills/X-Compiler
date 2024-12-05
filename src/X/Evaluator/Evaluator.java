@@ -306,6 +306,10 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object o) {
+        return null;
+    }
+
     public Object visitLoopStmt(LoopStmt ast, Object o) {
         return null;
     }
@@ -554,6 +558,18 @@ public class Evaluator implements Visitor {
     }
 
     public Object visitTupleAccess(TupleAccess ast, Object o) {
+        return null;
+    }
+
+    public Object visitTupleDestructureAssign(TupleDestructureAssign ast, Object o) {
+        return null;
+    }
+
+    public Object visitIdentsList(IdentsList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
         return null;
     }
 
