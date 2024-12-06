@@ -4,7 +4,6 @@ import X.Checker.Checker;
 import X.CodeGen.Emitter;
 import X.Lexer.*;
 import X.Nodes.AST;
-import X.Nodes.Module;
 import X.Parser.Parser;
 import X.Parser.SyntaxError;
 import X.TreeDrawer.Drawer;
@@ -87,6 +86,7 @@ public class X {
             System.out.println("'" + command + "' command failed. Is this program installed on your system?");
         }
     }
+
     public static void main(String[] args) {
         Instant start = Instant.now();
         if (args.length == 0) {

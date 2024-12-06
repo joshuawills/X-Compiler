@@ -53,6 +53,9 @@ public class Emitter implements Visitor {
         for (Function f: modules.getLibCFunctions()) {
             f.visit(this, null);
         }
+        for (GlobalVar v: modules.getLibCVariables()) {
+            v.visit(this, null);
+        }
         inLibCDeclarations = false;
 
         // Instantiate all the tuple types
@@ -201,6 +204,14 @@ public class Emitter implements Visitor {
 
     // TODO: make this handle empty expressions (should be easy)
     public Object visitGlobalVar(GlobalVar ast, Object o) {
+
+        if (inLibCDeclarations) {
+            emit("@" + ast.I.spelling + " = external global ");
+            ast.T.visit(this, o);
+            emitN("");
+            return null;
+        }
+
         Object result;
         if (ast.T.isArray()) {
             Type T = ((ArrayType) ast.T).t;
@@ -890,7 +901,10 @@ public class Emitter implements Visitor {
                 G.T.visit(this, o);
                 emit(", ");
                 G.T.visit(this, o);
-                emitN("* @" + ast.I.spelling);
+                if (!G.T.isPointer()) {
+                    emit("*");
+                }
+                emitN(" @" + ast.I.spelling);
             }
             default -> {}
         }

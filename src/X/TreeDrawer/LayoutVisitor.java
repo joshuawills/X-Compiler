@@ -297,6 +297,9 @@ public class LayoutVisitor implements Visitor {
     // Variable names
 
     public Object visitSimpleVar(SimpleVar ast, Object obj) {
+        if (ast.isLibC) {
+            return layoutUnary("@SimVar", ast.I);
+        }
         return layoutUnary("SimVar", ast.I);
     }
 

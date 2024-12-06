@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import X.Nodes.Function;
+import X.Nodes.GlobalVar;
 import X.Nodes.Module;
 import X.Nodes.TupleType;
 
@@ -11,6 +12,7 @@ public class AllModules {
 
 
     private ArrayList<Function> libCFunctions = new ArrayList<Function>();
+    private ArrayList<GlobalVar> libCVariables = new ArrayList<GlobalVar>();
 
     private ArrayList<Module> modules = new ArrayList<Module>();
     private static AllModules instance = null;
@@ -58,9 +60,22 @@ public class AllModules {
         libCFunctions.add(f);
     }
 
+    public void addLibCVariable(GlobalVar v) {
+        libCVariables.add(v);
+    }
+
     public boolean libCFunctionExists(String name) {
         for (Function f : libCFunctions) {
             if (f.I.spelling.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean libCVariableExists(String name) {
+        for (GlobalVar v : libCVariables) {
+            if (v.I.spelling.equals(name)) {
                 return true;
             }
         }
@@ -71,10 +86,23 @@ public class AllModules {
         return libCFunctions;
     }
 
+    public ArrayList<GlobalVar> getLibCVariables() {
+        return libCVariables;
+    }
+
     public Function getLibCFunction(String name) {
         for (Function f : libCFunctions) {
             if (f.I.spelling.equals(name)) {
                 return f;
+            }
+        }
+        return null;
+    }
+
+    public GlobalVar getLibCVariable(String name) {
+        for (GlobalVar v : libCVariables) {
+            if (v.I.spelling.equals(name)) {
+                return v;
             }
         }
         return null;

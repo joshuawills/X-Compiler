@@ -1,6 +1,8 @@
 export enum StdErrors -> {
 	MEMORY_ERROR,
-	NUMBER_ERROR
+	NUMBER_ERROR,
+	IO_ERROR,
+	NO_ERROR
 }
 
 export struct error -> {
@@ -91,4 +93,40 @@ export fn println(v: bool) -> void {
 	} else {
 		@printf("false\n");
 	}
+}
+
+export fn read_i64() -> i64 {
+	let mut v: i64;
+	@__isoc99_scanf("%lld", &v);
+	@getchar();
+	return v;
+}
+
+export fn read_f64() -> f64 {
+	let mut v: f64;
+	@__isoc99_scanf("%lf", &v);
+	@getchar();
+	return v;
+}
+
+export fn read_i32() -> i32 {
+	let mut v: i32;
+	@__isoc99_scanf("%d", &v);
+	@getchar();
+	return v;
+}
+
+export fn read_char() -> i8 {
+	let mut v: i8;
+	@__isoc99_scanf("%c", &v);
+	@getchar();
+	return v;
+}
+
+export fn read_str(v: i8*, l: i64) -> error {
+	let res = @fgets(v, l as i32, @stdin);
+	if res == null {
+		return error { true, StdErrors.IO_ERROR, "IO error" };
+	}
+	return error { false, StdErrors.NO_ERROR, "" };
 }

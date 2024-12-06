@@ -30,6 +30,9 @@ public class PointerType extends Type {
             }
             return ((PointerType) obj).t != null && ((PointerType) obj).t.equals(t);
         }
+        if (obj instanceof ArrayType) {
+            return t.equals(((ArrayType) obj).t);
+        }
         return false;
     }
 

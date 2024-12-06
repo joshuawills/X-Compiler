@@ -118,7 +118,15 @@ do
 
   message=$(head -n1 "$file")
 
-  java -jar "$EXE" "$file" -q -r > "$TEMP"
+  # check if file with same name but .inp ending exists
+  if [ -f "${file%.x}.inp" ]
+  then
+    java -jar "$EXE" "$file" -q 
+    ./a.out < "${file%.x}.inp" > "$TEMP"
+  else
+    java -jar "$EXE" "$file" -q -r > "$TEMP"
+  fi
+
   real_file=$(echo "$file" | sed -E 's/x$/txt/g')
 
   output=$(diff -q "$TEMP" "$real_file")

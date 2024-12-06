@@ -6,6 +6,7 @@ import X.Lexer.Position;
 public class SimpleVar extends Var {
 
     public Ident I;
+    public boolean isLibC = false;
 
     public SimpleVar(Ident idAST, Position pos) {
         super(pos);

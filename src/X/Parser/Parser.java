@@ -929,6 +929,12 @@ public class Parser {
                 match(TokenType.AT_SYMBOL);
                 Ident I = parseIdent();
                 finish(pos);
+                if (currentToken.kind != TokenType.OPEN_PAREN) {
+                    SimpleVar SV = new SimpleVar(I, pos);
+                    SV.isLibC = true;
+                    finish(pos);
+                    yield new VarExpr(SV, pos);
+                }
                 match(TokenType.OPEN_PAREN);
                 List aLIST;
                 if (tryConsume(TokenType.CLOSE_PAREN)) {

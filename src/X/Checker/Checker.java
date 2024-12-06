@@ -104,7 +104,8 @@ public class Checker implements Visitor {
         "*74: may only perform tuple access on tuples",
         "*75: tuple access index out of bounds",
         "*76: inappropriate tuple destructuring",
-        "*77: identifier redeclared in tuple destructuring"
+        "*77: identifier redeclared in tuple destructuring",
+        "*78: no such lib C variable"
     };
 
     private final SymbolTable idTable;
@@ -384,6 +385,26 @@ public class Checker implements Visitor {
                     new EmptyParaList(dummyPos), dummyPos
                 ), dummyPos
         ));
+        Environment.getchar = stdFunctionLibC(Environment.i32Type, "getchar", new EmptyParaList(dummyPos));
+        Environment.__isoc99_scanf = stdFunctionLibC(Environment.i32Type, "__isoc99_scanf", new ParaList(
+                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
+                new ParaList(
+                    new ParaDecl(Environment.variaticType, i, dummyPos, false),
+                    new EmptyParaList(dummyPos), dummyPos
+                ), dummyPos
+        ));
+        Environment.fgets = stdFunctionLibC(Environment.charPointerType, "fgets", new ParaList(
+                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
+                new ParaList(
+                    new ParaDecl(Environment.i32Type, i, dummyPos, false),
+                    new ParaList(
+                        new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
+                        new EmptyParaList(dummyPos), dummyPos
+                    ), dummyPos
+                ), dummyPos
+        ));
+
+        Environment.stdin = stdVariableLibC(Environment.voidPointerType, "stdin");
 
         Environment.fmod = stdFunctionLibC(Environment.f64Type, "fmod", new ParaList(
                 new ParaDecl(Environment.f64Type, i, dummyPos, false),
@@ -446,6 +467,15 @@ public class Checker implements Visitor {
         binding.isUsed = true;
         if (!modules.libCFunctionExists(id)) {
             modules.addLibCFunction(binding);
+        }
+        return binding;
+    }
+
+    private GlobalVar stdVariableLibC(Type resultType, String id) {
+        GlobalVar binding = new GlobalVar(resultType, new Ident(id, dummyPos), new EmptyExpr(dummyPos), dummyPos, false);
+        binding.isUsed = true;
+        if (!modules.libCVariableExists(id)) {
+            modules.addLibCVariable(binding);
         }
         return binding;
     }
@@ -1385,6 +1415,16 @@ public class Checker implements Visitor {
         }
         if (inCallExpr) {
             ast.setInCallExpr();
+        }
+
+        if (ast.isLibC) {
+            if (!modules.libCVariableExists(ast.I.spelling)) {
+                handler.reportError(errors[78] + ": %", ast.I.spelling, ast.I.pos);
+                return Environment.errorType;
+            }
+            GlobalVar G = modules.getLibCVariable(ast.I.spelling);
+            ast.I.decl = G;
+            return G.T;
         }
 
         if (ast.I.isModuleAccess) {
