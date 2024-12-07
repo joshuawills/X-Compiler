@@ -1,6 +1,6 @@
 // Casting with different numeric types
 
-import std;
+import std, io;
 
 fn main() -> void {
 
@@ -14,10 +14,10 @@ fn main() -> void {
 
 	let hmm = (21, false, "hello world");
 
-	std::print(type(what));
-	std::print(type(real));
-	std::print(type(val));
-	std::print(type(val2));
-	std::print(type(hmm));
+	io::print(type(what));
+	io::print(type(real));
+	io::print(type(val));
+	io::print(type(val2));
+	io::print(type(hmm));
 
 }

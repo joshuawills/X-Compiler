@@ -1,6 +1,6 @@
 // Array list boolean
 
-import std;
+import std, io;
 
 let SECTION_SIZE: i64 = 100;
 
@@ -29,9 +29,9 @@ fn add_to_list(list: List*, val: bool) -> void {
 
 fn outBool(x: bool) -> void {
     if x {
-        std::print("true\n");
+        io::print("true\n");
     } else {
-        std::print("false\n");
+        io::print("false\n");
     }
 }
 
@@ -50,11 +50,11 @@ fn main() -> void {
 
     let mut list: List* = init_list();
     
-    std::print("====\n");
+    io::print("====\n");
     loop i in 5 {
         add_to_list(list, i % 2 == 0);
     }
-    std::print("====\n");
+    io::print("====\n");
 
     print_list(list);
 

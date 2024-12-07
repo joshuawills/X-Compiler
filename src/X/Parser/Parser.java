@@ -96,12 +96,28 @@ public class Parser {
         return programAST;
     }
 
+    private boolean inCommaSeparatedImport = false;
 
     private List parseDeclList() throws SyntaxError {
 
         List dlAST;
         Position pos = new Position();
         start(pos);
+
+        if (inCommaSeparatedImport) {
+            Ident I = parseIdent();
+            if (tryConsume(TokenType.COMMA)) {
+                inCommaSeparatedImport = true;
+            } else {
+                inCommaSeparatedImport = false;
+                match(TokenType.SEMI);
+            }
+            finish(pos);
+            ImportStmt IS = new ImportStmt(I);
+            List dlAST2 = parseDeclList();
+            finish(pos);
+            return new DeclList(IS, dlAST2, pos);
+        }
 
         if (currentToken.kind != TokenType.IMPORT) {
             parsingImportStmts = false;
@@ -119,7 +135,11 @@ public class Parser {
             if (currentToken.kind == TokenType.IDENT) {
                 Ident I = parseIdent();
                 finish(pos);
-                match(TokenType.SEMI);
+                if (tryConsume(TokenType.COMMA)) {
+                    inCommaSeparatedImport = true;
+                } else {
+                    match(TokenType.SEMI);
+                }
                 ImportStmt IS = new ImportStmt(I);
                 List dlAST2 = parseDeclList();
                 finish(pos);

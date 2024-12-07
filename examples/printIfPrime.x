@@ -3,7 +3,7 @@ fn main() -> void {
     loop {
         inInt("Enter a number: ", x);
         if is_prime(x) {
-            std::println(x);
+            io::println(x);
         } else {
             break;
         }

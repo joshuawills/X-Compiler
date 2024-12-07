@@ -9,7 +9,7 @@ fn main() -> void {
     let x = 6;
     let y = 2;
 
-    std::println(euclid(x, y));
+    io::println(euclid(x, y));
     return;
 }
 

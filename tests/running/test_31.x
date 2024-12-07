@@ -1,19 +1,19 @@
 // Floats works now
 
-import std;
+import std, io;
 
 fn main() -> void {
 
 	let mut x = 0.1;
 
 	while x < 2.0 {
-		std::println(x);
+		io::println(x);
 		x += 0.1;
 	}
 
 	let mut y = 1.0;
 
-	std::println(y * 3 / 2);
+	io::println(y * 3 / 2);
 
 }
 

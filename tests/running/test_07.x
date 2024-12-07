@@ -1,12 +1,12 @@
 // Loop constructs in their different forms
 
-import std;
+import std, io;
 
 fn main() -> void {
 
     let mut i: i64 = 0;
     while i < 10 {
-        std::println(i);
+        io::println(i);
         i += 1;
     }
 
@@ -19,24 +19,24 @@ fn main() -> void {
         if j == 2 {
             continue;
         }
-        std::println(j);
+        io::println(j);
     }
 
     loop {
         if $ == 1 {
             continue;
         }
-        std::println($);
+        io::println($);
         if $ == 3 {
             break;
         }
     }
 
     loop haha in 3 5 {
-        std::println(haha);
+        io::println(haha);
     }
 
-    std::println(-19);
+    io::println(-19);
 
     loop l_one in 5 {
         
@@ -48,25 +48,25 @@ fn main() -> void {
             if l_two == 1 {
                 continue;
             }
-            std::println(l_one);
-            std::println(l_two);
+            io::println(l_one);
+            io::println(l_two);
         }
     }
 
     let mut why_not: i64 = 0;
 
     do {
-        std::println('x');
+        io::println('x');
     } while why_not != 0;
 
     let mut donda: i64 = 0;
     for donda = 0; donda < 10; donda += 1 {
-        std::println(donda);
+        io::println(donda);
     }
 
     let mut explanatory: i64 = 0;
     for ;; {
-        std::println(explanatory);
+        io::println(explanatory);
         if explanatory == 3 {
             break;
         }

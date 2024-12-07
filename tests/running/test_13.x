@@ -1,6 +1,6 @@
 // Bubble sort w/ types
 
-import std;
+import std, io;
 
 fn main() -> void {
     let mut x: i64[] = [2, 3, 1, 4, 5, 9, 8, 7, 6, 0];
@@ -10,7 +10,7 @@ fn main() -> void {
 }
 
 fn print_arr(x: i64[], len: i64) -> void {
-     loop i in len { std::println(x[i]); }
+     loop i in len { io::println(x[i]); }
 }
 
 fn bubble_sort(mut x: i64[], len: i64) -> void {

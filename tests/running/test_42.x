@@ -1,6 +1,6 @@
 // Do array index operations on a pointer -> mutable var
 
-import std;
+import std, io;
 
 fn main() -> void { 
 
@@ -10,6 +10,6 @@ fn main() -> void {
     y = x;
     
     loop i in 5 {
-        std::println(y[i]);
+        io::println(y[i]);
     }
 }

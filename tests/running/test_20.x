@@ -1,6 +1,6 @@
 // Nested struct accesses with primitive types
 
-import std;
+import std, io;
 
 struct IntBox -> {
     val: i64
@@ -16,6 +16,6 @@ fn main() -> void {
     let a = IntBox { 3 };
     let b = BoxOfMany { a, 2 == 3 };
 
-    std::println(b.val2.val);
+    io::println(b.val2.val);
 
 }

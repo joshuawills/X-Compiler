@@ -1,14 +1,14 @@
 // Redeclaring char*
 
-import std;
+import std, io;
 
 fn main() -> void {
     let mut val = "hello, world\n";
 
-    std::print(val);
+    io::print(val);
     
     val = "goodbye, world!\n";
 
-    std::print(val);
+    io::print(val);
 
 }

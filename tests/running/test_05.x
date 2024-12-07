@@ -1,6 +1,6 @@
 // Global variables
 
-import std;
+import std, io;
 
 let x: i64 = 21;
 let mut x1: i64 = 19;
@@ -16,16 +16,16 @@ let mut aB: bool[] = [true, false, true, false];
 let mut aC: i8[] = ['a', 'b', 'c', 'd'];
 
 fn main() -> void {
-    std::println(x); // 20
-    std::println(x1); // 19
+    io::println(x); // 20
+    io::println(x1); // 19
     x1 += 1;
-    std::println(x1); // 20
+    io::println(x1); // 20
     printX1(); // 20
 
-    std::println(y); // 'a'
-    std::println(y1); // '&'
+    io::println(y); // 'a'
+    io::println(y1); // '&'
     y1 += 1;
-    std::println(y1); // '`';
+    io::println(y1); // '`';
     printY1(); // '`';
 
     outBool(z); // false
@@ -35,9 +35,9 @@ fn main() -> void {
     printZ1(); // false;
 
     loop i in 10 {
-        std::println(aA[i]);
+        io::println(aA[i]);
     }
-    std::println(aA[0]);
+    io::println(aA[0]);
     printaAZero();
     aA[0] = 19;
     printaAZero();
@@ -51,16 +51,16 @@ fn main() -> void {
     }
 
     loop whatj in 4 {
-        std::println(aC[whatj]);
+        io::println(aC[whatj]);
     }
     aC[0] = 'e';
     loop dummyd in 4 {
-        std::println(aC[dummyd]);
+        io::println(aC[dummyd]);
     }
 }
 
 fn printaAZero() -> void {
-    std::println(aA[0]);
+    io::println(aA[0]);
 }
 
 fn printZ1() -> void {
@@ -68,18 +68,18 @@ fn printZ1() -> void {
 }
 
 fn printX1() -> void {
-    std::println(x1);
+    io::println(x1);
 }
 
 fn printY1() -> void {
-    std::println(y1);
+    io::println(y1);
 }
 
 
 fn outBool(x: bool) -> void {
     if x {
-        std::println(1);
+        io::println(1);
     } else {
-        std::println(0);
+        io::println(0);
     }
 }

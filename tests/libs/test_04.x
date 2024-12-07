@@ -1,32 +1,32 @@
 // Printing different things
 
-import std;
+import std, io;
 
 fn main() -> void {
 
-    std::println("A string");
-    std::print("A string");
+    io::println("A string");
+    io::print("A string");
 
-    std::print(3.14159265);
-    std::println(2.71828182);
+    io::print(3.14159265);
+    io::println(2.71828182);
 
-    std::print(true);
-    std::println(false);
+    io::print(true);
+    io::println(false);
 
-    std::print(3.14159265 as f32);
-    std::println(2.71828182 as f32);
+    io::print(3.14159265 as f32);
+    io::println(2.71828182 as f32);
 
-    std::print(true);
-    std::println(false);
+    io::print(true);
+    io::println(false);
 
-    std::print(3);
-    std::println(2);
+    io::print(3);
+    io::println(2);
 
 
-    std::print(3 as i32);
-    std::println(2 as i32);
+    io::print(3 as i32);
+    io::println(2 as i32);
 
-    std::print('A');
-    std::println('B');
+    io::print('A');
+    io::println('B');
 
 }

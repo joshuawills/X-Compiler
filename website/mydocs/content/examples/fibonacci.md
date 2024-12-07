@@ -7,7 +7,7 @@ weight: 1
 fn main() -> void {
     let x = 9;
 	
-    std::println(fib(x));
+    io::println(fib(x));
 }
 
 

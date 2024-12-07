@@ -4,7 +4,7 @@ weight: 1
 ---
 
 ```Rust
-import std;
+import std, io;
 
 struct Node -> {
     mut val: i64,
@@ -54,11 +54,11 @@ fn addNumToLinkedList(list: LinkedList*, val: i64) -> void {
 fn printLinkedList(list: LinkedList*) -> void {
     let mut curr: Node* = list->head;
     while curr != null {
-        std::println(curr->val);
+        io::println(curr->val);
         curr = curr->next;
     }
-    std::print("Size is: ");
-    std::println(list->len);
+    io::print("Size is: ");
+    io::println(list->len);
 }
 
 fn freeLinkedList(list: LinkedList*) -> void {

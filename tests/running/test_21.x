@@ -1,6 +1,6 @@
 // declaring sub structs in place
 
-import std;
+import std, io;
 
 struct IntBox -> {
 	val: i64
@@ -27,6 +27,6 @@ fn main() -> void {
 
     let z = BasicStruct2 { IntBox2 { 2, 3 }, 4};
 
-	std::println(y.x.val);
-	std::println(z.x.val2);
+	io::println(y.x.val);
+	io::println(z.x.val2);
 }

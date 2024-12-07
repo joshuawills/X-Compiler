@@ -1,15 +1,15 @@
 // If conditional is not boolean
 
-import std;
+import std, io;
 
 fn main() -> void {
 
     if 1 {
-        std::println(1);
+        io::println(1);
     }
 
     if 'c' {
-      std::println(1);
+      io::println(1);
     }
 
 }

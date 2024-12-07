@@ -349,9 +349,12 @@ public class Checker implements Visitor {
                 }
             }
 
-            for (Function f: M.getFunctions()) {
-                if (!f.isUsed && !f.I.spelling.equals("main")) {
-                    M.thisHandler.reportMinorError(errors[23] + ": %", f.I.spelling, f.I.pos);
+            if (M.isMainModule()) {
+                // Don't print for imported modules
+                for (Function f: M.getFunctions()) {
+                    if (!f.isUsed && !f.I.spelling.equals("main")) {
+                        M.thisHandler.reportMinorError(errors[23] + ": %", f.I.spelling, f.I.pos);
+                    }
                 }
             }
 

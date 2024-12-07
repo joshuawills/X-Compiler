@@ -1,14 +1,14 @@
 // Basic file import work
 
-import std;
+import std, io;
 import "math-what.x" as math;
 
 fn main() -> void {
-    std::println(math::add(1, 2));
+    io::println(math::add(1, 2));
 
-    std::println(math::Zero);
+    io::println(math::Zero);
 
     let val = math::Vec2 { 1, 1 };
-    std::println(val.x);
+    io::println(val.x);
 
 }

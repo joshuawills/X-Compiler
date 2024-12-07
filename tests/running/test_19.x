@@ -1,6 +1,6 @@
 // Simple struct accesses, no nesting
 
-import std;
+import std, io;
 
 struct Box -> {
     num: i64,
@@ -12,7 +12,7 @@ fn main() -> void {
     let var = Box { 2, false };
 
     if !var.cond {
-        std::println(var.num);
+        io::println(var.num);
     }
 
 }

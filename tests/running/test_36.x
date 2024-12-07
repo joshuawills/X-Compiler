@@ -1,6 +1,6 @@
 // Can infer void* cast from type annotation
 
-import std;
+import std, io;
 
 struct Node -> {
 	value: i64
@@ -9,7 +9,7 @@ struct Node -> {
 fn main() -> void {
 
 	let value: Node* = std::malloc(size(Node));
-	std::print(type(value));
+	io::print(type(value));
 	std::free(value);
 
 }

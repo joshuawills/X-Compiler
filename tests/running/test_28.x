@@ -1,43 +1,43 @@
 // Testing if-else constructs
 
-import std;
+import std, io;
 
 fn main() -> void {
 
     if (true) {
-        std::println(-2);
+        io::println(-2);
     } else {
-        std::println(-1);
+        io::println(-1);
     }
 
     if (false) {
-        std::println(1);
+        io::println(1);
     } else {
-        std::println(2);
+        io::println(2);
     }
 
     if (false) {
-        std::println(5);
+        io::println(5);
     } else if (false) {
-        std::println(6);
+        io::println(6);
     } else {
-        std::println(7);
+        io::println(7);
     }
 
     if (true) {
-        std::println(8);
+        io::println(8);
     } else if (false) {
-        std::println(9);
+        io::println(9);
     } else {
-        std::println(10);
+        io::println(10);
     }
 
     if (true) {
-        std::println(11);
+        io::println(11);
     } else if (true) {
-        std::println(12);
+        io::println(12);
     } else {
-        std::println(13);
+        io::println(13);
     }
 
 }

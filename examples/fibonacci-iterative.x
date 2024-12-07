@@ -1,6 +1,6 @@
 fn main() -> void {
     let x: i64 = 9;
-	std::println(fib(x));
+	io::println(fib(x));
 }
 
 fn fib(x: i64) -> i64 {

@@ -1,6 +1,6 @@
 // Struct values are correctly duplicated
 
-import std;
+import std, io;
 
 struct A -> {
 	mut v: i64
@@ -10,8 +10,8 @@ fn main() -> void {
 	let mut b = A { 2 };
 	let mut v = b;
 	b.v = 3;
-	std::println(b.v);
-	std::println(v.v);
+	io::println(b.v);
+	io::println(v.v);
 
 	let mut vals = [
 		A { 2 },
@@ -24,9 +24,9 @@ fn main() -> void {
 	r.v = 1;
 	p.v = 2;
 
-	std::println(r.v);
-	std::println(p.v);
+	io::println(r.v);
+	io::println(p.v);
 
-	std::println(vals[0].v);
-	std::println(vals[1].v);
+	io::println(vals[0].v);
+	io::println(vals[1].v);
 }

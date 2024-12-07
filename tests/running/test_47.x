@@ -1,6 +1,6 @@
 // Basic tuple return from function
 
-import std;
+import std, io;
 
 fn getNumber(val: i64) -> (i64, bool) {
 
@@ -18,15 +18,15 @@ fn main() -> void {
 	let mut v = getNumber(10);
 
 	if v.1 {
-		std::print("You provided a positive number: ");
-		std::println(v.0);
+		io::print("You provided a positive number: ");
+		io::println(v.0);
 	}
 
 	v = getNumber(-1);
 
 	if !v.1 {
-		std::print("You provided a negative number: ");
-		std::println(v.0);
+		io::print("You provided a negative number: ");
+		io::println(v.0);
 	}
 
 }

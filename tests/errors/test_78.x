@@ -1,9 +1,9 @@
 // No such libc variable
 
-import std;
+import std, io;
 
 fn main() -> void {
 
-	std::print(@what);
+	io::print(@what);
 
 }

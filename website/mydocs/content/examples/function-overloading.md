@@ -13,7 +13,7 @@ fn add(x: i64, y: i64) -> i64 {
 }
 
 fn main() -> void {
-    std::println(add(2, 1)); // logs 3
-    std::println(add(2));   // logs 2
+    io::println(add(2, 1)); // logs 3
+    io::println(add(2));   // logs 2
 }
 ```

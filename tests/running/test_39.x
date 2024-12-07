@@ -1,6 +1,6 @@
 // Linked list :)
 
-import std;
+import std, io;
 
 struct Node -> {
 	mut val: i64,
@@ -60,11 +60,11 @@ fn addNumToLinkedList(list: LinkedList*, val: i64) -> void {
 fn printLinkedList(list: LinkedList*) -> void {
 	let mut curr: Node* = list->head;
 	while curr != null {
-		std::println(curr->val);
+		io::println(curr->val);
 		curr = curr->next;
 	}
-	std::print("Size is: ");
-	std::println(list->len);
+	io::print("Size is: ");
+	io::println(list->len);
 }
 
 fn listContainsValue(list: LinkedList*, val: i64) -> bool {
@@ -87,15 +87,15 @@ fn main() -> void {
 	printLinkedList(list);
 
 	if listContainsValue(list, 500) {
-		std::print("List contains 500\n");
+		io::print("List contains 500\n");
 	} else {
-		std::print("List does not contain 500\n");
+		io::print("List does not contain 500\n");
 	}
 
 	if listContainsValue(list, 2500) {
-		std::print("List contains 2500\n");
+		io::print("List contains 2500\n");
 	} else {
-		std::print("List does not contain 2500\n");
+		io::print("List does not contain 2500\n");
 	}
 
 	freeLinkedList(list);

@@ -1,6 +1,6 @@
 // Basic struct return from function
 
-import std;
+import std, io;
 
 struct IntBox -> { val: i64 }
 
@@ -12,6 +12,6 @@ fn getIntBox(val: i64) -> IntBox {
 fn main() -> void {
 
 	let x: IntBox = getIntBox(21);
-	std::println(x.val);
+	io::println(x.val);
 
 }

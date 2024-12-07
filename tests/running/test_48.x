@@ -1,12 +1,12 @@
 // Very basic tuple destructuring
 
-import std;
+import std, io;
 
 fn main() -> void {
 
 	let a, b, c = (1, 2, 3);
-	std::println(a);
-	std::println(b);
-	std::println(c);
+	io::println(a);
+	io::println(b);
+	io::println(c);
 
 }

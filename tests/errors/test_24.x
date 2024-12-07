@@ -1,6 +1,6 @@
 // inappropriate use of the '$' operator
 
-import std;
+import std, io;
 
 fn main() -> void {
 
@@ -8,7 +8,7 @@ fn main() -> void {
 
 
     loop i in 10 {
-        std::println($);
+        io::println($);
     }
 
 }

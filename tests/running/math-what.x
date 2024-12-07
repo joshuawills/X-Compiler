@@ -1,4 +1,4 @@
-import std;
+import std, io;
 
 export struct Vec2 -> {
     mut x: i64,
@@ -16,6 +16,6 @@ export fn add(x: i64, y: i64) -> i64 {
 }
 
 export fn log_vec2(val: Vec2) -> void {
-    std::println(val.x);
-    std::println(val.y);
+    io::println(val.x);
+    io::println(val.y);
 }

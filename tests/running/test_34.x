@@ -1,6 +1,6 @@
 // Typecasting with void pointers
 
-import std;
+import std, io;
 
 struct Node -> {
 	value: i64

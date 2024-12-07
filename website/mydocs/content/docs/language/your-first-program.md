@@ -3,11 +3,11 @@ title: "Your First Program"
 ---
 
 ```Rust
-import std;
+import std, io;
 
 // A hello world application :)
 fn main() -> void {
-    std::println("hello, world!");
+    io::println("hello, world!");
     return;
 }
 ```

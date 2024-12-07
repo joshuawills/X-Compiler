@@ -1,10 +1,10 @@
 // No duplicate br/return stmts
 
-import std;
+import std, io;
 
 fn getBooleanString(val: bool) -> i8* {
 	if val {
-		std::println(21);
+		io::println(21);
 		return "true\n";
 	}
 	return "false\n";
@@ -13,7 +13,7 @@ fn getBooleanString(val: bool) -> i8* {
 fn main() -> void {
 
 	let a = true;
-	std::print(getBooleanString(a));
-	std::print(getBooleanString(!a));
+	io::print(getBooleanString(a));
+	io::print(getBooleanString(!a));
 
 }

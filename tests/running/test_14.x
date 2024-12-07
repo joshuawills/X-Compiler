@@ -1,6 +1,6 @@
 // Euclid
 
-import std;
+import std, io;
 
 fn main() -> void {
 
@@ -11,7 +11,7 @@ fn main() -> void {
         return;
     }
 
-    std::println(euclid(x, y));
+    io::println(euclid(x, y));
     return;
 }
 

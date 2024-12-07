@@ -34,7 +34,7 @@ fn main() -> void {
 Explicit type casting can be useful, especially when working with libC methods. Below are some examples of how to utilise explicit type casting using the **as** keyword.
 
 ```Rust
-import std;
+import std, io;
 
 struct Node -> {
     val: i64
@@ -84,7 +84,7 @@ fn main() -> void {
     };
 
     if !a.vals.cond {
-        std::println(a.num);
+        io::println(a.num);
     }
 }
 
@@ -103,7 +103,7 @@ fn main() -> void {
     let myTuple = (21, true, "hello, world!\n");
 
     if myTuple.1 {
-        std::println(myTuple.2);
+        io::println(myTuple.2);
     }
 
     myTuple.0 += 1; // cause a compilation error as the tuple is defined as immutable
@@ -118,9 +118,9 @@ fn main() -> void {
 
     let val, err = functionThatMayFail();
     if err.isError {
-        std::println("handle error");
+        io::println("handle error");
     }
-    std::println("confident errors have been handled");
+    io::println("confident errors have been handled");
 
 }
 ```

@@ -4,20 +4,19 @@ weight: 1
 ---
 
 ```Rust
-import std;
-import math;
+import math, math;
 
 fn main() -> void {
 
     let val, err = math::tan(math::PI / 2);
 
     if err.isError {
-        std::println("Error occured");
+        io::println("Error occured");
         std::exit(1);
     }
 
-    std::print("tan(PI / 2) = ");
-    std::println(val);
+    io::print("tan(PI / 2) = ");
+    io::println(val);
     std::exit(0);
 }
 

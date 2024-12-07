@@ -1,6 +1,6 @@
 // Can use malloc and free
 
-import std;
+import std, io;
 
 fn main() -> void {
 

@@ -1,67 +1,67 @@
 // Boolean logic and conditional branching
 
-import std;
+import std, io;
 
 fn doSomething() -> bool {
-    std::println('z');
+    io::println('z');
     return true;
 }
 
 fn main() -> void {
 
     if true && true {
-        std::println(1);
+        io::println(1);
     }
 
     if true && false {
-        std::println(2);
+        io::println(2);
     }
 
     if false && true {
-        std::println(3);
+        io::println(3);
     }
 
     if false && false {
-        std::println(4);
+        io::println(4);
     }
 
     if true && doSomething() {
-        std::println(5);
+        io::println(5);
     }
 
     if false && doSomething() {
-        std::println(6);
+        io::println(6);
     }
 
     if true || doSomething() {
-        std::println(7);
+        io::println(7);
     }
 
     if false || doSomething() {
-        std::println(8);
+        io::println(8);
     }
 
     if !false {
-        std::println(9);
+        io::println(9);
     }
 
     if !true {
-        std::println(10);
+        io::println(10);
     }
 
     if true || true {
-        std::println(11);
+        io::println(11);
     }
 
     if false || true {
-        std::println(12);
+        io::println(12);
     }
 
     if true || false {
-        std::println(13);
+        io::println(13);
     }
 
     if false || false {
-        std::println(14);
+        io::println(14);
     }
 }

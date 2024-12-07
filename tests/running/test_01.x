@@ -1,8 +1,8 @@
 // super simple: printing 0
 
-import std;
+import std, io;
 
 fn main() -> void {
-    std::println(2);
+    io::println(2);
     return;
 }

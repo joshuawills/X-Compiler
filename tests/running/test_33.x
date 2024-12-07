@@ -1,6 +1,6 @@
 // Structs passed to functions as values
 
-import std;
+import std, io;
 
 struct Test -> {
 	mut a: i64,
@@ -14,17 +14,17 @@ struct DeeperStruct -> {
 
 fn printData(mut data: Test) -> void {
 	data.a += 1;
-	std::print("should be 2: ");
-	std::println(data.a);
+	io::print("should be 2: ");
+	io::println(data.a);
 }
 
 fn printDeeperData(mut data: DeeperStruct) -> void {
     if data.accessible {
-        std::print("should be 2: ");
+        io::print("should be 2: ");
         data.test.a += 1;
-        std::println(data.test.a);
+        io::println(data.test.a);
     } else {
-        std::print("inaccessible");
+        io::print("inaccessible");
     }
 }
 
@@ -32,12 +32,12 @@ fn printDeeperData(mut data: DeeperStruct) -> void {
 fn main() -> void {
 
 	let data = Test { 1, 2 };
-	std::print("should be 1: ");
-	std::println(data.a);
+	io::print("should be 1: ");
+	io::println(data.a);
 
 	printData(data);
-	std::print("should be 1: ");
-	std::println(data.a);
+	io::print("should be 1: ");
+	io::println(data.a);
 
     let data2 = DeeperStruct { true, Test { 1, 2 } };
     printDeeperData(data2);

@@ -44,9 +44,9 @@ struct myData -> {
 
 export fn logBoolean(b: Boolean) -> void {
     if b == Boolean.TRUE {
-        std::println("true\n");
+        io::println("true\n");
     } else {
-        std::println("false\n");
+        io::println("false\n");
     }
 }
 

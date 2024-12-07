@@ -1,13 +1,12 @@
 // Testing power in the math lib
 
-import math;
-import std;
+import std, io, math;
 
 fn main() -> void {
 
-    std::println(Math::power(2.0, 3.0));
-    std::println(Math::power(2.0, 0.0));
-    std::println(Math::power(2.0, 0.5));
-    std::println(Math::power(2.0, -1.0));
+    io::println(Math::power(2.0, 3.0));
+    io::println(Math::power(2.0, 0.0));
+    io::println(Math::power(2.0, 0.5));
+    io::println(Math::power(2.0, -1.0));
 
 }

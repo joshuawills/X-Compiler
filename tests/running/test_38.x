@@ -1,6 +1,6 @@
 // Passing struct pointers to functions
 
-import std;
+import std, io;
 
 struct Node -> {
 	mut value: i64
@@ -21,13 +21,13 @@ fn setNodeInNodeValueTo42(node: NodeInNode*) -> void {
 fn main() -> void {
 
 	let mut node = Node { 21 };
-	std::println(node.value);
+	io::println(node.value);
 	setNodeValueTo42(&node);
-	std::println(node.value);
+	io::println(node.value);
 
 	let mut nodeInNode = NodeInNode { Node { 21 } };
-	std::println(nodeInNode.node.value);
+	io::println(nodeInNode.node.value);
 	setNodeInNodeValueTo42(&nodeInNode);
-	std::println(nodeInNode.node.value);
+	io::println(nodeInNode.node.value);
 
 }

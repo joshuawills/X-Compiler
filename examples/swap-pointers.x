@@ -8,6 +8,6 @@ fn main() -> void {
     let mut a: i64 = 2;
     let mut b: i64 = 3;
     swap(&a, &b);
-    std::println(a);
-    std::println(b);
+    io::println(a);
+    io::println(b);
 }

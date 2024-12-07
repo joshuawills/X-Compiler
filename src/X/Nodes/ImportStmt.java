@@ -20,6 +20,7 @@ public class ImportStmt extends Decl {
     public ImportStmt(Ident ident) {
         super(new Position(), false);
         this.ident = ident;
+        ident.parent = this;
         isSTLImport = true;
     }
 

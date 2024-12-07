@@ -1,23 +1,23 @@
 // Basic IO operations
 
-import std;
+import std, io;
 
 fn main() -> void {
 
-    let num = std::read_i64();
-    std::println(num);
+    let num = io::read_i64();
+    io::println(num);
 
     let mut buffer: i8[100];
-    std::read_str(buffer, 100);
-    std::println(buffer);
+    io::read_str(buffer, 100);
+    io::println(buffer);
 
-    let char = std::read_char();
-    std::println(char);
+    let char = io::read_char();
+    io::println(char);
 
-    let num2 = std::read_i32();
-    std::println(num2);
+    let num2 = io::read_i32();
+    io::println(num2);
 
-    let num3 = std::read_f64();
-    std::println(num3);
+    let num3 = io::read_f64();
+    io::println(num3);
 
 }

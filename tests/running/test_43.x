@@ -1,6 +1,6 @@
 // Array list i64
 
-import std;
+import std, io;
 
 let SECTION_SIZE: i64 = 100;
 
@@ -29,7 +29,7 @@ fn add_to_list(list: List*, val: i64) -> void {
 
 fn print_list(list: List*) -> void {
     loop i in list->current_size {
-        std::println(list->array[i]);
+        io::println(list->array[i]);
     }
 }
 
@@ -42,12 +42,12 @@ fn main() -> void {
 
     let mut list: List* = init_list();
     
-    std::print("====\n");
+    io::print("====\n");
     loop i in 5 {
-        std::println(i);
+        io::println(i);
         add_to_list(list, i);
     }
-    std::print("====\n");
+    io::print("====\n");
 
     print_list(list);
 

@@ -172,6 +172,7 @@
 *06.12.2024*
 
 - can access std lib without path resolution
+- can do this pattern "import A, B;" for std library files
 
 # TODO
 

@@ -1,6 +1,6 @@
 // Accessing struct pointers at the top level
 
-import std;
+import std, io;
 
 struct Node -> {
 	mut value: i64
@@ -18,8 +18,8 @@ fn main() -> void {
 
 	nodePtr->value = 20;
 
-	std::println(node.value);
-	std::println(nodePtr->value);
+	io::println(node.value);
+	io::println(nodePtr->value);
 
 
 	let mut nodeInNode = NodeInNode { Node { 30 } };
@@ -27,8 +27,8 @@ fn main() -> void {
 
 	nodeInNodePtr->node.value = 40;
 
-	std::println(nodeInNode.node.value);
-	std::println(nodeInNodePtr->node.value);
+	io::println(nodeInNode.node.value);
+	io::println(nodeInNodePtr->node.value);
 
 
 }

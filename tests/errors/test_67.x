@@ -1,6 +1,6 @@
 // No such type in module
 
-import std;
+import std, io;
 
 fn main() -> void {
 
