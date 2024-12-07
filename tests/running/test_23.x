@@ -1,6 +1,6 @@
 // Struct values are correctly duplicated
 
-import "../../lib/std.x" as std;
+import std;
 
 struct A -> {
 	mut v: i64

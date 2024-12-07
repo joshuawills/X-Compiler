@@ -1,6 +1,6 @@
 // Accessing struct pointers at the top level
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Node -> {
 	mut value: i64

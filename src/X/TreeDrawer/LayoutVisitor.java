@@ -618,6 +618,9 @@ public class LayoutVisitor implements Visitor {
 
     @Override
     public Object visitImportStmt(ImportStmt ast, Object o) {
+        if (ast.isSTLImport) {
+            return layoutUnary("ImportStmt", ast.ident);
+        }
         return layoutUnary("ImportStmt", ast.ident);
     }
 

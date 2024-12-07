@@ -1,6 +1,6 @@
 // Enums in other files accessed!
 
-import "../../lib/std.x" as std;
+import std;
 
 import "math-what.x" as Math;
 

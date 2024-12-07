@@ -1,6 +1,6 @@
 // Basic tuple return from function
 
-import "../../lib/std.x" as std;
+import std;
 
 fn getNumber(val: i64) -> (i64, bool) {
 

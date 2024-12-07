@@ -1,6 +1,6 @@
 // Can infer void* cast from type annotation
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Node -> {
 	value: i64

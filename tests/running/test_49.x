@@ -1,6 +1,6 @@
 // Messing around with tuple destructuring
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Data -> {
 	mut x: i64

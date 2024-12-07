@@ -1,6 +1,6 @@
 // Structs passed to functions as values
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Test -> {
 	mut a: i64,

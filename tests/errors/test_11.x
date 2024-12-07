@@ -1,6 +1,6 @@
 // If conditional is not boolean
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
 

@@ -1,6 +1,6 @@
 // Emitting type annotations
 
-import "../../lib/std.x" as std;
+import std;
 
 enum Boolean -> { TRUE, FALSE }
 

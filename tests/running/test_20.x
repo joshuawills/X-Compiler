@@ -1,6 +1,6 @@
 // Nested struct accesses with primitive types
 
-import "../../lib/std.x" as std;
+import std;
 
 struct IntBox -> {
     val: i64

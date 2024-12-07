@@ -1,6 +1,6 @@
 // declaring sub structs in place
 
-import "../../lib/std.x" as std;
+import std;
 
 struct IntBox -> {
 	val: i64

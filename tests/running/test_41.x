@@ -1,6 +1,6 @@
 // Do array index operations on a pointer
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void { 
 

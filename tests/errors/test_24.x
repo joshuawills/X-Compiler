@@ -1,6 +1,6 @@
 // inappropriate use of the '$' operator
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
 

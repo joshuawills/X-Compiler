@@ -4,7 +4,7 @@ weight: 1
 ---
 
 ```Rust
-import "lib/std.x" as std;
+import std;
 
 let SECTION_SIZE: i64 = 100;
 

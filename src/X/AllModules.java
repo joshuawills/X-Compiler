@@ -1,5 +1,6 @@
 package X;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -22,7 +23,16 @@ public class AllModules {
     public int strCount = 0;
     public final HashMap<String, Integer> stringConstantsMapping = new HashMap<>();
 
+    public Path libPath;
+
     private AllModules() {
+        String val = System.getenv("X_LIB_PATH");
+        if (val != null) {
+            libPath = Path.of(val);
+        } else {
+            Path homePath = Path.of(System.getProperty("user.home"));
+            libPath = homePath.resolve(".x-lib");
+        }
     }
 
     public static AllModules getInstance() {

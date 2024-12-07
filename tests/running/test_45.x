@@ -1,6 +1,6 @@
 // Basic tuple operations
 
-import "../../lib/std.x" as std;
+import std;
 
 fn takeInTuple(mut tuple: (i64, bool, i8*)) -> void {
     std::print(tuple.2);

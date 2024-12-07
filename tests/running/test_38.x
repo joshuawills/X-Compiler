@@ -1,6 +1,6 @@
 // Passing struct pointers to functions
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Node -> {
 	mut value: i64

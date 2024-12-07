@@ -1,6 +1,6 @@
 // Basic struct return from function
 
-import "../../lib/std.x" as std;
+import std;
 
 struct IntBox -> { val: i64 }
 

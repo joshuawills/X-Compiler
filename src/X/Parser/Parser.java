@@ -116,15 +116,25 @@ public class Parser {
 
         if (currentToken.kind == TokenType.IMPORT && parsingImportStmts) {
             match(TokenType.IMPORT);
-            finish(pos);
-            StringExpr SE = new StringExpr(parseStringLiteral(), pos);
-            match(TokenType.AS);
-            Ident I = parseIdent();
-            match(TokenType.SEMI);
-            ImportStmt IS = new ImportStmt(SE, I);
-            List dlAST2 = parseDeclList();
-            finish(pos);
-            dlAST = new DeclList(IS, dlAST2, pos);
+            if (currentToken.kind == TokenType.IDENT) {
+                Ident I = parseIdent();
+                finish(pos);
+                match(TokenType.SEMI);
+                ImportStmt IS = new ImportStmt(I);
+                List dlAST2 = parseDeclList();
+                finish(pos);
+                dlAST = new DeclList(IS, dlAST2, pos);
+            } else {
+                finish(pos);
+                StringExpr SE = new StringExpr(parseStringLiteral(), pos);
+                match(TokenType.AS);
+                Ident I = parseIdent();
+                match(TokenType.SEMI);
+                ImportStmt IS = new ImportStmt(SE, I);
+                List dlAST2 = parseDeclList();
+                finish(pos);
+                dlAST = new DeclList(IS, dlAST2, pos);
+            }
         } 
         else if (tryConsume(TokenType.FN)) {
             // Function

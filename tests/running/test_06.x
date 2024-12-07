@@ -1,6 +1,6 @@
 // Logging global arrays, mutating them
 
-import "../../lib/std.x" as std;
+import std;
 
 let x: i64[] = [1, 19, 9];
 let x1: bool[] = [true, false, true];

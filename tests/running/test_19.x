@@ -1,6 +1,6 @@
 // Simple struct accesses, no nesting
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Box -> {
     num: i64,

@@ -1,4 +1,4 @@
-import "../../lib/std.x" as std;
+import std;
 
 export struct Vec2 -> {
     mut x: i64,

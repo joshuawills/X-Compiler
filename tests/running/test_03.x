@@ -1,6 +1,6 @@
 // Boolean logic and conditional branching
 
-import "../../lib/std.x" as std;
+import std;
 
 fn doSomething() -> bool {
     std::println('z');

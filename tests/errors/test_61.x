@@ -2,7 +2,7 @@
 
 import "haha/what.x" as What;
 
-import "../../lib/math.x" as Math;
+import math;
 
 
 fn main() -> void { return; }

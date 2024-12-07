@@ -1,6 +1,6 @@
 // Printing different things
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
 

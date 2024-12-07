@@ -1,6 +1,6 @@
 // Typecasting with void pointers
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Node -> {
 	value: i64

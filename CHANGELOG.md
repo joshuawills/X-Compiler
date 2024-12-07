@@ -169,6 +169,10 @@
 - proper type analysis
   - remove need for 'as void*' everywhere
 
+*06.12.2024*
+
+- can access std lib without path resolution
+
 # TODO
 
 - in-compilation expression everywhere possible

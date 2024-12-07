@@ -1,6 +1,6 @@
 // Testing size of
 
-import "../../lib/std.x" as std;
+import std;
 
 struct A -> { b: i64, c: bool}
 

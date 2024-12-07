@@ -1,7 +1,7 @@
 // Testing sin and cos in the math lib
 
-import "../../lib/math.x" as Math;
-import "../../lib/std.x" as std;
+import math;
+import std;
 
 fn main() -> void {
 

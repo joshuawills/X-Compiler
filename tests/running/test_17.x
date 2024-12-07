@@ -1,6 +1,6 @@
 // Swap POINTERS
 
-import "../../lib/std.x" as std;
+import std;
 
 fn swap(mut a: i64*, mut b: i64*) -> void {
     let temp: i64 = *a;

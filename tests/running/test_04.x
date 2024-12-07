@@ -1,6 +1,6 @@
 // Messing around with functions and function overloading
 
-import "../../lib/std.x" as std;
+import std;
 
 fn add() -> i64 {
     return add(1, 2);

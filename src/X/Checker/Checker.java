@@ -17,7 +17,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Optional;
 
 public class Checker implements Visitor {
@@ -105,7 +104,8 @@ public class Checker implements Visitor {
         "*75: tuple access index out of bounds",
         "*76: inappropriate tuple destructuring",
         "*77: identifier redeclared in tuple destructuring",
-        "*78: no such lib C variable"
+        "*78: no such lib C variable",
+        "*79: imported standard libary does not exist. Is your 'X_LIB_PATH' set?",
     };
 
     private final SymbolTable idTable;
@@ -2546,13 +2546,24 @@ public class Checker implements Visitor {
     }
 
     public Object visitImportStmt(ImportStmt ast, Object o) {
-        Path basePath = Paths.get(currentFileName).resolve(Paths.get("..")).normalize();
-        Path relativePath = Paths.get(ast.path.SL.spelling);
-        Path finalPath = basePath.resolve(relativePath).normalize();
+        Path finalPath;
+        if (!ast.isSTLImport) {
+            Path basePath = Paths.get(currentFileName).resolve(Paths.get("..")).normalize();
+            Path relativePath = Paths.get(ast.path.SL.spelling);
+            finalPath = basePath.resolve(relativePath).normalize();
+        } else {
+            Path basePath = modules.libPath;
+            Path relativePath = Paths.get(ast.ident.spelling + ".x");
+            finalPath = basePath.resolve(relativePath).normalize();
+        }
         String fileName = finalPath.toString();
         File file = new File(fileName);
         if (!file.exists() || (file.exists() && file.isDirectory())) {
-            handler.reportError(errors[61] + ": %", "'" + ast.path.SL.spelling + "'", ast.path.SL.pos);
+            if (ast.isSTLImport) {
+                handler.reportError(errors[79] + ": %", "'" + ast.ident.spelling + "'", ast.ident.pos);
+            } else {
+                handler.reportError(errors[61] + ": %", "'" + ast.path.SL.spelling + "'", ast.path.SL.pos);
+            }
             return null;
         }
 

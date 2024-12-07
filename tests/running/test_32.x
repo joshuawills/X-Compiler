@@ -1,6 +1,6 @@
 // Testing types using the type() command
 
-import "../../lib/std.x" as std;
+import std;
 
 struct Data -> {
     x: i32

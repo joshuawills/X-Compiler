@@ -1,6 +1,6 @@
 // Basic IO operations
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
 

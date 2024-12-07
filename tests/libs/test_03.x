@@ -1,7 +1,7 @@
 // Tan X testing
 
-import "../../lib/math.x" as math;
-import "../../lib/std.x" as std;
+import math;
+import std;
 
 fn main() -> void {
 

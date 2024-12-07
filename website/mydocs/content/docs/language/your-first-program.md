@@ -3,7 +3,7 @@ title: "Your First Program"
 ---
 
 ```Rust
-import "lib/std.x" as std;
+import std;
 
 // A hello world application :)
 fn main() -> void {

@@ -1,6 +1,6 @@
 // Global variables
 
-import "../../lib/std.x" as std;
+import std;
 
 let x: i64 = 21;
 let mut x1: i64 = 19;

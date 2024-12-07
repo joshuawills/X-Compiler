@@ -1,6 +1,6 @@
 // Fibonacci iterative
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
     let x: i64 = 9;

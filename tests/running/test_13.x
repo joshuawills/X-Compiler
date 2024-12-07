@@ -1,6 +1,6 @@
 // Bubble sort w/ types
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
     let mut x: i64[] = [2, 3, 1, 4, 5, 9, 8, 7, 6, 0];

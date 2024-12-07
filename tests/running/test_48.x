@@ -1,6 +1,6 @@
 // Very basic tuple destructuring
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
 

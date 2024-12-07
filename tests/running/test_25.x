@@ -1,6 +1,6 @@
 // Redeclaring char*
 
-import "../../lib/std.x" as std;
+import std;
 
 fn main() -> void {
     let mut val = "hello, world\n";

@@ -1,6 +1,6 @@
 // No such type in module
 
-import "standard.x" as std;
+import std;
 
 fn main() -> void {
 

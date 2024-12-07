@@ -1,6 +1,6 @@
 // Basic file import work
 
-import "../../lib/std.x" as std;
+import std;
 import "math-what.x" as math;
 
 fn main() -> void {

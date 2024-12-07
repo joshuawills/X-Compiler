@@ -1,6 +1,6 @@
 // No duplicate br/return stmts
 
-import "../../lib/std.x" as std;
+import std;
 
 fn getBooleanString(val: bool) -> i8* {
 	if val {

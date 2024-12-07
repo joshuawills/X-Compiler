@@ -1,4 +1,4 @@
-import "../lib/std.x" as std;
+import std;
 
 struct Node -> {
 	mut val: i64,

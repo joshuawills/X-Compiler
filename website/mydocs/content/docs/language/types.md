@@ -34,7 +34,7 @@ fn main() -> void {
 Explicit type casting can be useful, especially when working with libC methods. Below are some examples of how to utilise explicit type casting using the **as** keyword.
 
 ```Rust
-import "lib/std.x" as std;
+import std;
 
 struct Node -> {
     val: i64

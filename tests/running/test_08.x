@@ -1,6 +1,6 @@
 // Allowing for multiple variables with the same name
 
-import "../../lib/std.x" as std;
+import std;
 
 let i: i64 = 0;
 

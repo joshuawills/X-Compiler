@@ -1,6 +1,6 @@
 // Can succesfully instantiate an array of structs
 
-import "../../lib/std.x" as std;
+import std;
 
 struct A -> {
 	v: i64

@@ -4,8 +4,8 @@ weight: 1
 ---
 
 ```Rust
-import "lib/std.x" as std;
-import "lib/math.x" as math;
+import std;
+import math;
 
 fn main() -> void {
 

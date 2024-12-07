@@ -1,6 +1,6 @@
 // Array list boolean
 
-import "../../lib/std.x" as std;
+import std;
 
 let SECTION_SIZE: i64 = 100;
 
