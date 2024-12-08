@@ -461,6 +461,16 @@ public class Checker implements Visitor {
                     new EmptyParaList(dummyPos), dummyPos
                 ), dummyPos
         ));
+        Environment.memcmp = stdFunctionLibC(Environment.i32Type, "memcmp", new ParaList(
+                new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
+                new ParaList(
+                    new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
+                    new ParaList(
+                        new ParaDecl(Environment.i64Type, i, dummyPos, false),
+                        new EmptyParaList(dummyPos), dummyPos
+                    ), dummyPos
+                ), dummyPos
+        ));
    }
 
     private Function stdFunctionLibC(Type resultType, String id, List pl) {
@@ -1409,7 +1419,9 @@ public class Checker implements Visitor {
         if (entry != null) {
             String message = String.format("'%s'. Previously declared at line %d", ident.spelling,
                 entry.attr.pos.lineStart);
-            handler.reportError(errors[2] +": %", message, ident.pos);
+            if (!ident.spelling.equals("_")) {
+                handler.reportError(errors[2] +": %", message, ident.pos);
+            }
         }
 
         if (decl.isGlobalVar()) {
@@ -2813,8 +2825,10 @@ public class Checker implements Visitor {
         String s = ast.I.spelling;
         Decl d = idTable.retrieve(s);
         if (d != null || mainModule.varExists(s)) {
-            handler.reportError(errors[77] + ": %", s, ast.I.pos);
-            return null;
+            if (!s.equals("_")) {
+                handler.reportError(errors[77] + ": %", s, ast.I.pos);
+                return null;
+            }
         } 
 
         LocalVar L = new LocalVar(TL.T, ast.I, new EmptyExpr(dummyPos), ast.pos, isCurrentTupleDestructureMut);
