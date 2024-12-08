@@ -722,6 +722,8 @@ public class Checker implements Visitor {
             CastExpr E = new CastExpr(expr, expr.type, new F64Type(expr.type.pos), expr.pos, parent);
             E.visit(this, null);
             return E;
+        } else if (expectedT.isVariatic()) {
+            return expr;
         }
 
         if (expr.isNullExpr()) {
@@ -1006,7 +1008,7 @@ public class Checker implements Visitor {
 
     // Only to be used for primitive types
     private boolean isSameType(Type T1, Type T2) {
-        return T1.getMini().equals(T2.getMini());
+        return T1.equals(T2);
     }
 
     private String getPrefix(Type T) {
@@ -1022,6 +1024,8 @@ public class Checker implements Visitor {
             return "f64";
         } else if (T.isBoolean()) {
             return "b";
+        } else if (T.isPointer()) {
+            return "p";
         }
         return "TODO";
     }
@@ -1072,10 +1076,10 @@ public class Checker implements Visitor {
             }
             case "==", "!=" -> {
                 if (t1.isBoolean() && t2.isBoolean()) {
-                    ast.type = Environment.booleanType;
-                    break;
                 }
-                if (!v1Numeric || !v2Numeric) {
+                else if (t1.isPointer() && t2.isPointer()) {
+                }
+                else if (!v1Numeric || !v2Numeric) {
                     handler.reportError(errors[7], "", t2.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -1083,7 +1087,9 @@ public class Checker implements Visitor {
                 ast.type = Environment.booleanType;
             }
             case "<", "<=", ">", ">=" -> {
-                if (!v1Numeric || !v2Numeric) {
+                if (t1.isPointer() && t2.isPointer()) {
+                }
+                else if (!v1Numeric || !v2Numeric) {
                     handler.reportError(errors[7], "", ast.pos);
                     ast.type = Environment.errorType;
                     break;
@@ -1091,11 +1097,36 @@ public class Checker implements Visitor {
                ast.type = Environment.booleanType;
             }
             case "+", "-", "/", "*", "%" -> {
-                if (!v1Numeric || !v2Numeric) {
+                boolean validV1 = v1Numeric || t1.isPointer();
+                boolean validV2 = v2Numeric || t2.isPointer();
+
+                if (!validV1|| !validV2) {
                     handler.reportError(errors[7], "", ast.pos);
                     ast.type = Environment.errorType;
                     break;
                 }
+
+                if (t1.isPointer() && t2.isPointer()) {
+                    handler.reportError(errors[7], "", ast.pos);
+                    ast.type = Environment.errorType;
+                    break;
+                }
+
+                if (t1.isPointer() && t2.isNumeric()) {
+                    // Can only be "+" or "-"
+                    if (!ast.O.spelling.equals("+") && !ast.O.spelling.equals("-")) {
+                        handler.reportError(errors[7], "", ast.pos);
+                        ast.type = Environment.errorType;
+                        break;
+                    }
+                    ast.type = t1;
+                    break;
+                } else if (t2.isPointer()) {
+                    handler.reportError(errors[7], "", ast.pos);
+                    ast.type = Environment.errorType;
+                    break;
+                }
+
                 ast.type = t1;
             }
             default -> {
@@ -1103,6 +1134,7 @@ public class Checker implements Visitor {
                 return ast.type;
             }
         }
+
         if (ast.type.isBoolean()) {
             if (isSameType(t1, t2)) {
                 ast.O.spelling = getPrefix(t1) + ast.O.spelling;
@@ -1110,7 +1142,7 @@ public class Checker implements Visitor {
             }
 
             // Not including enum types!
-            assert(t1.isNumeric() && t2.isNumeric());
+            assert((t1.isNumeric() || t1.isPointer()) && (t2.isNumeric() || t2.isPointer()));
             if (prioritiseIntTypes(t1, t2)) {
                 ast.O.spelling = getPrefix(t1) + ast.O.spelling;
                 ast.E2 = new CastExpr(ast.E2, t2, t1, ast.E2.pos, ast);
@@ -1127,9 +1159,12 @@ public class Checker implements Visitor {
             return ast.type;
         }
 
-        assert(t1.isNumeric() && t2.isNumeric());   
+        assert((t1.isNumeric() || t1.isPointer()) && (t2.isNumeric() || t2.isPointer()));
 
-        if (prioritiseIntTypes(t1, t2)) {
+        if (t1.isPointer()) {
+            // t2 is not pointer
+            ast.O.spelling = "p" + ast.O.spelling;
+        } else if (prioritiseIntTypes(t1, t2)) {
             ast.O.spelling = getPrefix(t1) + ast.O.spelling;
             ast.E2 = new CastExpr(ast.E2, t2, t1, ast.E2.pos, ast);
             ast.type = t1;
@@ -2150,6 +2185,14 @@ public class Checker implements Visitor {
         if (expectedType.isNumeric()) {
             currentNumericalType = expectedType;
         }
+
+        if (ast.O.spelling.equals("/=") || ast.O.spelling.equals("*=")
+            || ast.O.spelling.equals("-=")|| ast.O.spelling.equals("+=")) {
+            String O = String.valueOf(ast.O.spelling.charAt(0));
+            ast.RHS = new BinaryExpr(ast.LHS, ast.RHS, new Operator(O, ast.RHS.pos), ast.RHS.pos);
+            ast.RHS.visit(this, o);
+        }
+
         if (ast.RHS.isDotExpr() || ast.RHS.isIntOrDecimalExpr()) {
             ast.RHS = (Expr) ast.RHS.visit(this, o);
             realType = ast.RHS.type;
@@ -2180,14 +2223,6 @@ public class Checker implements Visitor {
                 return Environment.errorType;
             }
         }
-
-        if (ast.O.spelling.equals("/=") || ast.O.spelling.equals("*=")
-            || ast.O.spelling.equals("-=")|| ast.O.spelling.equals("+=")) {
-            String O = String.valueOf(ast.O.spelling.charAt(0));
-            ast.RHS = new BinaryExpr(ast.LHS, ast.RHS, new Operator(O, ast.RHS.pos), ast.RHS.pos);
-            ast.RHS.visit(this, o);
-        }
-
 
         ast.RHS = checkCast(expectedType, ast.RHS, ast);
         ast.type = expectedType;

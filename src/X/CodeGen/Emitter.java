@@ -591,6 +591,8 @@ public class Emitter implements Visitor {
 
             case "f32<=" -> "fcmp ole float";
             case "f64<=" -> "fcmp ole double";
+            
+            case "p<=" -> "icmp ule ptr";
 
             case "i8<" -> "icmp slt i8";
             case "i32<" -> "icmp slt i32";
@@ -599,6 +601,8 @@ public class Emitter implements Visitor {
             case "f32<" -> "fcmp olt float";
             case "f64<" -> "fcmp olt double";
 
+            case "p<" -> "icmp ult ptr";
+
             case "i8>" -> "icmp sgt i8";
             case "i32>" -> "icmp sgt i32";
             case "i64>" -> "icmp sgt i64";
@@ -606,12 +610,16 @@ public class Emitter implements Visitor {
             case "f32>" -> "fcmp ogt float";
             case "f64>" -> "fcmp ogt double";
 
+            case "p>" -> "icmp ugt ptr";
+
             case "i8>=" -> "icmp sge i8";
             case "i32>=" -> "icmp sge i32";
             case "i64>=" -> "icmp sge i64";
 
             case "f32>=" -> "fcmp oge float";
             case "f64>=" -> "fcmp oge double";
+
+            case "p>=" -> "icmp uge ptr";
 
             default -> {
                 System.out.println("opToCommand not implemented: " + input);
@@ -660,16 +668,30 @@ public class Emitter implements Visitor {
 
         if (ast.O.spelling.equals("p==") || ast.O.spelling.equals("p!=")) {
             boolean isEq = ast.O.spelling.equals("p==");
-            Expr E = null;;
+            Expr E = null;
             if (ast.E1.isNullExpr() && ast.E2.isNullExpr()) {
                 int i = f.getNewIndex();
                 ast.tempIndex = i;
-                emitN("\t%" + i + " = add i1 0, 1");
+                if (isEq) {
+                    emitN("\t%" + i + " = add i1 0, 1");
+                } else {
+                    emitN("\t%" + i + " = add i1 0, 0");
+                }
                 return null;
             } else if (ast.E1.isNullExpr()) {
                 E = ast.E2;
-            } else {
+            } else if (ast.E2.isNullExpr()) {
                 E = ast.E1;
+            } else {
+                // They are both not null
+                ast.E1.visit(this, o);
+                int indexOne = ast.E1.tempIndex;
+                ast.E2.visit(this, o);
+                int indexTwo = ast.E2.tempIndex;
+                int i = f.getNewIndex();
+                ast.tempIndex = i;
+                emitN("\t%" + i + " = icmp " + (isEq ? "eq" : "ne") + " i8* %" + indexOne + ", %" + indexTwo);
+                return null;
             }
             E.visit(this, o);
             int index = E.tempIndex;
@@ -680,6 +702,20 @@ public class Emitter implements Visitor {
             } else {
                 emitN("\t%" + i + " = icmp ne ptr %" + index + ", null");
             }
+            return null;
+        }
+
+        if (ast.O.spelling.equals("p+")) {
+            Type innerT = ((PointerType) ast.E1.type).t;
+            ast.E1.visit(this, o);
+            int i1 = ast.E1.tempIndex;
+            ast.E2.visit(this, o);
+            int i2 = ast.E2.tempIndex;
+            int v = f.getNewIndex();
+            ast.tempIndex = v;
+            emit("\t%" + v + " = getelementptr inbounds ");
+            innerT.visit(this, o);
+            emitN(", ptr %" + i1 + ", i64 %" + i2);
             return null;
         }
 

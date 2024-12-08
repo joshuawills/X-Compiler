@@ -75,6 +75,14 @@ export fn println(v: bool) -> void {
 	}
 }
 
+export fn print(v: void*) -> void {
+	@printf("%p", v);
+}
+
+export fn println(v: void*) -> void {
+	@printf("%p\n", v);
+}
+
 export fn read_i64() -> i64 {
 	let mut v: i64;
 	@__isoc99_scanf("%lld", &v);

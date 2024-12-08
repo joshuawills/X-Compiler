@@ -4,6 +4,6 @@ fn main() -> void {
 
     let x: i64 = 1 + true;
 
-    let x1: i8 = "false" - 19;
+    let x1: i8 = true - 19;
 
 }

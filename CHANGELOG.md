@@ -169,10 +169,14 @@
 - proper type analysis
   - remove need for 'as void*' everywhere
 
-*06.12.2024*
+*06/7.12.2024*
 
 - can access std lib without path resolution
 - can do this pattern "import A, B;" for std library files
+
+*08.12.2024*
+
+- pointer arithmetic!!
 
 # TODO
 
@@ -196,7 +200,5 @@
 - underline relevant part in error messages
 
 HERE
-
-- pointer arithmetic
 
 - do struct accesses, tuples in grammar
