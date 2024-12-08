@@ -9,6 +9,19 @@ export fn str_len(mut v: i8*) -> i64 {
 	return count;
 }
 
+export fn str_equal(mut a: i8*, mut b: i8*) -> bool {
+	let mut s1: i8* = a;
+	let mut s2: i8* = b;
+	while *s1 != '\0' && *s2 != '\0' {
+		if *s1 != *s2 {
+			return false;
+		}
+		s1 += 1;
+		s2 += 1;
+	}
+	return *s1 == *s2;
+}
+
 // export enum StrErrors -> {
 //     MEMORY_ERROR,
 //     NO_ERROR

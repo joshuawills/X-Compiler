@@ -409,15 +409,16 @@ public class Emitter implements Visitor {
     public Object visitWhileStmt(WhileStmt ast, Object o) {
         Frame f = (Frame) o;
         String top = f.getNewLabel();
-        String middle= f.getNewLabel();
-        String bottom = f.getNewLabel();
 
-        f.brkStack.push(bottom);
         f.conStack.push(top);
 
         emitN("\tbr label %" + top);
         emitN("\n" + top + ":");
         ast.E.visit(this, o);
+        String middle= f.getNewLabel();
+        String bottom = f.getNewLabel();
+        f.brkStack.push(bottom);
+
         int index = ast.E.tempIndex;
         emitN("\tbr i1 %" + index + ", label %" + middle + ", label %" + bottom);
         emitN("\n" + middle + ":");
