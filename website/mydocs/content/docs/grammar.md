@@ -10,7 +10,8 @@ defined in other language documentation.
 \begin{align}
 \textit{program} &\to \textit{import-stmts}^* (\textit{function }|\textit{ global-var }|\textit{ enum }|\textit{ struct})^*  \\ \\
 
-\textit{import-stmts} &\to \textbf{import } \textit{STRINGLITERAL} \textbf{ as } \textit{ident} \text{";"} \\ \\
+\textit{import-stmts} &\to \textbf{import } \textit{STRINGLITERAL} \textbf{ as } \textit{ident} \text{";"} \\ 
+\textit{import-stmts} &\to \textbf{import } \textit{ident} (\text{"," } \textit{ident})? \text{";"} \\ \\
 
 \textit{global-var} &\to \textbf{export}? \textbf{ let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\

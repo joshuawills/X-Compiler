@@ -73,6 +73,23 @@ public class SymbolTable {
         return attr;
     }
 
+    public void remove(IdEntry entry) {
+        IdEntry e = this.latest;
+        IdEntry prev = null;
+        while (e != null) {
+            if (e == entry) {
+                if (prev == null) {
+                    this.latest = e.previousEntry;
+                } else {
+                    prev.previousEntry = e.previousEntry;
+                }
+                return;
+            }
+            prev = e;
+            e = e.previousEntry;
+        }
+    }
+
     public IdEntry retrieveOneLevel(String id) {
         IdEntry entry = this.latest;
 

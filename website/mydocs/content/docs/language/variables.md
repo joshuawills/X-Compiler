@@ -18,8 +18,10 @@ let mut x: i64 = 21; // this variable can be mutated later on in the programs ru
 
 X supports both global and local variables. They are assigned in the same way. 
 
-Basic pointer types are also currently supported in X. These are experimental however, and may have
-problems.
+Global variable names **must** be unique. However, for local variables, they do not need to be, but the compiler
+will complain in some instances. It is recommended that variable declarations are overwritten only in the case of
+tuple destructuring or when specifying a variable as unused, i.e. '_'.
+
 
 ```Rust
 fn swap(mut a: i64*, mut b: i64*) -> void {

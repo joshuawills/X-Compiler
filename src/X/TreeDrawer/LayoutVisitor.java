@@ -153,8 +153,11 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("'" + ast.spelling + "'");
     }
 
-    public Object visitCharExpr(CharExpr ast, Object o) {
-        return layoutUnary("CharExp", ast.CL);
+    public Object visitCharExpr(I8Expr ast, Object o) {
+        if (ast.CL.isPresent()) {
+            return layoutUnary("I8Expr", ast.CL.get());
+        }
+        return layoutUnary("I8Expr", ast.IL.get());
     }
 
     public Object visitCastExpr(CastExpr ast, Object o) {

@@ -1352,10 +1352,15 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitCharExpr(CharExpr ast, Object o) {
+    public Object visitCharExpr(I8Expr ast, Object o) {
         Frame f = (Frame) o;
-        String value = ast.CL.spelling;
-        int v = (int) value.charAt(0);
+        int v = -1;
+        if (ast.CL.isPresent()) {
+            String value = ast.CL.get().spelling;
+            v = (int) value.charAt(0);
+        } else {
+            v = Integer.parseInt(ast.IL.get().spelling);
+        }
         int num = f.getNewIndex();
         emitN("\t%" + num + " = add i8 0, " + v);
         ast.tempIndex = num;
@@ -1877,7 +1882,7 @@ public class Emitter implements Visitor {
         // TODO: handle other cases
         Expr I;
         switch (t) {
-            case I8Type  _ -> I = new CharExpr(new CharLiteral("0", dummyPos), dummyPos);
+            case I8Type  _ -> I = new I8Expr(new CharLiteral("0", dummyPos), dummyPos);
             case I32Type _ -> I = new I32Expr(new IntLiteral("0", dummyPos), dummyPos);
             case I64Type _ -> I = new I64Expr(new IntLiteral("0", dummyPos), dummyPos);
             case F32Type _ -> I = new F32Expr(new DecimalLiteral("0.0", dummyPos), dummyPos);

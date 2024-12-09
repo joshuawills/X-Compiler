@@ -106,6 +106,7 @@ public class Checker implements Visitor {
         "*77: identifier redeclared in tuple destructuring",
         "*78: no such lib C variable",
         "*79: imported standard libary does not exist. Is your 'X_LIB_PATH' set?",
+        "*80: use of _ variable."
     };
 
     private final SymbolTable idTable;
@@ -333,35 +334,34 @@ public class Checker implements Visitor {
     }
 
     private void checkUnusedEntities() {
-        for (Module M: AllModules.getInstance().getModules()) {
-            for (Enum e: M.getEnums().values()) {
-                if (!e.isUsed) {
-                    M.thisHandler.reportMinorError(errors[39] + ": %", e.I.spelling, e.I.pos);
-                }
-            }
+        Module M = AllModules.getInstance().getMainModule();
 
-            for (GlobalVar v: M.getVars().values()) {
-                if (!v.isUsed) {
-                    M.thisHandler.reportMinorError(errors[21] + ": %", v.I.spelling, v.I.pos);
-                }
-                if (v.isMut && !v.isReassigned) {
-                    M.thisHandler.reportMinorError(errors[22] + ": %", v.I.spelling, v.I.pos);
-                }
+        for (Enum e: M.getEnums().values()) {
+            if (!e.isUsed) {
+                M.thisHandler.reportMinorError(errors[39] + ": %", e.I.spelling, e.I.pos);
             }
+        }
 
-            if (M.isMainModule()) {
-                // Don't print for imported modules
-                for (Function f: M.getFunctions()) {
-                    if (!f.isUsed && !f.I.spelling.equals("main")) {
-                        M.thisHandler.reportMinorError(errors[23] + ": %", f.I.spelling, f.I.pos);
-                    }
-                }
+        // Don't print for imported modules
+        for (GlobalVar v: M.getVars().values()) {
+            if (!v.isUsed && !v.I.spelling.equals("_")) {
+                M.thisHandler.reportMinorError(errors[21] + ": %", v.I.spelling, v.I.pos);
             }
+            if (v.isMut && !v.isReassigned) {
+                M.thisHandler.reportMinorError(errors[22] + ": %", v.I.spelling, v.I.pos);
+            }
+        }
 
-            for (Struct s: M.getStructs().values()) {
-                if (!s.isUsed) {
-                    M.thisHandler.reportMinorError(errors[46] + ": %", s.I.spelling, s.I.pos);
-                }
+        // Don't print for imported modules
+        for (Function f: M.getFunctions()) {
+            if (!f.isUsed && !f.I.spelling.equals("main")) {
+                M.thisHandler.reportMinorError(errors[23] + ": %", f.I.spelling, f.I.pos);
+            }
+        }
+
+        for (Struct s: M.getStructs().values()) {
+            if (!s.isUsed) {
+                M.thisHandler.reportMinorError(errors[46] + ": %", s.I.spelling, s.I.pos);
             }
         }
     }
@@ -812,7 +812,7 @@ public class Checker implements Visitor {
             StmtList SL = (StmtList) S;
             if (SL.S instanceof LocalVarStmt) {
                 LocalVar V = ((LocalVarStmt) SL.S).V;
-                if (!V.isUsed) {
+                if (!V.isUsed && !V.I.spelling.equals("_")) {
                     String message = "'" + V.I.spelling + "'";
                     handler.reportMinorError(errors[21] + ": %", message, V.pos);
                 }
@@ -1320,9 +1320,7 @@ public class Checker implements Visitor {
         } else if (currentNumericalType.isI32()) {
             E = new I32Expr(ast.IL, ast.pos);
         } else if (currentNumericalType.isI8()) {
-            Expr inner = new I64Expr(ast.IL, ast.pos);
-            inner.visit(this, o);
-            E = new CastExpr(inner, inner.type, Environment.i8Type, dummyPos);
+            E = new I8Expr(ast.IL, ast.pos);
         }
          
         if (!E.isIntExpr()) {
@@ -1419,10 +1417,15 @@ public class Checker implements Visitor {
         if (entry != null) {
             String message = String.format("'%s'. Previously declared at line %d", ident.spelling,
                 entry.attr.pos.lineStart);
-            if (!ident.spelling.equals("_")) {
+            if (decl.isGlobalVar()) {
                 handler.reportError(errors[2] +": %", message, ident.pos);
+            } else {
+                if (!ident.spelling.equals("_") && !ident.spelling.equals("err")) {
+                    handler.reportMinorError(errors[2] +": %", message, ident.pos);
+                }
+                idTable.remove(entry);
             }
-        }
+       }
 
         if (decl.isGlobalVar()) {
             if (mainModule.varExists(ident.spelling)) {
@@ -1460,9 +1463,14 @@ public class Checker implements Visitor {
 
     public Object visitSimpleVar(SimpleVar ast, Object o) {
 
+        if (ast.I.spelling.equals("_")) {
+            handler.reportMinorError(errors[80], "", ast.I.pos);
+        }
+
         if (declaringLocalVar) {
             ast.setDeclaringLocalVar();
         }
+
         if (inCallExpr) {
             ast.setInCallExpr();
         }
@@ -1835,13 +1843,16 @@ public class Checker implements Visitor {
         return Environment.i8Type;
     }
 
-    public Object visitCharExpr(CharExpr ast, Object o) {
-        int l = ast.CL.spelling.length();
-        if (l != 1) {
-            String m = "received '" + ast.CL.spelling + "'";
-            handler.reportMinorError(errors[38] + ": %", m, ast.CL.pos);
-            return Environment.errorType;
+    public Object visitCharExpr(I8Expr ast, Object o) {
+        if (ast.CL.isPresent()) {
+            int l = ast.CL.get().spelling.length();
+            if (l != 1) {
+                String m = "received '" + ast.CL.get().spelling + "'";
+                    handler.reportMinorError(errors[38] + ": %", m, ast.CL.get().pos);
+                return Environment.errorType;
+            }
         }
+
         ast.type = Environment.i8Type;
         return ast.type;
     }
@@ -2824,12 +2835,6 @@ public class Checker implements Visitor {
         TypeList TL = (TypeList) o;
         String s = ast.I.spelling;
         Decl d = idTable.retrieve(s);
-        if (d != null || mainModule.varExists(s)) {
-            if (!s.equals("_")) {
-                handler.reportError(errors[77] + ": %", s, ast.I.pos);
-                return null;
-            }
-        } 
 
         LocalVar L = new LocalVar(TL.T, ast.I, new EmptyExpr(dummyPos), ast.pos, isCurrentTupleDestructureMut);
         L.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter);

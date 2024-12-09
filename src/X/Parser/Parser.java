@@ -1090,7 +1090,7 @@ public class Parser {
             case CHAR_LIT -> {
                 CharLiteral clAST = parseCharLiteral();
                 finish(pos);
-                yield new CharExpr(clAST, pos);
+                yield new I8Expr(clAST, pos);
             }
             case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);

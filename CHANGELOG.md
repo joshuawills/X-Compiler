@@ -178,6 +178,12 @@
 
 - pointer arithmetic!!
 
+*09.12.2024*
+
+- min and max numeric values in std lib
+- can't access '_' variables
+- can have multiple variables with the same name in scope
+
 # TODO
 
 - in-compilation expression everywhere possible

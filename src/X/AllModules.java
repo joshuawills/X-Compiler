@@ -136,5 +136,14 @@ public class AllModules {
         return null;
     }
 
+    public Module getMainModule() {
+        for (Module m : modules) {
+            if (m.isMainModule()) {
+                return m;
+            }
+        }
+        return null;
+    }
+
     
 }

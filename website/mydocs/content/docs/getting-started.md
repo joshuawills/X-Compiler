@@ -3,7 +3,7 @@ title: "Getting Started"
 weight: 1
 ---
 
-*All development so far has been on Ubuntu WSL. I cannot confirm yet whether or not this compiler
+*All development so far has been on Manjaro Linux. I cannot confirm yet whether or not this compiler
 works correctly on other operating systems/environments*
 
 ## Pre-Requisites
@@ -11,7 +11,7 @@ works correctly on other operating systems/environments*
 - Java 21
 - Gradle
 - Git
-- Clang
+- Clang 18.1.18 >
 
 ## Setup
 

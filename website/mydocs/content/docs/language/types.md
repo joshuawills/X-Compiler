@@ -7,6 +7,8 @@ At the moment, X supports several different base types. They are `i64`, `i32`, `
 Implicit type casting will occur from integers to floats, and between integers and characters. Any 
 other attempt to assign one type to another will currently fail. Statically-sized arrays are also supported, as well as enums. Some examples of these types is shown below.
 
+You also have pointer types, specified by appending an '*' to the end of a type.
+
 ```Rust
 enum DaysOfWeek -> {
     MON, TUE, WED, THU, FRI, SAT, SUN

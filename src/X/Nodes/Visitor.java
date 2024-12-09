@@ -117,7 +117,7 @@ public interface Visitor {
 
     Object visitCharLiteral(CharLiteral ast, Object o);
 
-    Object visitCharExpr(CharExpr ast, Object o);
+    Object visitCharExpr(I8Expr ast, Object o);
 
     Object visitCastExpr(CastExpr ast, Object o);
 

@@ -9,7 +9,7 @@ public class Evaluator implements Visitor {
 
 
     public static Object evalExpression(Expr ast) {
-        return ast.visit(new Evaluator(), null);
+        return ast.visit(new Evaluator(), ast.type);
     }
 
     public static Object evalExpression(Expr ast, Object e) {
@@ -79,7 +79,7 @@ public class Evaluator implements Visitor {
             case "&&" -> (boolean) ast.E1.visit(this, o) && (boolean) ast.E2.visit(this, o);
             case "==" -> {
                 if (ast.E1.type.isI64() || ast.E2.type.isI8()) {
-                    yield (int) ast.E1.visit(this, o) == (int) ast.E1.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) == (long) ast.E1.visit(this, o);
                 } else if (ast.E1.type.isF32()) {
                     yield (float) ast.E1.visit(this, o) == (float) ast.E1.visit(this, o);
                 } else if (t.isBoolean()) {
@@ -90,7 +90,7 @@ public class Evaluator implements Visitor {
             }
             case "!=" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) != (int) ast.E1.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) != (long) ast.E1.visit(this, o);
                 }  else if (t.isF32()) {
                     yield (float) ast.E1.visit(this, o) != (float) ast.E1.visit(this, o);
                 } else if (t.isBoolean()) {
@@ -101,61 +101,61 @@ public class Evaluator implements Visitor {
             }
             case "<=" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) <= (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) <= (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) <= (float) ast.E2.visit(this, o);
                 }
             }
             case "<" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) < (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) < (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) < (float) ast.E2.visit(this, o);
                 }
             }
             case ">" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) > (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) > (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) > (float) ast.E2.visit(this, o);
                 }
             }
             case ">=" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) >= (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) >= (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) >= (float) ast.E2.visit(this, o);
                 }
             }
             case "+" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) + (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) + (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) + (float) ast.E2.visit(this, o);
                 }
             }
             case "-" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) - (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) - (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) - (float) ast.E2.visit(this, o);
                 }
             }
             case "/" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) / (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) / (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) / (float) ast.E2.visit(this, o);
                 }
             }
             case "*" -> {
                 if (t.isI64() || t.isI8()) {
-                    yield (int) ast.E1.visit(this, o) * (int) ast.E2.visit(this, o);
+                    yield (long) ast.E1.visit(this, o) * (long) ast.E2.visit(this, o);
                 } else {
                     yield (float) ast.E1.visit(this, o) * (float) ast.E2.visit(this, o);
                 }
             }
-            case "%" -> (int) ast.E1.visit(this, o) % (int) ast.E2.visit(this, o);
+            case "%" -> (long) ast.E1.visit(this, o) % (long) ast.E2.visit(this, o);
             default -> {
                 System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
                 yield null;
@@ -167,14 +167,15 @@ public class Evaluator implements Visitor {
         Type t = (Type) o;
         return switch (ast.O.spelling) {
             case "+" -> ast.E.visit(this, o);
-            case "-" -> {
-                if (t.isI64() || t.isI8()) {
-                    yield -(int) ast.E.visit(this, o);
-                } else if (t.isF32()) {
-                    yield -(float) ast.E.visit(this, o);
+            case "i8-", "i32-", "i64-", "f32-", "f64-" -> {
+                if (t.isInteger()) {
+                    try {
+                        yield - (long) ast.E.visit(this, o);
+                    } catch (Exception e) {
+                        yield (long) Long.parseLong("-9223372036854775808");
+                    }
                 } else {
-                    System.out.println("SHOULDN'T BE REACHED IN EVALUATOR");
-                    yield null;
+                    yield -(float) ast.E.visit(this, o);
                 }
             }
             case "!" -> !(boolean) ast.E.visit(this, o);
@@ -235,15 +236,15 @@ public class Evaluator implements Visitor {
 
     // integer
     public Object visitI64Expr(I64Expr ast, Object o) {
-        return Integer.parseInt(ast.IL.spelling);
+        return Long.parseLong(ast.IL.spelling);
     }
 
     public Object visitI32Expr(I32Expr ast, Object o) {
-        return Integer.parseInt(ast.IL.spelling);
+        return Long.parseLong(ast.IL.spelling);
     }
 
     public Object visitIntExpr(IntExpr ast, Object o) {
-        return Integer.parseInt(ast.IL.spelling);
+        return Long.parseLong(ast.IL.spelling);
     }
 
     public Object visitDecimalExpr(DecimalExpr ast, Object o) {
@@ -411,8 +412,11 @@ public class Evaluator implements Visitor {
         return null;
     }
 
-    public Object visitCharExpr(CharExpr ast, Object o) {
-        return (int) ast.CL.spelling.charAt(0);
+    public Object visitCharExpr(I8Expr ast, Object o) {
+        if (ast.CL.isPresent()) {
+            return (long) ast.CL.get().spelling.charAt(0);
+        }
+        return Long.parseLong(ast.IL.get().spelling);
     }
 
     public Object visitCastExpr(CastExpr ast, Object o) {

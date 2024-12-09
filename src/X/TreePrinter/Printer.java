@@ -229,10 +229,14 @@ public class Printer implements Visitor {
         return null;
     }
 
-    public Object visitCharExpr(CharExpr ast, Object o) {
+    public Object visitCharExpr(I8Expr ast, Object o) {
         print(indentString() + "CharExpr");
         ++indent;
-        ast.CL.visit(this, o);
+        if (ast.CL.isPresent()) {
+            ast.CL.get().visit(this, o);
+        } else {
+            ast.IL.get().visit(this, o);
+        }
         --indent;
         return null;
     }

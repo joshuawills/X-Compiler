@@ -31,6 +31,11 @@ The entry point for an application is the main function.
 // there will be further support for other paths later
 import "../myLib/math.x" as Math;
 
+// This shorthand can be specified for standard libraries
+// The path to standard library can be specified with the 'X_LIB_PATH' env 
+// variable, but defaults to "$HOME/.x-lib/" 
+import std, io, math;
+
 export enum Boolean -> {
     TRUE, FALSE
 }
