@@ -159,19 +159,43 @@ public class Parser {
         else if (tryConsume(TokenType.FN)) {
             // Function
             acceptableModuleAccess = false;
+
+            Ident I1 = null;
+            Type T1 = null;
+            boolean subMut = false;
+            if (tryConsume(TokenType.OPEN_PAREN)) {
+                subMut = tryConsume(TokenType.MUT);
+                I1 = parseIdent();
+                match(TokenType.COLON);
+                T1 = parseType();
+                match(TokenType.CLOSE_PAREN);
+            }
+
             Ident ident = parseIdent();
             List pL = parseParaList();
             match(TokenType.ARROW);
             Type tAST = parseType();
             Stmt sAST = parseCompoundStmt();
             finish(pos);
-            Function function = new Function(tAST, ident, pL, sAST, pos);
-            if (isExport) {
-                function.setExported();
+            if (I1 != null) {
+                ParaDecl PD = new ParaDecl(T1, I1, pos, subMut);
+                Method method = new Method(tAST, ident, pL, sAST, PD, pos);
+                if (isExport) {
+                    method.setExported();
+                }
+                List dlAST2 = parseDeclList();
+                finish(pos);
+                dlAST = new DeclList(method, dlAST2, pos);
+            } else {
+                Function function = new Function(tAST, ident, pL, sAST, pos);
+                if (isExport) {
+                    function.setExported();
+                }
+                List dlAST2 = parseDeclList();
+                finish(pos);
+                dlAST = new DeclList(function, dlAST2, pos);
             }
-            List dlAST2 = parseDeclList();
-            finish(pos);
-            dlAST = new DeclList(function, dlAST2, pos);
+
         } else if (tryConsume(TokenType.ENUM)) {
             Ident ident = parseIdent();
             match(TokenType.ARROW);

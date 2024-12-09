@@ -28,6 +28,10 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitMethod(Method ast, Object o) {
+        return null;
+    }
+
     public Object visitGlobalVar(GlobalVar ast, Object o) {
         return ast.E.visit(this, o);
     }

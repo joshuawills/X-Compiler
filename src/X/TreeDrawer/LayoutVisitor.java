@@ -62,6 +62,10 @@ public class LayoutVisitor implements Visitor {
         return layoutQuaternary("FunDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S);
     }
 
+    public Object visitMethod(Method ast, Object obj) {
+        return layoutQuinary("MethodDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S, ast.attachedStruct);
+    }
+
     public Object visitGlobalVar(GlobalVar ast, Object obj) {
         return layoutTernary("G.VarDec", ast.T, ast.I, ast.E);
     }
@@ -389,6 +393,27 @@ public class LayoutVisitor implements Visitor {
         DrawingTree d3 = (DrawingTree) child3.visit(this, null);
         DrawingTree d4 = (DrawingTree) child4.visit(this, null);
         dt.setChildren(new DrawingTree[]{d1, d2, d3, d4});
+        attachParent(dt, join(dt));
+        return dt;
+    }
+
+    private DrawingTree layoutQuinary(String name, AST child1, AST child2,
+                                        AST child3, AST child4, AST child5) { 
+        
+        if (debug) {
+            Position pos = child1.parent.pos;
+            name += " " + pos.lineStart
+                    + "(" + pos.charStart + ").."
+                    + pos.lineFinish + "("
+                    + pos.charFinish + ")";
+        }
+        DrawingTree dt = layoutCaption(name);
+        DrawingTree d1 = (DrawingTree) child1.visit(this, null);
+        DrawingTree d2 = (DrawingTree) child2.visit(this, null);
+        DrawingTree d3 = (DrawingTree) child3.visit(this, null);
+        DrawingTree d4 = (DrawingTree) child4.visit(this, null);
+        DrawingTree d5 = (DrawingTree) child5.visit(this, null);
+        dt.setChildren(new DrawingTree[]{d1, d2, d3, d4, d5});
         attachParent(dt, join(dt));
         return dt;
     }

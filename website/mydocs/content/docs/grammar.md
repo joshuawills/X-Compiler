@@ -16,7 +16,7 @@ defined in other language documentation.
 \textit{global-var} &\to \textbf{export}? \textbf{ let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{local-var} &\to \textbf{let } \textbf{mut}? \textit{ ident } (\text{ ":" type})? (\text{"="} expr)? \text{";"}\\
 \textit{tuple-destructure} &\to \textbf{let } \textbf{mut}? \textit{ ident } ("," \textit{ident})? (\text{ ":" type})? \text{"="} expr \text{ ";"}\\
-\textit{function} &\to \textbf{export}? \textbf{ fn } (\text{"@"})? \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
+\textit{function} &\to \textbf{export}? \textbf{ fn } (\textit{"("} \textit{"mut"}?\textit{ ident } \textit{":"} \textit{ type }\textit{")"})? (\text{"@"})? \textit{ ident} \text{ "\\("} \textit{ para-list} \text{ "\\)"} \text{ "->"} \textit{compound-stmt }\\
 \textit{enum} &\to \textbf{export}? \textbf{ enum} \textit{ ident } \textit{"->" "\{ "} \textit{ident} (\textit{"," ident})^*\textit{ " \}"}\\
 \textit{struct} &\to \textbf{export}? \textbf{ struct} \textit{ ident } \textit{"->" "\{ "} \textbf{mut}? \textit{ ident}\text{ ":" type } (\textit{"," \textbf{mut}? \textit{ ident}\text{ ":" type }})^*\textit{ " \}"}\\ \\
 

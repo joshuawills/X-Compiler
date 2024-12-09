@@ -198,4 +198,6 @@ public interface Visitor {
     Object visitTupleDestructureAssignStmt(TupleDestructureAssignStmt ast, Object o);
 
     Object visitVariaticType(VariaticType ast, Object o);
+
+    Object visitMethod(Method ast, Object o);
 }

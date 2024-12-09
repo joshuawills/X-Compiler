@@ -102,6 +102,17 @@ public class Emitter implements Visitor {
             inMainModule = false;
         }
 
+        // Visiting all the methods
+        inMainModule = true;
+        for (Module m: mainModule) {
+            currentModule = m;
+            formattedCurrentPath = m.fileName.replace("/", ".");
+            for (Method me: m.getMethods()) {
+                me.visit(this, null);
+            }
+            inMainModule = false;
+        }
+
         LLVM.dump(outputName);
     }
 
@@ -113,6 +124,112 @@ public class Emitter implements Visitor {
         emit("(");
         ast.PL.visit(this, f);
         emitN(")");
+    }
+
+    public Object visitMethod(Method ast, Object o) {
+        
+        if (!ast.isUsed) {
+            return null;
+        }
+
+        Frame f = new Frame(false);
+        inMainFunction = false;
+
+        emit("define ");
+        if (ast.T.isStruct() || ast.T.isTuple()) {
+            emit("void");
+        } else {
+            ast.T.visit(this, f);
+        }
+
+        emit(" @");
+        if (!inMainModule) {
+            emit(formattedCurrentPath);
+        } 
+        emit(ast.I.spelling + "." + ast.attachedStruct.T.getMini() + "." + ast.TypeDef);
+        
+        emit("(");
+        if (ast.T.isStruct() || ast.T.isTuple()) {
+            emit("ptr %.ret, "); 
+        }
+        ast.attachedStruct.visit(this, o);
+        if (!ast.PL.isEmptyParaList()) {
+            emit(", ");
+        }
+        ast.PL.visit(this, f);
+        emitN(") {");
+
+        Type t1 = ast.attachedStruct.T;
+        String n = ast.attachedStruct.I.spelling;
+        if ((ast.attachedStruct.isMut && !t1.isArray() && !t1.isStruct() && !t1.isTuple()) || t1.isPointer()) {
+            emit("\t%" + n + "0 = alloca ");
+            t1.visit(this, o);
+
+            emit("\n\tstore ");
+            t1.visit(this, o);
+            emit(" %" + n  + ", ");
+            t1.visit(this, o);
+            if (t1.isPointer()) {
+                emitN(" %" + n + "0");
+            } else {
+                emitN("* %" + n + "0");
+            }
+        }
+
+        if (t1.isStruct() || t1.isTuple()) {
+            emit("\t%" + n + "0 = alloca ");
+            t1.visit(this, o);
+            emitN("");
+            
+            int v = handleSizeOfExpr(t1, f);
+            emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + n + "0, ptr %" + n + ", i64 %" + v + ", i1 false)");
+        }
+
+        // Bind mutable variables to a local variable
+        List PL = ast.PL;
+        while (!PL.isEmptyParaList()) {
+            ParaDecl P = ((ParaList) PL).P;
+            Type t = P.T;
+            if ((P.isMut && !t.isArray() && !t.isStruct() && !t.isTuple()) || t.isPointer()) {
+                emit("\t%" + P.I.spelling + "0 = alloca ");
+                t.visit(this, o);
+
+                emit("\n\tstore ");
+                t.visit(this, o);
+                emit(" %" + P.I.spelling + ", ");
+                t.visit(this, o);
+                if (t.isPointer()) {
+                    emitN(" %" + P.I.spelling + "0");
+                } else {
+                    emitN("* %" + P.I.spelling + "0");
+                }
+            }
+
+            if (t.isStruct() || t.isTuple()) {
+                emit("\t%" + P.I.spelling + "0 = alloca ");
+                t.visit(this, o);
+                emitN("");
+               
+                int v = handleSizeOfExpr(t, f);
+                emitN("\tcall void @llvm.memcpy.p0.p0.i64(ptr %" + P.I.spelling + "0, ptr %" + P.I.spelling + ", i64 %" + v + ", i1 false)");
+            }
+
+            PL = ((ParaList) PL).PL;
+        }
+
+        ast.S.visit(this, f);
+        if (ast.I.spelling.equals("main")) {
+           emitN("\tret i64 0");
+        }
+
+        if (!ast.S.containsExit && ast.T.isVoid() && !inMainFunction) {
+            emitN("\t ret void");
+        }
+
+        emitN("}");
+        inMainFunction = false;
+        return null;
+
     }
 
     public Object visitFunction(Function ast, Object o) {

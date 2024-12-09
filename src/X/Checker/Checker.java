@@ -128,7 +128,7 @@ public class Checker implements Visitor {
     private int baseStatementCounter = 0;
 
     private boolean validDollar = false;
-    private Type currentFunctionType = null;
+    private Type currentFunctionOrMethodType = null;
 
     private final Position dummyPos = new Position();
 
@@ -168,7 +168,7 @@ public class Checker implements Visitor {
         // Load  in all unique types
         loadUniqueTypes(L);
        
-        // Load in function names and global vars
+        // Load in function names, method names and global vars
         loadFunctionsAndGlobalVars(L);
        
         // Actually visiting everything
@@ -296,6 +296,33 @@ public class Checker implements Visitor {
                         }
                     }
                 }
+                case Method M -> {
+                    List P = M.PL;
+
+                    // Recalculating params for abstract types
+                    if (!P.isEmptyParaList()) {
+                        while (true) {
+                            ParaDecl PE = ((ParaList) P).P;
+                            checkMurking(PE);
+                            if (((ParaList) P).PL.isEmptyParaList()) {
+                                break;
+                            }
+                            P = ((ParaList) P).PL;
+                        }
+                    }
+
+                    checkMurking(M.attachedStruct);
+                    checkMurking(M);
+
+                    if (mainModule.methodExists(M.I.spelling, M.attachedStruct.T, M.PL)) {
+                        String message = String.format("'%s'. Previously declared at line %d", M.I.spelling,
+                                M.pos.lineStart);
+                        handler.reportError(errors[2] + ": %", message, M.I.pos);
+                    }
+
+                    M.setTypeDef();
+                    mainModule.addMethod(M);
+                }
                 case Function F -> {
                     List P = F.PL;
 
@@ -320,7 +347,7 @@ public class Checker implements Visitor {
                     }
 
                     F.setTypeDef();
-                    stdFunction(F);
+                    mainModule.addFunction(F);
                 }
                 default -> {}
                 
@@ -493,10 +520,6 @@ public class Checker implements Visitor {
         return binding;
     }
 
-    private void stdFunction(Function funct) {
-        mainModule.addFunction(funct);
-    }
-
     public Object visitProgram(Program ast, Object o) {
         ast.PL.visit(this, null);
         return null;
@@ -516,12 +539,39 @@ public class Checker implements Visitor {
         return binding;
     }
 
+    public Object visitMethod(Method ast, Object o) {
+        baseStatementCounter = 0;
+
+        checkMurking(ast.attachedStruct);
+        checkMurking(ast);
+        this.currentFunctionOrMethodType = ast.T;
+
+        if (ast.I.spelling.equals("$")) {
+            handler.reportError(errors[24] + ": %", "can't be used as method name", ast.I.pos);
+        }
+
+        idTable.openScope();
+        ast.attachedStruct.visit(this, o);
+        ast.PL.visit(this, null);
+        ast.S.visit(this, ast);
+        idTable.closeScope();
+
+        if (!hasReturn && !ast.T.isVoid()) {
+            handler.reportError(errors[19], "", ast.I.pos);
+        }
+
+        this.currentFunctionOrMethodType = null;
+        hasReturn = false;
+        baseStatementCounter = 0;
+        return null;
+    }
+
     public Object visitFunction(Function ast, Object o) {
         baseStatementCounter = 0;
 
         // Check if func already exists with that name
         checkMurking(ast);
-        this.currentFunctionType = ast.T;
+        this.currentFunctionOrMethodType = ast.T;
         if (ast.I.spelling.equals("main")) {
             inMain = hasMain = true;
             if (!ast.T.isVoid()) {
@@ -543,7 +593,7 @@ public class Checker implements Visitor {
             handler.reportError(errors[19], "", ast.I.pos);
         }
 
-        this.currentFunctionType = null;
+        this.currentFunctionOrMethodType = null;
         inMain = hasReturn = false;
         baseStatementCounter = 0;
         return ast.T;
@@ -961,9 +1011,9 @@ public class Checker implements Visitor {
         boolean seenIncompatible = false;
 
         // Returning nothing but there's something to return
-        if (ast.E.isEmptyExpr() && !(this.currentFunctionType.isVoid())) {
+        if (ast.E.isEmptyExpr() && !(this.currentFunctionOrMethodType.isVoid())) {
             seenIncompatible = true;
-            String message = "expected " + this.currentFunctionType.toString() + ", received void";
+            String message = "expected " + this.currentFunctionOrMethodType.toString() + ", received void";
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
         }
         Type conditionType;
@@ -972,8 +1022,8 @@ public class Checker implements Visitor {
             conditionType = new VoidType(new Position());
             ast.E.type = Environment.voidType;
         } else {
-            if (this.currentFunctionType.isNumeric()) {
-                currentNumericalType = this.currentFunctionType;
+            if (this.currentFunctionOrMethodType.isNumeric()) {
+                currentNumericalType = this.currentFunctionOrMethodType;
             }
             if (ast.E.isDotExpr() || ast.E.isIntOrDecimalExpr()) {
                 ast.E = (Expr) ast.E.visit(this, ast);
@@ -983,8 +1033,8 @@ public class Checker implements Visitor {
             }
             currentNumericalType = null;
         }
-        if (!this.currentFunctionType.assignable(conditionType) && !seenIncompatible) {
-            String message = "expected " + this.currentFunctionType.toString() +
+        if (!this.currentFunctionOrMethodType.assignable(conditionType) && !seenIncompatible) {
+            String message = "expected " + this.currentFunctionOrMethodType.toString() +
                 ", received " + conditionType.toString();
             handler.reportError(errors[6] + ": %", message, ast.E.pos);
         }
@@ -1417,7 +1467,7 @@ public class Checker implements Visitor {
         if (entry != null) {
             String message = String.format("'%s'. Previously declared at line %d", ident.spelling,
                 entry.attr.pos.lineStart);
-            if (decl.isGlobalVar()) {
+            if (decl.isGlobalVar() || decl.isParaDecl()) {
                 handler.reportError(errors[2] +": %", message, ident.pos);
             } else {
                 if (!ident.spelling.equals("_") && !ident.spelling.equals("err")) {

@@ -53,7 +53,7 @@ public class Printer implements Visitor {
 
     @Override
     public Object visitFunction(Function ast, Object o) {
-        print(indentString() + "Function" + ast.isExported);
+        print(indentString() + "Function");
         ++indent;
         ast.T.visit(this, o);
         ast.I.visit(this, o);
@@ -61,6 +61,18 @@ public class Printer implements Visitor {
         ast.S.visit(this, o);
         --indent;
          return null;
+    }
+
+    @Override 
+    public Object visitMethod(Method ast, Object o) {
+        print(indentString() + "Method");
+        ++indent;
+        ast.T.visit(this, o);
+        ast.I.visit(this, o);
+        ast.PL.visit(this, o);
+        ast.S.visit(this, o);
+        --indent;
+        return null;
     }
 
     @Override
