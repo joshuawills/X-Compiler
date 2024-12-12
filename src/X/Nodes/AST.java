@@ -48,6 +48,10 @@ public abstract class AST {
         return this instanceof EmptyParaList;
     }
 
+    public boolean isParaList() {
+        return this instanceof ParaList;
+    }
+
     public boolean isEmptyStmtList() {
         return this instanceof EmptyStmtList;
     }
@@ -150,6 +154,10 @@ public abstract class AST {
 
     public boolean isIdentsList() {
         return this instanceof IdentsList;
+    }
+
+    public boolean isDerefExpr() {
+        return this instanceof DerefExpr;
     }
 
 }

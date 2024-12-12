@@ -183,6 +183,11 @@
 - min and max numeric values in std lib
 - can't access '_' variables
 - can have multiple variables with the same name in scope
+- method declarations mapped to struct types
+
+*12.12.2024*
+
+- adding in argc/argv
 
 # TODO
 

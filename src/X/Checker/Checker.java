@@ -42,7 +42,7 @@ public class Checker implements Visitor {
         "*13: while conditional is not boolean",
         "*14: break must be in a loop construct",
         "*15: continue must be in a loop construct",
-        "*16: main function may not have any parameters",
+        "*16: main function may only have one i32 and one optional i8** parameter following it",
         "*17: main function may not call itself",
         "*18: statement(s) not reached",
         "*19: missing return statement",
@@ -578,7 +578,7 @@ public class Checker implements Visitor {
                 String message = "set to " + ast.T.toString();
                 handler.reportError(errors[1] + ": %", message, ast.I.pos);
             }
-            if (!ast.PL.isEmptyParaList()) {
+            if (ast.PL.isParaList() && !((ParaList) ast.PL).validMainParameters()) {
                handler.reportError(errors[16], "", ast.I.pos);
             }
         } else if (ast.I.spelling.equals("$")) {

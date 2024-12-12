@@ -737,6 +737,10 @@ public class Parser {
         if (tryConsume(TokenType.STAR)) {
             finish(pos);
             t = new PointerType(pos, t);
+            while (tryConsume(TokenType.STAR)) {
+                finish(pos);
+                t = new PointerType(pos, t);
+            }
         }
         return t;
     }

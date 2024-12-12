@@ -832,7 +832,11 @@ public class Emitter implements Visitor {
             int v = f.getNewIndex();
             ast.tempIndex = v;
             emit("\t%" + v + " = getelementptr inbounds ");
-            innerT.visit(this, o);
+            if (ast.E1.isDerefExpr()) {
+                emit("ptr");
+            } else {
+                innerT.visit(this, o);
+            }
             emitN(", ptr %" + i1 + ", i64 %" + i2);
             return null;
         }
@@ -1961,6 +1965,20 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
         if (ast.E instanceof VarExpr V) {
             SimpleVar VS = (SimpleVar) V.V;
+
+            String name = switch (VS.I.decl) {
+                case LocalVar L -> VS.I.spelling + L.index;
+                case ParaDecl _ -> VS.I.spelling + "0";
+                default -> throw new RuntimeException("DerefExpr not implemented");
+            };
+
+            if (ast.parent.isAssignmentExpr() && ast.isLHSOfAssignment 
+                && ast.type.isPointer()) { 
+                int v = f.getNewIndex();
+                emitN("\t%" + v + " = bitcast ptr %" + name + " to ptr");
+                ast.tempIndex = v;
+                return null;
+            }
             int v = f.getNewIndex();
             ast.tempIndex = v;
             emit("\t%" + v + " = load ");

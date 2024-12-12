@@ -18,4 +18,21 @@ public class ParaList extends List {
         return v.visitParaList(this, o);
     }
 
+    public boolean validMainParameters() {
+        // Must start with an i32 type, then an optional i8**
+        if (!P.T.isI32()) {
+            return false;
+        }
+        if (PL.isEmptyParaList()) {
+            return true;
+        }
+        ParaDecl P2 = ((ParaList) PL).P;
+        if (!P2.T.isCharPointerPointer()) {
+            return false;
+        }
+        if (!((ParaList) PL).PL.isEmptyParaList()) {
+            return false;
+        }
+        return true;
+    }
 }

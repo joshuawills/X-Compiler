@@ -63,6 +63,15 @@ public abstract class Type extends AST {
         return this instanceof PointerType;
     }
 
+    public boolean isCharPointerPointer() {
+        return this instanceof PointerType && ((PointerType) this).t instanceof PointerType 
+            && ((PointerType) (((PointerType) this).t)).t instanceof I8Type;
+    }
+
+    public boolean isPointerToPointer() {
+        return this instanceof PointerType && ((PointerType) this).t instanceof PointerType;
+    }
+
     public boolean isPointerToStruct() {
         return this instanceof PointerType && ((PointerType) this).t instanceof StructType;
     }
