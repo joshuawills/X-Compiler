@@ -26,10 +26,15 @@ fn new_foo() -> Foo* {
 	return f;
 }
 
+fn (v: Foo*) free() -> void {
+	std::free(v);
+}
+
 fn main() -> void {
 
 	let mut v = new_foo();
 	io::println(v.get_val().len());
+	v.free();
 
 }
 ```

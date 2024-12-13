@@ -16,6 +16,10 @@ fn new_foo() -> Foo* {
 	return f;
 }
 
+fn (v: Foo*) free() -> void {
+	std::free(v);
+}
+
 fn main() -> void {
 
 	let mut v = new_foo();
@@ -23,5 +27,6 @@ fn main() -> void {
 	let l = c.len();
 	io::println(c);
 	io::println(l);
+	v.free();
 
 }
