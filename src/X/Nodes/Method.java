@@ -13,6 +13,8 @@ public class Method extends Decl {
 
     public String TypeDef;
 
+    public String filename;
+
     public Method(Type tAST, Ident idAST, List fplAST, Stmt cAST, ParaDecl asASt, Position pos) {
         super(pos, false);
         T = tAST;

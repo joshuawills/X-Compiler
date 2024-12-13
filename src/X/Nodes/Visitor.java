@@ -200,4 +200,8 @@ public interface Visitor {
     Object visitVariaticType(VariaticType ast, Object o);
 
     Object visitMethod(Method ast, Object o);
+
+    Object visitMethodAccessExpr(MethodAccessExpr ast, Object o);
+
+    Object visitMethodAccessWrapper(MethodAccessWrapper ast, Object o);
 }

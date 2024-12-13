@@ -18,7 +18,7 @@ public class Emitter implements Visitor {
     private String arrName = "";
     private final Position dummyPos = new Position();
 
-    public boolean inCallExpr = false;
+    public boolean inCallOrMethodAccessExpr = false;
 
     String formattedCurrentPath;
     boolean inMainModule = true;
@@ -104,13 +104,11 @@ public class Emitter implements Visitor {
 
         // Visiting all the methods
         inMainModule = true;
-        for (Module m: mainModule) {
-            currentModule = m;
-            formattedCurrentPath = m.fileName.replace("/", ".");
-            for (Method me: m.getMethods()) {
-                me.visit(this, null);
-            }
-            inMainModule = false;
+        for (Method m: modules.getMethods()) {
+            currentModule = modules.getModule(m.filename);
+            formattedCurrentPath = m.filename.replace("/", ".");
+            inMainModule = currentModule.isMainModule();
+            m.visit(this, null);
         }
 
         LLVM.dump(outputName);
@@ -127,7 +125,6 @@ public class Emitter implements Visitor {
     }
 
     public Object visitMethod(Method ast, Object o) {
-        
         if (!ast.isUsed) {
             return null;
         }
@@ -143,9 +140,7 @@ public class Emitter implements Visitor {
         }
 
         emit(" @");
-        if (!inMainModule) {
-            emit(formattedCurrentPath);
-        } 
+        emit(formattedCurrentPath);
         emit(ast.I.spelling + "." + ast.attachedStruct.T.getMini() + "." + ast.TypeDef);
         
         emit("(");
@@ -999,7 +994,7 @@ public class Emitter implements Visitor {
                 if (L.T.isArray()) {
                     newIndex = f.getNewIndex();
                     emitN("\t%" + newIndex + " = bitcast ptr %" + L.I.spelling + L.index + " to ptr");
-                    if (inCallExpr || ast.inDeclaringLocalVar) {
+                    if (inCallOrMethodAccessExpr || ast.inDeclaringLocalVar) {
                         return null;
                     }
                     newIndex = f.getNewIndex();
@@ -1076,7 +1071,7 @@ public class Emitter implements Visitor {
         Frame f = (Frame) o;
 
         // Evaluate all the expressions
-        inCallExpr = true;
+        inCallOrMethodAccessExpr = true;
         if (!ast.AL.isEmptyArgList()) {
             Args AL = (Args) ast.AL;
             while (true) {
@@ -1087,7 +1082,7 @@ public class Emitter implements Visitor {
                 AL = (Args) AL.EL;
             }
         }
-        inCallExpr = false;
+        inCallOrMethodAccessExpr = false;
 
         Function functionRef = (Function) ast.I.decl;
 
@@ -1852,6 +1847,99 @@ public class Emitter implements Visitor {
         return null;
     }
 
+    public Object visitMethodAccessExpr(MethodAccessExpr ast, Object o) {
+        
+        Frame f = (Frame) o;
+
+        // Evaluate all the expressions
+        inCallOrMethodAccessExpr = true;
+        if (!ast.args.isEmptyArgList()) {
+            Args AL = (Args) ast.args;
+            while (true) {
+                AL.E.visit(this, o);
+                if (AL.EL.isEmptyArgList()) {
+                    break;
+                }
+                AL = (Args) AL.EL;
+            }
+        }
+        inCallOrMethodAccessExpr = false;
+        Type T = ast.type;
+
+        int vwhat = -1;
+        if (ast.refVar != null) {
+            ast.refVar.visit(this, o);
+            vwhat = f.localVarIndex - 1;
+        }
+
+        if (T.isTuple() || T.isStruct()) {
+            int num = f.getNewIndex();
+            ast.tempIndex = num;
+            emit("\t%" + num + " = alloca ");
+            T.visit(this, o);
+            emit("\n\tcall void");
+            f.getNewIndex();
+        } else if (T.isVoid()) {
+            emit("\tcall void");
+        } else {
+            int num = f.getNewIndex();
+            ast.tempIndex = num;
+            emit("\t%" + num + " = call ");
+            T.visit(this, o);
+        }
+
+        String path = ast.ref.filename.replace("/", ".");
+        emit(" @" + path + ast.I.spelling + "." + ast.ref.attachedStruct.T.getMini() + "." + ast.TypeDef);
+        emit("(");
+
+        if (ast.refVar != null) {
+            Decl D = (Decl) ast.refVar.I.decl;
+            D.T.visit(this, o);
+            emit(" %" + vwhat);
+        } else {
+            int v = ((MethodAccessExpr) ast.parent).tempIndex;
+            ((MethodAccessExpr) ast.parent).type.visit(this, o);
+            emit(" %" + v);
+        }
+
+        if (!ast.args.isEmptyArgList()) {
+            emit(", ");
+        }
+
+        if (!ast.args.isEmptyArgList()) {
+            Args AL = (Args) ast.args;
+            while (true) {
+                Expr E = AL.E;
+                int index = E.tempIndex;
+                // pass arrays by ref, not val
+                if (E.type.isArray()) {
+                    if (E.isArrayIndexExpr()) {
+                        ((ArrayType) E.type).t.visit(this, o);
+                    } else {
+                        PointerType pT = new PointerType(dummyPos, ((ArrayType) E.type).t);
+                        pT.visit(this, o);
+                    }
+                } else {
+                    E.type.visit(this, o);
+                    if (E.type.isStruct() || E.type.isTuple()) {
+                        emit("*");
+                    }
+                }
+                emit(" %" + index);
+                if (AL.EL.isEmptyArgList()) {
+                    break;
+                } else {
+                    emit(", ");
+                }
+                AL = (Args) AL.EL;
+            }
+        }
+        emitN(")");
+
+        ast.next.visit(this, o);
+        return null;
+    }
+
     public Object visitTupleAccess(TupleAccess ast, Object o) {
         Frame f = (Frame) o;
         TupleType ref = ast.ref;
@@ -2446,6 +2534,21 @@ public class Emitter implements Visitor {
     }
 
     public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
+        return null;
+    }
+
+    public Object visitMethodAccessWrapper(MethodAccessWrapper ast, Object o) {
+        ast.methodAccessExpr.visit(this, o);
+        // Need to bind temp index to the lowest one
+        MethodAccessExpr MAE = ast.methodAccessExpr;
+        while (true) {
+            if (MAE.next.isMethodAccessExpr()) {
+                MAE = (MethodAccessExpr) MAE.next;
+            } else {
+                break;
+            }
+        }
+        ast.tempIndex = MAE.tempIndex;
         return null;
     }
 }

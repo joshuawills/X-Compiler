@@ -449,6 +449,16 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitMethodAccessExpr(MethodAccessExpr ast, Object o) {
+        System.out.println("EVALUATOR: METHOD ACCESS EXPR");
+        return null;
+    }
+
+    public Object visitMethodAccessWrapper(MethodAccessWrapper ast, Object o) {
+        System.out.println("EVALUATOR: METHOD ACCESS WRAPPER");
+        return null;
+    }
+
     public Object visitUnknownType(UnknownType ast, Object o) {
         return null;
     }

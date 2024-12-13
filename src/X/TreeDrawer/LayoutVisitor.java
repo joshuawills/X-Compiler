@@ -604,6 +604,14 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("DotExpr", ast.I, ast.E);
     }
 
+    public Object visitMethodAccessExpr(MethodAccessExpr ast, Object o) {
+        return layoutTernary("MethodAccessExpr", ast.I, ast.args, ast.next);
+    }
+
+    public Object visitMethodAccessWrapper(MethodAccessWrapper ast, Object o) {
+        return layoutUnary("MethodAccessWrapper", ast.methodAccessExpr);
+    }
+
     public Object visitUnknownType(UnknownType ast, Object o) {
         return layoutNullary("UnknownType");
     }

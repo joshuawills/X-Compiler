@@ -10,16 +10,21 @@ public class DotExpr extends Expr {
     public Optional<Expr> arrayIndex;
     public Expr E;
     public boolean isPointerAccess;
+    public Optional<List> args;
 
-    public DotExpr(Ident iAST, Expr eAST, Position pos, Optional<Expr> arrayAST, boolean isPointerAST) {
+    public DotExpr(Ident iAST, Expr eAST, Position pos, Optional<Expr> arrayAST, boolean isPointerAST, Optional<List> argsAST) {
         super(pos);
         I = iAST;
         E = eAST;
         arrayIndex = arrayAST;
+        args = argsAST;
         isPointerAccess = isPointerAST;
         I.parent = E.parent = this;
         if (arrayIndex.isPresent()) {
             arrayIndex.get().parent = this;
+        }
+        if (args.isPresent()) {
+            args.get().parent = this;
         }
     }
 

@@ -6,8 +6,11 @@ import java.util.HashMap;
 
 import X.Nodes.Function;
 import X.Nodes.GlobalVar;
+import X.Nodes.List;
+import X.Nodes.Method;
 import X.Nodes.Module;
 import X.Nodes.TupleType;
+import X.Nodes.Type;
 
 public class AllModules {
 
@@ -16,6 +19,9 @@ public class AllModules {
     private ArrayList<GlobalVar> libCVariables = new ArrayList<GlobalVar>();
 
     private ArrayList<Module> modules = new ArrayList<Module>();
+
+    private ArrayList<Method> methods = new ArrayList<>();
+
     private static AllModules instance = null;
 
     private ArrayList<TupleType> tupleTyples = new ArrayList<>();
@@ -48,6 +54,10 @@ public class AllModules {
 
     public void addModule(Module mainModule) {
         modules.add(mainModule);
+    }
+
+    public void addMethod(Method m) {
+        methods.add(m);
     }
 
     public void addTupleType(TupleType tupleType) {
@@ -145,5 +155,35 @@ public class AllModules {
         return null;
     }
 
+    public boolean methodExists(String v, Type T, List PL) {
+        for (Method m: methods) {
+            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean methodWithNameExists(String v, Type T) {
+        for (Method m: methods) {
+            if (m.I.spelling.equals(v) && m.attachedStruct.T.equals(T)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Method getMethod(String v, Type T, List PL) {
+        for (Method m: methods) {
+            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    public ArrayList<Method> getMethods() {
+        return methods;
+    }
     
 }

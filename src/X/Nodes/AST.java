@@ -160,4 +160,12 @@ public abstract class AST {
         return this instanceof DerefExpr;
     }
 
+    public boolean isIdent() {
+        return this instanceof Ident;
+    }
+
+    public boolean isMethodAccessExpr() {
+        return this instanceof MethodAccessExpr;
+    }
+
 }

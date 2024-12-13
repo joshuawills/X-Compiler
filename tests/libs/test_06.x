@@ -4,18 +4,30 @@ import io, str;
 
 fn main() -> void {
 
-	io::println(str::str_len(""));
-	io::println(str::str_len("a"));
-	io::println(str::str_len("\th"));
-	io::println(str::str_len("abkajklsjdakjd"));
+	let mut v = "";
+	io::println(v.len());
+	v = "a";
+	io::println(v.len());
+	v = "\th";
+	io::println(v.len());
+	v = "abkajklsjdakjd";
+	io::println(v.len());
 
-	io::println(str::str_equal("", ""));
-	io::println(str::str_equal("a", ""));
-	io::println(str::str_equal("", "b"));
-	io::println(str::str_equal("a", "b"));
-	io::println(str::str_equal("b", "b"));
-	io::println(str::str_equal("\t", "\t"));
-	io::println(str::str_equal("hello world", "hello world"));
-	io::println(str::str_equal("hello world!", "hello world"));
+	v = "";
+	io::println(v.equal(""));
+	v = "a";
+	io::println(v.equal(""));
+	v = "";
+	io::println(v.equal("b"));
+	v = "a";
+	io::println(v.equal("b"));
+	v = "b";
+	io::println(v.equal("b"));
+	v = "\t";
+	io::println(v.equal("\t"));
+	v = "hello world";
+	io::println(v.equal("hello world"));
+	v = "hello world!";
+	io::println(v.equal("hello world"));
 
 }

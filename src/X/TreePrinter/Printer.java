@@ -664,6 +664,24 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitMethodAccessExpr(MethodAccessExpr ast, Object o) {
+        print(indentString() + "MethodAccessExpr");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.args.visit(this, o);
+        ast.next.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitMethodAccessWrapper(MethodAccessWrapper ast, Object o) {
+        print(indentString() + "MethodAccessWrapper");
+        ++indent;
+        ast.methodAccessExpr.visit(this, o);
+        --indent;
+        return null;
+    }
+
     public Object visitUnknownType(UnknownType ast, Object o) {
         print(indentString() + "UnknownType");
         return null;

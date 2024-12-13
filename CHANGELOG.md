@@ -189,13 +189,16 @@
 
 - adding in argc/argv
 
+*13.12.2024*
+
+- supporting new vs code extension
+- experimental support for method accesesses
+
 # TODO
 
 - in-compilation expression everywhere possible
 
 - basic string operations
-  - static reassignment
-    - mut str x = "a"; x = "b";
 	- '+' operator
 
 - basic control flow logic evaluation
@@ -213,3 +216,4 @@
 HERE
 
 - do struct accesses, tuples in grammar
+- general grammar overhaul

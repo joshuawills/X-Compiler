@@ -1013,7 +1013,7 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         AST E = parsePrimaryExpr();
-        if (!(E instanceof Ident)) {
+        if (!E.isIdent()) {
             return (Expr) E;
         }
 
@@ -1027,7 +1027,7 @@ public class Parser {
                     finish(pos);
                     yield new TupleAccess((Ident) E, new IntExpr(IL, pos), pos);
                 }
-                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.empty(), isPointerAccess);
+                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.empty(), isPointerAccess, Optional.empty());
             }
             case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);
@@ -1049,7 +1049,7 @@ public class Parser {
                 if (currentToken.kind == TokenType.PERIOD || currentToken.kind == TokenType.ARROW) {
                     boolean isPointerAccess = currentToken.kind == TokenType.ARROW;
                     finish(pos);
-                    yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.of(eAST), isPointerAccess);
+                    yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.of(eAST), isPointerAccess, Optional.empty());
                 }
                 finish(pos);
                 yield new ArrayIndexExpr((Ident) E, eAST, pos);
@@ -1082,9 +1082,20 @@ public class Parser {
             if (tryConsume(TokenType.LEFT_SQUARE)) {
                 E = Optional.of(parseExpr());
                 match(TokenType.RIGHT_SQUARE);
+            } else if (tryConsume(TokenType.OPEN_PAREN)) {
+                List aList;
+                if (tryConsume(TokenType.CLOSE_PAREN)) {
+                    finish(pos);
+                    aList = new EmptyArgList(pos);
+                } else {
+                    aList = parseArgList();
+                    match(TokenType.CLOSE_PAREN);
+                }
+                finish(pos);
+                return new MethodAccessExpr(I, aList, pos, parsePostFixExpressionTwo());
             }
             finish(pos);
-            return new DotExpr(I, parsePostFixExpressionTwo(), pos, E, isPointerAccess);
+            return new DotExpr(I, parsePostFixExpressionTwo(), pos, E, isPointerAccess, Optional.empty());
         }
         finish(pos);
         return new EmptyExpr(pos);

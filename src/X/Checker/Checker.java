@@ -1,5 +1,11 @@
 package X.Checker;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Optional;
+
 import X.AllModules;
 import X.Environment;
 import X.ErrorHandler;
@@ -12,12 +18,6 @@ import X.Nodes.Enum;
 import X.Nodes.Module;
 import X.Parser.Parser;
 import X.Parser.SyntaxError;
-
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Optional;
 
 public class Checker implements Visitor {
 
@@ -106,7 +106,11 @@ public class Checker implements Visitor {
         "*77: identifier redeclared in tuple destructuring",
         "*78: no such lib C variable",
         "*79: imported standard libary does not exist. Is your 'X_LIB_PATH' set?",
-        "*80: use of _ variable."
+        "*80: use of _ variable.",
+        "*81: unknown method",
+        "*82: no method found with provided parameter types",
+        "*83: cannot pass immutable data type to mutable method",
+        "*84: duplicate method declarations"
     };
 
     private final SymbolTable idTable;
@@ -314,14 +318,12 @@ public class Checker implements Visitor {
                     checkMurking(M.attachedStruct);
                     checkMurking(M);
 
-                    if (mainModule.methodExists(M.I.spelling, M.attachedStruct.T, M.PL)) {
-                        String message = String.format("'%s'. Previously declared at line %d", M.I.spelling,
-                                M.pos.lineStart);
-                        handler.reportError(errors[2] + ": %", message, M.I.pos);
-                    }
-
                     M.setTypeDef();
-                    mainModule.addMethod(M);
+                    M.filename = currentFileName;
+                    if (modules.methodExists(M.I.spelling, M.attachedStruct.T, M.PL)) {
+                        handler.reportError(errors[84] + ": %", M.I.spelling, M.I.pos);
+                    }
+                    modules.addMethod(M);
                 }
                 case Function F -> {
                     List P = F.PL;
@@ -2322,11 +2324,87 @@ public class Checker implements Visitor {
         return ast.type;
     }
 
+    // Currently just assuming it's not gonna be a module access of a global variable TODO: fix that
+    public Object visitMethodAccessExpr(MethodAccessExpr ast, Object o) {
+        Expr errorExpr = new EmptyExpr(ast.pos);
+        errorExpr.type = Environment.errorType;
+
+        if (ast.TypeDef == null) {
+            String TL = genTypes(ast.args, o);
+            ast.TypeDef = TL;
+        }
+
+        Type T = currentTypeMethodAccess;
+        if (!modules.methodExists(ast.I.spelling, T, ast.args)) {
+            String message = " type " + T + ", with method name " + ast.I.spelling;
+            if (!modules.methodWithNameExists(ast.I.spelling, T)) {
+                handler.reportError(errors[81] + ": %", message, ast.pos);
+            } else {
+                handler.reportError(errors[82] + ": %", message, ast.pos);
+            }
+            return errorExpr;
+        }
+        
+        Method M = modules.getMethod(ast.I.spelling, T, ast.args);
+
+        if (M.attachedStruct.isMut && !isCurrentMethodMutable) {
+            handler.reportError(errors[83] + ": %", "'" + ast.I.spelling + "'", ast.pos);
+            return errorExpr;
+        }
+        isCurrentMethodMutable = true;
+
+        M.setUsed();
+        ast.args.visit(this, M.PL);
+        ast.TypeDef = M.TypeDef;
+        ast.type = M.T;
+        ast.ref = M;
+        currentTypeMethodAccess = ast.type;
+        if (ast.next != null) {
+            ast.next.visit(this, o);
+        }
+        return ast;
+    }
+
+    private Type currentTypeMethodAccess = null;
+    private boolean isCurrentMethodMutable = false;
+
     // Currently operating under the presumption there's no pointer accesses
     public Object visitDotExpr(DotExpr ast, Object o) {
 
         Expr errorExpr = new EmptyExpr(ast.pos);
         errorExpr.type = Environment.errorType;
+
+        if (ast.E.isMethodAccessExpr()) {
+            boolean isGlobalVar = mainModule.varExists(ast.I.spelling);
+            boolean isLocalVar = idTable.retrieve(ast.I.spelling) != null;
+            if (!(isLocalVar || isGlobalVar)) {
+                handler.reportError(errors[56], "", ast.pos);
+                return errorExpr;
+            }
+            Decl d;
+            if (isLocalVar) {
+                d = idTable.retrieve(ast.I.spelling);
+            } else {
+                d = mainModule.getVar(ast.I.spelling);
+            }
+            d.isUsed = true;
+            currentTypeMethodAccess = d.T;
+            isCurrentMethodMutable = d.isMut;
+            MethodAccessExpr E1;
+            try {
+                E1= (MethodAccessExpr) ast.E.visit(this, o);
+            } catch (Exception e) {
+                return errorExpr;
+            } 
+            SimpleVar SV = new SimpleVar(ast.I, ast.pos);
+            SV.I.decl = d;
+            E1.refVar = SV;
+            MethodAccessWrapper MAW = new MethodAccessWrapper(E1);
+            MAW.visit(this, o);
+            currentTypeMethodAccess = null;
+            return MAW;
+        }
+
         Module M = mainModule;
         boolean isExternalModule = false;
         String message = "";
@@ -2467,11 +2545,18 @@ public class Checker implements Visitor {
 
 
     public Object visitExprStmt(ExprStmt ast, Object o) {
-        if (!(ast.E.isAssignmentExpr() || ast.E.isCallExpr())) {
+        boolean isMethodAccess = ast.E.isDotExpr() && ((DotExpr) ast.E).E.isMethodAccessExpr();
+        if (!(ast.E.isAssignmentExpr() || ast.E.isCallExpr() || isMethodAccess)) {
             System.out.println(ast.E);
             System.out.println("Should never be reached");
         }
-        ast.E.visit(this, o);
+
+        if (ast.E.isDotExpr()) {
+            Expr E = (Expr) ast.E.visit(this, o);
+            ast.E = E;
+        } else {
+            ast.E.visit(this, o);
+        }
         return null;
     }
 
@@ -2900,6 +2985,19 @@ public class Checker implements Visitor {
     }
 
     public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
+        return null;
+    }
+
+    public Object visitMethodAccessWrapper(MethodAccessWrapper ast, Object o) {
+        // Need to traverse down to find the deepest method access, and bind the type
+        MethodAccessExpr E = ast.methodAccessExpr;
+        while (true) {
+            if (E.next.isEmptyExpr()) {
+                break;
+            }
+            E = (MethodAccessExpr) E.next;
+        }
+        ast.type = E.type;
         return null;
     }
 

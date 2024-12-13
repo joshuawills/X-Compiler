@@ -11,7 +11,6 @@ public class Module extends AST {
     public String fileName;
 
     private ArrayList<Function> functions = new ArrayList<>();
-    private ArrayList<Method> methods = new ArrayList<>();
 
     private HashMap<String, GlobalVar> vars = new HashMap<>();
     private HashMap<String, Enum> enums = new HashMap<>();
@@ -85,10 +84,6 @@ public class Module extends AST {
         functions.add(f);
     }
 
-    public void addMethod(Method m) {
-        methods.add(m);
-    }
-
     public boolean entityExists(String v) {
         return vars.containsKey(v) || functionWithNameExists(v)
             || enums.containsKey(v) || structs.containsKey(v);
@@ -119,15 +114,6 @@ public class Module extends AST {
         return false;
     }
 
-    public boolean methodExists(String v, Type T, List PL) {
-        for (Method m: methods) {
-            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public boolean functionWithNameExists(String v) {
         for (Function f: functions) {
             if (f.I.spelling.equals(v)) {
@@ -137,14 +123,6 @@ public class Module extends AST {
         return false;
     }
 
-    public boolean methodWithNameExists(String v, Type T) {
-        for (Method m: methods) {
-            if (m.I.spelling.equals(v) && m.attachedStruct.T.equals(T)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public Function getFunction(String v, List PL) {
         for (Function f: functions) {
@@ -155,14 +133,7 @@ public class Module extends AST {
         return null;
     }
 
-    public Method getMethod(String v, Type T, List PL) {
-        for (Method m: methods) {
-            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
-                return m;
-            }
-        }
-        return null;
-    }
+  
 
     public HashMap<String, Struct> getStructs() {
         return structs;
@@ -174,10 +145,6 @@ public class Module extends AST {
 
     public ArrayList<Function> getFunctions() {
         return functions;
-    }
-
-    public ArrayList<Method> getMethods() {
-        return methods;
     }
 
     public HashMap<String, Enum> getEnums() {
