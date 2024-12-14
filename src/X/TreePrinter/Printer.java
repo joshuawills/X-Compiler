@@ -657,7 +657,7 @@ public class Printer implements Visitor {
 
     public Object visitDotExpr(DotExpr ast, Object o) {
         print(indentString() + "DotExpr: ");
-        ast.I.visit(this, o);
+        ast.IE.visit(this, o);
         ++indent;
         ast.E.visit(this, o);
         --indent;

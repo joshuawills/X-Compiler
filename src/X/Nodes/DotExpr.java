@@ -6,25 +6,21 @@ import X.Lexer.Position;
 
 public class DotExpr extends Expr {
 
-    public Ident I;
+    public Expr IE;
+
     public Optional<Expr> arrayIndex;
     public Expr E;
     public boolean isPointerAccess;
-    public Optional<List> args;
 
-    public DotExpr(Ident iAST, Expr eAST, Position pos, Optional<Expr> arrayAST, boolean isPointerAST, Optional<List> argsAST) {
+    public DotExpr(Expr ieAST, Expr eAST, Position pos, Optional<Expr> arrayAST, boolean isPointerAST) {
         super(pos);
-        I = iAST;
+        IE = ieAST;
         E = eAST;
         arrayIndex = arrayAST;
-        args = argsAST;
         isPointerAccess = isPointerAST;
-        I.parent = E.parent = this;
+        IE.parent = E.parent = this;
         if (arrayIndex.isPresent()) {
             arrayIndex.get().parent = this;
-        }
-        if (args.isPresent()) {
-            args.get().parent = this;
         }
     }
 

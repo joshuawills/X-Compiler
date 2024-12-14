@@ -192,7 +192,11 @@
 *13.12.2024*
 
 - supporting new vs code extension
-- experimental support for method accesesses
+- experimental support for method accesses 
+
+*14.12.2024*
+
+- able to map methods directlyt to raw expressions
 
 # TODO
 

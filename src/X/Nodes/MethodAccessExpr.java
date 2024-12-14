@@ -8,7 +8,7 @@ public class MethodAccessExpr extends Expr {
     public List args;
     public Expr next;
 
-    public SimpleVar refVar = null;
+    public Expr refExpr = null;
     
     public Method ref;
 

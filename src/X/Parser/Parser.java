@@ -1013,10 +1013,6 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         AST E = parsePrimaryExpr();
-        if (!E.isIdent()) {
-            return (Expr) E;
-        }
-
         return switch(currentToken.kind) {
             case PERIOD, ARROW-> {
                 boolean isPointerAccess = currentToken.kind == TokenType.ARROW;
@@ -1027,7 +1023,10 @@ public class Parser {
                     finish(pos);
                     yield new TupleAccess((Ident) E, new IntExpr(IL, pos), pos);
                 }
-                yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.empty(), isPointerAccess, Optional.empty());
+                if (E.isIdent()) {
+                    E = new VarExpr(new SimpleVar((Ident) E, pos), pos);
+                }
+                yield new DotExpr((Expr) E, parsePostFixExpressionTwo(), pos, Optional.empty(), isPointerAccess);
             }
             case OPEN_PAREN -> {
                 match(TokenType.OPEN_PAREN);
@@ -1049,20 +1048,27 @@ public class Parser {
                 if (currentToken.kind == TokenType.PERIOD || currentToken.kind == TokenType.ARROW) {
                     boolean isPointerAccess = currentToken.kind == TokenType.ARROW;
                     finish(pos);
-                    yield new DotExpr((Ident) E, parsePostFixExpressionTwo(), pos, Optional.of(eAST), isPointerAccess, Optional.empty());
+                    if (E.isIdent()) {
+                        E = new VarExpr(new SimpleVar((Ident) E, pos), pos);
+                    }
+                    yield new DotExpr((Expr) E, parsePostFixExpressionTwo(), pos, Optional.of(eAST), isPointerAccess);
                 }
                 finish(pos);
                 yield new ArrayIndexExpr((Ident) E, eAST, pos);
             }
             default -> {
-                if (!inConditionalCheck && tryConsume(TokenType.OPEN_CURLY)) {
-                    List saAST = parseStructArgs();
+                if (E.isIdent()) {
+                    if (!inConditionalCheck && tryConsume(TokenType.OPEN_CURLY)) {
+                        List saAST = parseStructArgs();
+                        finish(pos);
+                        yield new StructExpr((Ident) E, saAST, pos);
+                    }
                     finish(pos);
-                    yield new StructExpr((Ident) E, saAST, pos);
+                    Var simVAST = new SimpleVar((Ident) E, pos);
+                    yield new VarExpr(simVAST, pos);
+                } else {
+                    yield (Expr) E;
                 }
-                finish(pos);
-                Var simVAST = new SimpleVar((Ident) E, pos);
-                yield new VarExpr(simVAST, pos);
             }
         };
     }
@@ -1095,7 +1101,8 @@ public class Parser {
                 return new MethodAccessExpr(I, aList, pos, parsePostFixExpressionTwo());
             }
             finish(pos);
-            return new DotExpr(I, parsePostFixExpressionTwo(), pos, E, isPointerAccess, Optional.empty());
+            Expr IE = new VarExpr(new SimpleVar(I, pos), pos);
+            return new DotExpr(IE, parsePostFixExpressionTwo(), pos, E, isPointerAccess);
         }
         finish(pos);
         return new EmptyExpr(pos);

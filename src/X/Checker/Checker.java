@@ -1112,7 +1112,7 @@ public class Checker implements Visitor {
 
         boolean v1Numeric = t1.isNumeric() || t1.isEnum() || t1.isError();
         boolean v2Numeric = t2.isNumeric() || t2.isEnum() || t2.isError();
-
+       
         if (t1.isError() || t2.isError()) {
             ast.type = Environment.errorType;
             return ast.type;
@@ -2375,30 +2375,42 @@ public class Checker implements Visitor {
         errorExpr.type = Environment.errorType;
 
         if (ast.E.isMethodAccessExpr()) {
-            boolean isGlobalVar = mainModule.varExists(ast.I.spelling);
-            boolean isLocalVar = idTable.retrieve(ast.I.spelling) != null;
-            if (!(isLocalVar || isGlobalVar)) {
-                handler.reportError(errors[56], "", ast.pos);
-                return errorExpr;
-            }
-            Decl d;
-            if (isLocalVar) {
-                d = idTable.retrieve(ast.I.spelling);
+            if (ast.IE.isVarExpr()) {
+                Ident I = ((SimpleVar) ((VarExpr) ast.IE).V).I;
+                boolean isGlobalVar = mainModule.varExists(I.spelling);
+                boolean isLocalVar = idTable.retrieve(I.spelling) != null;
+                if (!(isLocalVar || isGlobalVar)) {
+                    handler.reportError(errors[56], "", ast.pos);
+                    return errorExpr;
+                }
+                Decl d;
+                if (isLocalVar) {
+                    d = idTable.retrieve(I.spelling);
+                } else {
+                    d = mainModule.getVar(I.spelling);
+                }
+                d.isUsed = true;
+                I.decl = d;
+                currentTypeMethodAccess = d.T;
+                ((VarExpr) ast.IE).type = d.T;
+                isCurrentMethodMutable = d.isMut;
             } else {
-                d = mainModule.getVar(ast.I.spelling);
+                if (ast.IE.isDotExpr() || ast.IE.isIntOrDecimalExpr()) {
+                    ast.IE = (Expr) ast.IE.visit(this, o);
+                } else {
+                    ast.IE.visit(this, o);
+                }
+                currentTypeMethodAccess = ast.IE.type;
+                isCurrentMethodMutable = true;
             }
-            d.isUsed = true;
-            currentTypeMethodAccess = d.T;
-            isCurrentMethodMutable = d.isMut;
+
             MethodAccessExpr E1;
             try {
                 E1= (MethodAccessExpr) ast.E.visit(this, o);
             } catch (Exception e) {
                 return errorExpr;
             } 
-            SimpleVar SV = new SimpleVar(ast.I, ast.pos);
-            SV.I.decl = d;
-            E1.refVar = SV;
+            E1.refExpr = ast.IE;
             MethodAccessWrapper MAW = new MethodAccessWrapper(E1);
             MAW.visit(this, o);
             currentTypeMethodAccess = null;
@@ -2408,11 +2420,17 @@ public class Checker implements Visitor {
         Module M = mainModule;
         boolean isExternalModule = false;
         String message = "";
+        
+        if (!ast.IE.isVarExpr()) {
+            handler.reportError(errors[56], "", ast.pos);
+            return errorExpr;
+        }
 
-        if (ast.I.isModuleAccess) {
-            String alias = ast.I.module.get();
+        Ident I = ((SimpleVar) ((VarExpr) ast.IE).V).I; 
+        if (I.isModuleAccess) {
+            String alias = I.module.get();
             if (!mainModule.aliasExists(alias)) {
-                handler.reportError(errors[63] + ": %", "'" + alias + "'", ast.I.pos);
+                handler.reportError(errors[63] + ": %", "'" + alias + "'", I.pos);
                 return errorExpr;
             }
             M = mainModule.getModuleFromAlias(alias);
@@ -2421,8 +2439,8 @@ public class Checker implements Visitor {
 
 
         // First check if the identifier is an enum name
-        if (M.enumExists(ast.I.spelling)) {
-            Enum E = M.getEnum(ast.I.spelling);
+        if (M.enumExists(I.spelling)) {
+            Enum E = M.getEnum(I.spelling);
             E.isUsed = true;
 
             DotExpr innerE = (DotExpr) ast.E;
@@ -2430,6 +2448,10 @@ public class Checker implements Visitor {
                 handler.reportError(errors[55], "", ast.pos);
                 return Environment.errorType;
             }
+            if (!innerE.IE.isVarExpr()) {
+                handler.reportError(errors[56], "", ast.pos);
+                return Environment.errorType;
+            }   
             if (ast.arrayIndex.isPresent()) {
                 handler.reportError(errors[32], "", ast.pos);
                 return Environment.errorType;
@@ -2439,44 +2461,44 @@ public class Checker implements Visitor {
                     ast.pos);
                 return Environment.errorType;
             }
-
-            EnumExpr newEnum = new EnumExpr(ast.I, innerE.I, ast.pos);
+            Ident innerI = ((SimpleVar) ((VarExpr) innerE.IE).V).I;
+            EnumExpr newEnum = new EnumExpr(I, innerI, ast.pos);
             newEnum.visit(this, o);
             return newEnum;
         } else {
             // Assumption is now we have an attempted struct access
             Decl d;
             if (!isExternalModule) {
-                boolean isGlobalVar = M.varExists(ast.I.spelling);
-                boolean isLocalVar = idTable.retrieve(ast.I.spelling) != null;
+                boolean isGlobalVar = M.varExists(I.spelling);
+                boolean isLocalVar = idTable.retrieve(I.spelling) != null;
                 if (!(isLocalVar || isGlobalVar)) {
                     handler.reportError(errors[56], "", ast.pos);
                     return errorExpr;
                 }
 
                 if (isLocalVar) {
-                    d = idTable.retrieve(ast.I.spelling);
+                    d = idTable.retrieve(I.spelling);
                 } else {
-                    d = M.getVar(ast.I.spelling);
+                    d = M.getVar(I.spelling);
                 }
             } else {
                 // Needs to be a global variable
-                if (!M.varExists(ast.I.spelling)) {
-                    message = ast.I.module.get() + "::" + ast.I.spelling;
-                    handler.reportError(errors[66] + ": %", message, ast.I.pos);
+                if (!M.varExists(I.spelling)) {
+                    message = I.module.get() + "::" + I.spelling;
+                    handler.reportError(errors[66] + ": %", message, I.pos);
                     return errorExpr;
                 }
-                GlobalVar G = M.getVar(ast.I.spelling);
+                GlobalVar G = M.getVar(I.spelling);
                 if (!G.isExported) {
-                    message = "variable '" + ast.I.spelling + "' in module '" + ast.I.module.get() + "'";
-                    handler.reportError(errors[64] + ": %", message, ast.I.pos);
+                    message = "variable '" + I.spelling + "' in module '" + I.module.get() + "'";
+                    handler.reportError(errors[64] + ": %", message, I.pos);
                     return Environment.errorType;
                 }
                 d = G;
             }
 
             if ((!d.isMut && !ast.isPointerAccess) && isStructLHS) {
-                handler.reportError(errors[20] + ": %", "'" + ast.I.spelling + "'", ast.pos);
+                handler.reportError(errors[20] + ": %", "'" + I.spelling + "'", ast.pos);
                 return errorExpr;
             }
 
@@ -2537,10 +2559,12 @@ public class Checker implements Visitor {
     }
 
     public StructAccessList generateStructAccessList(DotExpr ast) {
+        assert(ast.IE.isVarExpr());
+        Ident I = ((SimpleVar) ((VarExpr) ast.IE).V).I;
         if (ast.E instanceof EmptyExpr) {
-            return new StructAccessList(ast.I, new EmptyStructAccessList(ast.pos), ast.pos, ast.arrayIndex, ast.isPointerAccess);
+            return new StructAccessList(I, new EmptyStructAccessList(ast.pos), ast.pos, ast.arrayIndex, ast.isPointerAccess);
         }
-        return new StructAccessList(ast.I, generateStructAccessList((DotExpr) ast.E), ast.pos, ast.arrayIndex, ast.isPointerAccess);
+        return new StructAccessList(I, generateStructAccessList((DotExpr) ast.E), ast.pos, ast.arrayIndex, ast.isPointerAccess);
     }
 
 
@@ -2998,7 +3022,7 @@ public class Checker implements Visitor {
             E = (MethodAccessExpr) E.next;
         }
         ast.type = E.type;
-        return null;
+        return ast.type;
     }
 
 }

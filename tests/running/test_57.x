@@ -1,3 +1,5 @@
+// More testing with nested method attachments
+
 import io, str, std;
 
 struct Foo -> {

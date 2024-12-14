@@ -601,7 +601,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitDotExpr(DotExpr ast, Object o) {
-        return layoutBinary("DotExpr", ast.I, ast.E);
+        return layoutBinary("DotExpr", ast.IE, ast.E);
     }
 
     public Object visitMethodAccessExpr(MethodAccessExpr ast, Object o) {

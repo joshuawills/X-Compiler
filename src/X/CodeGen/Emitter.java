@@ -1867,8 +1867,8 @@ public class Emitter implements Visitor {
         Type T = ast.type;
 
         int vwhat = -1;
-        if (ast.refVar != null) {
-            ast.refVar.visit(this, o);
+        if (ast.refExpr != null) {
+            ast.refExpr.visit(this, o);
             vwhat = f.localVarIndex - 1;
         }
 
@@ -1892,14 +1892,16 @@ public class Emitter implements Visitor {
         emit(" @" + path + ast.I.spelling + "." + ast.ref.attachedStruct.T.getMini() + "." + ast.TypeDef);
         emit("(");
 
-        if (ast.refVar != null) {
-            Decl D = (Decl) ast.refVar.I.decl;
-            D.T.visit(this, o);
+        if (ast.refExpr != null) {
+            Type DT = ast.refExpr.type;
+            DT.visit(this, o);
             emit(" %" + vwhat);
-        } else {
+        } else if (ast.parent.isMethodAccessExpr()) {
             int v = ((MethodAccessExpr) ast.parent).tempIndex;
             ((MethodAccessExpr) ast.parent).type.visit(this, o);
             emit(" %" + v);
+        } else {
+            System.out.println("UNREACHABLE");
         }
 
         if (!ast.args.isEmptyArgList()) {
