@@ -527,8 +527,8 @@ public class Emitter implements Visitor {
         emitN("\tbr label %" + top);
         emitN("\n" + top + ":");
         ast.E.visit(this, o);
-        String middle= f.getNewLabel();
         String bottom = f.getNewLabel();
+        String middle= f.getNewLabel();
         f.brkStack.push(bottom);
 
         int index = ast.E.tempIndex;
@@ -1872,6 +1872,7 @@ public class Emitter implements Visitor {
             vwhat = f.localVarIndex - 1;
         }
 
+
         if (T.isTuple() || T.isStruct()) {
             int num = f.getNewIndex();
             ast.tempIndex = num;
@@ -1891,6 +1892,11 @@ public class Emitter implements Visitor {
         String path = ast.ref.filename.replace("/", ".");
         emit(" @" + path + ast.I.spelling + "." + ast.ref.attachedStruct.T.getMini() + "." + ast.TypeDef);
         emit("(");
+
+        if (T.isTuple() || T.isStruct()) {
+            emit("ptr %" + ast.tempIndex);
+            emit(", ");
+        }
 
         if (ast.refExpr != null) {
             Type DT = ast.refExpr.type;
@@ -2477,6 +2483,7 @@ public class Emitter implements Visitor {
             String n = "tuplerand." + TT.index;
             emitN("\t%" + n + "  = alloca %tuple." + TT.index);
             index = handleBitCast(ast.T, "tuplerand." + TT.index, f);
+            ast.E.visit(this, o);
         } else {
             ast.E.visit(this, o);
             if (ast.E.isVarExpr()) {
@@ -2485,8 +2492,6 @@ public class Emitter implements Visitor {
                 index = f.localVarIndex - 2;
             }
         }
-
-        ast.E.visit(this, o);
 
         IdentsList IL = (IdentsList) ast.idents;
         int i = 0;

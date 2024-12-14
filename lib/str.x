@@ -24,7 +24,7 @@ export fn (mut a: i8*) equal(mut b: i8*) -> bool {
 	return *s1 == *s2;
 }
 
-export fn (mut src: i8*) duplicate(mut dest: i8*) -> void {
+export fn (mut src: i8*) copy(mut dest: i8*) -> void {
 	let mut s: i8* = src;
 	let mut d: i8* = dest;
 	while *s != '\0' {
@@ -46,6 +46,55 @@ export fn (mut s: i8*) contains(mut v: i8*) -> bool {
 		}
 	}
 	return false;
+}
+
+export fn (mut s: i8*) is_upper() -> bool {
+	let mut c: i8* = s;
+	while *c != '\0' {
+		let is_uppercase = *c >= 'A' && *c <= 'Z';
+		if !is_uppercase {
+			return false;
+		}
+		c += 1;
+	}
+	return true;
+}
+
+export fn (mut s: i8*) is_lower() -> bool {
+	let mut c: i8* = s;
+	while *c != '\0' {
+		let is_lowercase = *c >= 'a' && *c <= 'z';
+		if !is_lowercase {
+			return false;
+		}
+		c += 1;
+	}
+	return true;
+}
+
+export fn (mut s: i8*) is_alpha() -> bool {
+	let mut c: i8* = s;
+	while *c != '\0' {
+		let is_lowercase = *c >= 'a' && *c <= 'z';
+		let is_uppercase = *c >= 'A' && *c <= 'Z';
+		if !is_lowercase && !is_uppercase {
+			return false;
+		}
+		c += 1;
+	}
+	return true;
+}
+
+export fn (mut s: i8*) is_digit() -> bool {
+	let mut c: i8* = s;
+	while *c != '\0' {
+		let is_digit = *c >= '0' && *c <= '9';
+		if !is_digit {
+			return false;
+		}
+		c += 1;
+	}
+	return true;
 }
 
 // String struct and associated functions
@@ -83,7 +132,7 @@ export fn new_str(mut start: i8*) -> (str*, str_error) {
 	if new_str->s == null {
 		return (new_str, str_error { true, StrErrors.MEMORY_ERROR, "Memory error" });
 	}
-	start.duplicate(new_str->s);
+	start.copy(new_str->s);
 	new_str->len = start.len();
 	new_str->cap = STR_CAP;
 	return (new_str, str_error { false, StrErrors.NO_ERROR, "No error" });
@@ -94,13 +143,54 @@ export fn (v: str*) empty() -> bool {
 }
 
 export fn (v: str*) contains(s: str*) -> bool {
-	let mut c = v->s;
-	return c.contains(s->s);
+	return (v->s).contains(s->s);
 }
 
 export fn (v: str*) contains(s: i8*) -> bool {
-	let mut c = v->s;
-	return c.contains(s);
+	return (v->s).contains(s);
+}
+
+export fn (v: str*) len() -> i64 {
+	return v->len;
+}
+
+export fn (v: str*) equal(s: str*) -> bool {
+	return (v->s).equal(s->s);
+}
+
+export fn (mut v: str*) is_alpha() -> bool {
+	return (v->s).is_alpha();
+}
+
+export fn (mut v: str*) is_digit() -> bool {
+	return (v->s).is_digit();
+}
+
+export fn (mut v: str*) is_upper() -> bool {
+	return (v->s).is_upper();
+}
+
+export fn (mut v: str*) is_lower() -> bool {
+	return (v->s).is_lower();
+}
+
+export fn (mut v: str*) push(mut s: i8*) -> str_error {
+	let mut new_len = v.len() + s.len();
+	if new_len >= v->cap {
+		let mut new_cap = v->cap * 2;
+		let mut new_s: i8* = std::malloc(new_cap);
+		if new_s == null {
+			return str_error { true, StrErrors.MEMORY_ERROR, "Memory error" };
+		}
+		(v->s).copy(new_s);
+		std::free(v->s);
+		v->s = new_s;
+		v->cap = new_cap;
+	}
+	let mut addr: i8* = v->s + v->len;
+	s.copy(addr);
+	v->len = new_len;
+	return str_error { false, StrErrors.NO_ERROR, "No error" };
 }
 
 export fn print(v: str*) -> void {

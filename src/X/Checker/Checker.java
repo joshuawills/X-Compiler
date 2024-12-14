@@ -2572,6 +2572,8 @@ public class Checker implements Visitor {
         boolean isMethodAccess = ast.E.isDotExpr() && ((DotExpr) ast.E).E.isMethodAccessExpr();
         if (!(ast.E.isAssignmentExpr() || ast.E.isCallExpr() || isMethodAccess)) {
             System.out.println(ast.E);
+            System.out.println(ast.E.pos);
+            System.out.println(currentFileName);
             System.out.println("Should never be reached");
         }
 

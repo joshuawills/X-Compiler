@@ -331,7 +331,12 @@ public class LayoutVisitor implements Visitor {
 
     private DrawingTree layoutUnary(String name, AST child1) {
         if (debug) {
-            Position pos = child1.parent.pos;
+            Position pos;
+            if (child1.parent != null) {
+                pos = child1.parent.pos;
+            } else {
+                pos = new Position();
+            }
             name += " " + pos.lineStart
                     + "(" + pos.charStart + ").."
                     + pos.lineFinish + "("
@@ -346,7 +351,12 @@ public class LayoutVisitor implements Visitor {
 
     private DrawingTree layoutBinary(String name, AST child1, AST child2) {
         if (debug) {
-            Position pos = child1.parent.pos;
+            Position pos;
+            try {
+                pos = child1.parent.pos;
+            } catch (Exception e) {
+                pos = new Position();
+            }
             name += " " + pos.lineStart
                     + "(" + pos.charStart + ").."
                     + pos.lineFinish + "("
@@ -401,7 +411,12 @@ public class LayoutVisitor implements Visitor {
                                         AST child3, AST child4, AST child5) { 
         
         if (debug) {
-            Position pos = child1.parent.pos;
+            Position pos;
+            if (child1.parent != null) {
+                pos = child1.parent.pos;
+            } else {
+                pos = new Position();
+            }
             name += " " + pos.lineStart
                     + "(" + pos.charStart + ").."
                     + pos.lineFinish + "("
