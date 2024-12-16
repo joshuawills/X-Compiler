@@ -748,6 +748,11 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitUsingStmt(UsingStmt ast, Object o) {
+        print(indentString() + "UsingStmt");
+        return null;
+    }
+
     public Object visitNullExpr(NullExpr ast, Object o) {
         print(indentString() + "null");
         return null;

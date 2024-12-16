@@ -75,11 +75,11 @@ export fn println(v: bool) -> void {
 	}
 }
 
-export fn print(v: void*) -> void {
+export fn printaddr(v: void*) -> void {
 	@printf("%p", v);
 }
 
-export fn println(v: void*) -> void {
+export fn printaddrln(v: void*) -> void {
 	@printf("%p\n", v);
 }
 

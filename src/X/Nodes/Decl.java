@@ -14,6 +14,8 @@ public abstract class Decl extends AST {
     public boolean isMut;
     public boolean isExported = false;
 
+    public String filename;
+
     public Decl(Position pos, boolean isMut) {
         super(pos);
         this.isMut = isMut;

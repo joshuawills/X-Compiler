@@ -551,6 +551,10 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitUsingStmt(UsingStmt ast, Object o) {
+        return null;
+    }
+
     public Object visitNullExpr(NullExpr ast, Object o) {
         return null;
     }

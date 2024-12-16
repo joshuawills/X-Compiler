@@ -27,6 +27,7 @@ public class Parser {
     // evaluation
     private boolean inConditionalCheck = false;
     private boolean parsingImportStmts = true;
+    private boolean parsingUsingStmts = true;
 
     public Parser(ArrayList<Token> tokenStream, ErrorHandler handler) {
         this.tokenStream = tokenStream;
@@ -97,6 +98,7 @@ public class Parser {
     }
 
     private boolean inCommaSeparatedImport = false;
+    private boolean inCommaSeparatedUsing = false;
 
     private List parseDeclList() throws SyntaxError {
 
@@ -117,11 +119,24 @@ public class Parser {
             List dlAST2 = parseDeclList();
             finish(pos);
             return new DeclList(IS, dlAST2, pos);
+        } else if (inCommaSeparatedUsing) {
+            Ident I = parseIdent();
+            if (tryConsume(TokenType.COMMA)) {
+                inCommaSeparatedUsing = true;
+            } else {
+                inCommaSeparatedUsing = false;
+                match(TokenType.SEMI);
+            }
+            finish(pos);
+            UsingStmt US = new UsingStmt(I);
+            List dlAST2 = parseDeclList();
+            finish(pos);
+            return new DeclList(US, dlAST2, pos);
         }
 
-        if (currentToken.kind != TokenType.IMPORT) {
+        if (currentToken.kind != TokenType.IMPORT && currentToken.kind != TokenType.USING) {
             parsingImportStmts = false;
-        } 
+        }
         
         if (currentToken.kind == TokenType.EOF) {
             finish(pos);
@@ -155,7 +170,31 @@ public class Parser {
                 finish(pos);
                 dlAST = new DeclList(IS, dlAST2, pos);
             }
-        } 
+        }
+        else if (currentToken.kind == TokenType.USING && parsingUsingStmts) {
+            match(TokenType.USING);
+            if (currentToken.kind == TokenType.IDENT) {
+                Ident I = parseIdent();
+                finish(pos);
+                if (tryConsume(TokenType.COMMA)) {
+                    inCommaSeparatedUsing = true;
+                } else {
+                    match(TokenType.SEMI);
+                }
+                UsingStmt US = new UsingStmt(I);
+                List dlAST2 = parseDeclList();
+                finish(pos);
+                dlAST = new DeclList(US, dlAST2, pos);
+            } else {
+                finish(pos);
+                StringExpr SE = new StringExpr(parseStringLiteral(), pos);
+                match(TokenType.SEMI);
+                UsingStmt US = new UsingStmt(SE);
+                List dlAST2 = parseDeclList();
+                finish(pos);
+                dlAST = new DeclList(US, dlAST2, pos);
+            }
+        }
         else if (tryConsume(TokenType.FN)) {
             // Function
             acceptableModuleAccess = false;

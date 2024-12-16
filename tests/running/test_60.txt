@@ -1,0 +1,4 @@
+hello, world!
+21
+foo
+0.00

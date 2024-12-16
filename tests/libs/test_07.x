@@ -9,11 +9,11 @@ fn main() -> void {
 	io::println(c.contains(""));
 	io::println(c.contains("bob"));
 
-	let mut my_str, err = str::new_str("Hello, world!");
+	let mut my_str, err = str::Str("Hello, world!");
 	str::println(my_str);
 	io::println(my_str.empty());
 
-	let mut empty_str, _ = str::new_str("");
+	let mut empty_str, _ = str::Str("");
 	str::println(empty_str);
 	io::println(empty_str.empty());
 

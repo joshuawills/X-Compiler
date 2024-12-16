@@ -110,7 +110,11 @@ public class Checker implements Visitor {
         "*81: unknown method",
         "*82: no method found with provided parameter types",
         "*83: cannot pass immutable data type to mutable method",
-        "*84: duplicate method declarations"
+        "*84: duplicate method declarations",
+        "*85: function imported into namespace already exists",
+        "*86: global var imported into namespace already exists",
+        "*87: enum imported into namespace already exists",
+        "*88: struct imported into namespace already exists"
     };
 
     private final SymbolTable idTable;
@@ -233,7 +237,7 @@ public class Checker implements Visitor {
                         handler.reportError(errors[47] + ": %", message, E.I.pos);
                     }
 
-                    mainModule.addEnum(E);
+                    mainModule.addEnum(E, currentFileName);
                 }
                 case Struct S -> {
                     S.fileName = currentFileName;
@@ -260,7 +264,7 @@ public class Checker implements Visitor {
 
                     // header type is validated here
                     // potential subtypes that are user-created types will be validated when struct's initialised
-                    mainModule.addStruct(S);
+                    mainModule.addStruct(S, currentFileName);
                 }
                 default -> {}
             }
@@ -349,7 +353,7 @@ public class Checker implements Visitor {
                     }
 
                     F.setTypeDef();
-                    mainModule.addFunction(F);
+                    mainModule.addFunction(F, currentFileName);
                 }
                 default -> {}
                 
@@ -1483,7 +1487,7 @@ public class Checker implements Visitor {
             if (mainModule.varExists(ident.spelling)) {
                 handler.reportError(errors[2] + ": %", ident.spelling, ident.pos);
             }
-            mainModule.addGlobalVar((GlobalVar) decl);
+            mainModule.addGlobalVar((GlobalVar) decl, currentFileName);
         } else {
             idTable.insert(ident.spelling, decl.isMut, decl);
         }
@@ -1969,6 +1973,8 @@ public class Checker implements Visitor {
                 handler.reportError(errors[10] + ": %", ast.I.spelling, ast.I.pos);
             } else if (mainModule.functionWithNameExists(ast.I.spelling)) {
                 handler.reportError(errors[43] + ": %", ast.I.spelling, ast.I.pos);
+            } else if (mainModule.functionExistsNotExported(ast.I.spelling, ast.AL)) {
+                handler.reportError(errors[64] + ": %", ast.I.spelling, ast.I.pos);
             } else {
                 handler.reportError(errors[4] + ": %", ast.I.spelling, ast.I.pos);
             }
@@ -2767,6 +2773,107 @@ public class Checker implements Visitor {
         return null;
     }
 
+    public Object visitUsingStmt(UsingStmt ast, Object o) {
+        Path finalPath;
+        if (!ast.isSTLImport) {
+            Path basePath = Paths.get(currentFileName).resolve(Paths.get("..")).normalize();
+            Path relativePath = Paths.get(ast.path.SL.spelling);
+            finalPath = basePath.resolve(relativePath).normalize();
+        } else {
+            Path basePath = modules.libPath;
+            Path relativePath = Paths.get(ast.ident.spelling + ".x");
+            finalPath = basePath.resolve(relativePath).normalize();
+        }
+        String fileName = finalPath.toString();
+        File file = new File(fileName);
+        if (!file.exists() || (file.exists() && file.isDirectory())) {
+            if (ast.isSTLImport) {
+                handler.reportError(errors[79] + ": %", "'" + ast.ident.spelling + "'", ast.ident.pos);
+            } else {
+                handler.reportError(errors[61] + ": %", "'" + ast.path.SL.spelling + "'", ast.path.SL.pos);
+            }
+            return null;
+        }
+
+        if (mainModule.importedFileExists(fileName)) {
+            handler.reportError(errors[62] + ": %", "'" + ast.path.SL.spelling + "'", ast.path.SL.pos);
+            return null;
+        }
+
+        if (modules.moduleExists(fileName)) {
+            // We've already checked this module, but we need to load it into the current module
+            Module M = modules.getModule(fileName);
+            CheckDuplicatesInModule(M, ast, fileName); 
+            return null;
+        }
+
+        // We need to actually analyse the module
+        Module M = AnalyseModule(fileName);
+        CheckDuplicatesInModule(M, ast, fileName);
+        return null;
+    }
+    
+    private Module AnalyseModule(String fileName) {
+        ErrorHandler newHandler = new ErrorHandler(fileName, handler.isQuiet);
+        Lex lexer = new Lex(new MyFile(fileName));
+        ArrayList<Token> tokens = lexer.getTokens();
+        Parser parser = new Parser(tokens, newHandler);
+        AST currentAST = null;
+        try {
+            currentAST = parser.parseProgram();
+        } catch (SyntaxError s) {
+            System.exit(1);
+        }
+
+        Checker checkerInside = new Checker(newHandler);
+        checkerInside.check(currentAST, fileName, false);
+
+        Module referencedModule = modules.getModule(fileName);
+        return referencedModule;
+
+    }
+
+    private void CheckDuplicatesInModule(Module M, UsingStmt ast, String filename) {
+
+        String moduleName;
+        if (ast.path != null) {
+            moduleName = ast.path.SL.spelling;
+        } else {
+            moduleName = ast.ident.spelling;
+        }
+
+        for (Function F : M.getFunctions()) {
+            if (mainModule.functionExists(F.I.spelling, F.PL, true)) {
+                Function F2 = mainModule.getFunction(F.I.spelling, F.PL, true);
+                String message = "function '" + F.I.spelling + "' from module '" + moduleName + "'. Existing declaration below.";
+                mainModule.thisHandler.reportError(errors[85] + ": %", message, F2.I.pos);
+            }
+        }
+        for (GlobalVar G : M.getVars().values()) {
+            if (mainModule.varExists(G.I.spelling, true)) {
+                GlobalVar G1 = mainModule.getVar(G.I.spelling, true);
+                mainModule.thisHandler.reportError(errors[86] + ": %", "variable '" + G.I.spelling + "' from module '" + moduleName + "'. Existing declaration below.", G1.I.pos);
+            }
+        }
+
+        for (Enum E : M.getEnums().values()) {
+            if (mainModule.enumExists(E.I.spelling, true)) {
+                Enum E1 = mainModule.getEnum(E.I.spelling, true);
+                mainModule.thisHandler.reportError(errors[87] + ": %", "enum '" + E.I.spelling + "' from module '" + moduleName + "'. Existing declaration below.", E1.I.pos);
+            }
+        }
+
+        for (Struct S: M.getStructs().values()) {
+            if (mainModule.structExists(S.I.spelling, true)) {
+                Struct S2 = mainModule.getStruct(S.I.spelling, true);
+                String message = "struct '" + S.I.spelling + "' from module '" + moduleName + "'";
+                mainModule.thisHandler.reportError(errors[88] + ": %", message, S2.I.pos);
+            }
+        }
+
+        mainModule.addUsingFile(M, filename);
+    }
+
     public Object visitImportStmt(ImportStmt ast, Object o) {
         Path finalPath;
         if (!ast.isSTLImport) {
@@ -2799,24 +2906,8 @@ public class Checker implements Visitor {
             return null;
         }
 
-        ErrorHandler newHandler = new ErrorHandler(fileName, handler.isQuiet);
-        Lex lexer = new Lex(new MyFile(fileName));
-        ArrayList<Token> tokens = lexer.getTokens();
-        Parser parser = new Parser(tokens, newHandler);
-        AST currentAST = null;
-        try {
-            currentAST = parser.parseProgram();
-        } catch (SyntaxError s) {
-            System.exit(1);
-        }
-
-        Checker checkerInside = new Checker(newHandler);
-        checkerInside.check(currentAST, fileName, false);
-
-        Module referencedModule = modules.getModule(fileName);
+        Module referencedModule = AnalyseModule(fileName);
         mainModule.addImportedFile(referencedModule, ast.ident.spelling);
-
-
         return null;
     }
 

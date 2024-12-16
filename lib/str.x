@@ -123,7 +123,7 @@ export fn (mut v: str*) free() -> void {
 	std::free(v);
 }
 
-export fn new_str(mut start: i8*) -> (str*, str_error) {
+export fn Str(mut start: i8*) -> (str*, str_error) {
     let mut new_str: str* = std::malloc(size(str));
     if new_str == null {
         return (new_str, str_error { true, StrErrors.MEMORY_ERROR, "Memory error" });

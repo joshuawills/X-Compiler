@@ -672,7 +672,15 @@ public class LayoutVisitor implements Visitor {
         if (ast.isSTLImport) {
             return layoutUnary("ImportStmt", ast.ident);
         }
-        return layoutUnary("ImportStmt", ast.ident);
+        return layoutBinary("ImportStmt", ast.ident, ast.path);
+    }
+
+    @Override
+    public Object visitUsingStmt(UsingStmt ast, Object o) {
+        if (ast.isSTLImport) {
+            return layoutUnary("UsingStmt", ast.ident);
+        }
+        return layoutBinary("UsingStmt", ast.ident, ast.path);
     }
 
     public Object visitNullExpr(NullExpr ast, Object o) {

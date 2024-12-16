@@ -198,6 +198,12 @@
 
 - able to map methods directlyt to raw expressions
 
+*16.12.24*
+
+- using statement working
+  - TODO: update the vs code extension, the asset and the website
+  - write some new examples
+
 # TODO
 
 - in-compilation expression everywhere possible

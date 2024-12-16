@@ -175,6 +175,8 @@ public interface Visitor {
 
     Object visitImportStmt(ImportStmt ast, Object o);
 
+    Object visitUsingStmt(UsingStmt ast, Object o);
+
     Object visitTypeList(TypeList ast, Object o);
 
     Object visitEmptyTypeList(EmptyTypeList ast, Object o);

@@ -4,8 +4,8 @@ import io, std, math, str;
 
 fn main() -> void {
 
-	let mut str1, _ = str::new_str("Hello, world!");
-	let mut str2, _ = str::new_str("world");
+	let mut str1, _ = str::Str("Hello, world!");
+	let mut str2, _ = str::Str("world");
 
 	io::println(str1.len());
 	io::println(str2.len());
@@ -18,11 +18,11 @@ fn main() -> void {
 	io::println(str1.is_digit());
 	io::println("1234".is_digit());
 
-	let mut str3, _ = str::new_str("HELLO");
+	let mut str3, _ = str::Str("HELLO");
 	io::println(str3.is_upper());
 	io::println("HELLO".is_upper());
 	
-	let mut str4, _ = str::new_str("hello");
+	let mut str4, _ = str::Str("hello");
 	io::println(str4.is_lower());
 	io::println("hello".is_lower());
 	io::println(" hello".is_lower());

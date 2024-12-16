@@ -1,6 +1,7 @@
 // Can't access function that is not exported
 
 import "standard.x" as std;
+using "foo.x";
 
 fn main() -> void {
 
@@ -9,5 +10,7 @@ fn main() -> void {
     let y = std::what.val;
 
     let z = std::MyBoolean.TRUE;
+
+    say_hello();
 
 }

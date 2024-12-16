@@ -20,8 +20,6 @@ public class Emitter implements Visitor {
 
     public boolean inCallOrMethodAccessExpr = false;
 
-    String formattedCurrentPath;
-    boolean inMainModule = true;
     boolean inMainFunction = false;
 
     public Emitter(String outputName) {
@@ -39,7 +37,7 @@ public class Emitter implements Visitor {
     public final void gen() {
 
         modules = AllModules.getInstance();
-        ArrayList<Module> mainModule = modules.getModules();
+        ArrayList<Module> allModules = modules.getModules();
 
         emitN("declare i32 @scanf(i8*, ...)");
 
@@ -76,38 +74,31 @@ public class Emitter implements Visitor {
 
 
         // Visiting all the structs
-        for (Module m: mainModule) {
-            formattedCurrentPath = m.fileName.replace("/", ".");
+        for (Module m: allModules) {
             for (Struct s: m.getStructs().values()) {
                 s.visit(this, null);
             }
         }
 
         // Visiting all the global vars
-        for (Module m: mainModule) {
-            formattedCurrentPath = m.fileName.replace("/", ".");
+        for (Module m: allModules) {
             for (GlobalVar v: m.getVars().values()) {
                 v.visit(this, null);
             }
         }
         
         // Visiting all the functions
-        inMainModule = true;
-        for (Module m: mainModule) {
+        for (Module m: allModules) {
             currentModule = m;
-            formattedCurrentPath = m.fileName.replace("/", ".");
+
             for (Function f: m.getFunctions()) {
                 f.visit(this, null);
             }
-            inMainModule = false;
         }
 
         // Visiting all the methods
-        inMainModule = true;
         for (Method m: modules.getMethods()) {
             currentModule = modules.getModule(m.filename);
-            formattedCurrentPath = m.filename.replace("/", ".");
-            inMainModule = currentModule.isMainModule();
             m.visit(this, null);
         }
 
@@ -140,7 +131,8 @@ public class Emitter implements Visitor {
         }
 
         emit(" @");
-        emit(formattedCurrentPath);
+        String path = ast.filename.replace("/", ".");
+        emit(path);
         emit(ast.I.spelling + "." + ast.attachedStruct.T.getMini() + "." + ast.TypeDef);
         
         emit("(");
@@ -247,11 +239,14 @@ public class Emitter implements Visitor {
         } else {
             ast.T.visit(this, f);
         }
-        if (inMainModule) {
-            emit(" @" + ast.I.spelling);
+
+        String path = ast.filename.replace("/", ".");
+        if (ast.I.spelling.equals("main")) {
+            emit(" @main");
         } else {
-            emit(" @" + formattedCurrentPath + ast.I.spelling);
+            emit(" @" + path + ast.I.spelling);
         }
+
         if (!ast.I.spelling.equals("main")) {
             emit("." + ast.TypeDef);
         }
@@ -1107,12 +1102,10 @@ public class Emitter implements Visitor {
             emit(" @" + path + ast.I.spelling + "." + ast.TypeDef);
         }  else if (ast.isLibC) {
             emit(" @" + ast.I.spelling);
-        } else if (!inMainModule) {
-            emit(" @" + formattedCurrentPath + ast.I.spelling + "." + ast.TypeDef);
-        } else {
-            emit(" @" + ast.I.spelling + "." + ast.TypeDef);
-        }
-
+        } else  {
+            String path = functionRef.filename.replace("/", ".");
+            emit(" @" + path + ast.I.spelling + "." + ast.TypeDef);
+        } 
         emit("(");
 
         if (functionRef.T.isStruct() || functionRef.T.isTuple()) {
@@ -1603,7 +1596,8 @@ public class Emitter implements Visitor {
             return null;
         }
         String s;
-        s = formattedCurrentPath + "." + ast.I.spelling;
+        String path = ast.fileName.replace("/", ".");
+        s = path + "." + ast.I.spelling;
         emit("%struct." + s + " = type { ");
         ast.SL.visit(this, o);
         emitN(" }");
@@ -2341,6 +2335,10 @@ public class Emitter implements Visitor {
     }
 
     public Object visitImportStmt(ImportStmt ast, Object o) {
+        return null;
+    }
+
+    public Object visitUsingStmt(UsingStmt ast, Object o) {
         return null;
     }
 

@@ -17,10 +17,14 @@ public class Module extends AST {
     private HashMap<String, Struct> structs = new HashMap<>();
     private HashMap<String, Module> importedFiles = new HashMap<>();
 
+    private HashMap<String, Module> usingFiles = new HashMap<>();
+
     private HashMap<String, Module> aliasToModule = new HashMap<>();
     private boolean isMainModule = false;
     public ErrorHandler thisHandler;
-    
+
+    public boolean isUsed = false;
+
     public Module(
         String fileNameV,
         HashMap<String, Function> functionsV,
@@ -59,81 +63,250 @@ public class Module extends AST {
     public boolean importedFileExists(String v) {
         return importedFiles.containsKey(v);
     }
+
+    public void addUsingFile(Module m, String filename) {
+        m.isUsed = true;
+        usingFiles.put(filename, m);
+    }
+
+    public void usingFileExists(String v) {
+        usingFiles.containsKey(v);
+    }
     
-    public void addEnum(Enum e) {
+    public void addEnum(Enum e, String filename) {
+        e.filename = filename;
         enums.put(e.I.spelling, e);
     }
 
-    public boolean enumExists(String v) {
-        return enums.containsKey(v);
+    public boolean enumExists(String v, boolean topLevel) {
+        if (enums.containsKey(v)) {
+            if (topLevel || isMainModule || enums.get(v).isExported) {
+                return true;
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.enumExists(v, false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
-    public void addStruct(Struct s) {
+    public boolean enumExists(String v) {
+        return enumExists(v, true);
+    }
+
+    public void addStruct(Struct s, String filename) {
+        s.filename = filename;
         structs.put(s.I.spelling, s);
     }
 
-    public boolean structExists(String v) {
-        return structs.containsKey(v);
+    public boolean structExists(String v, boolean topLevel) {
+        if (structs.containsKey(v)) {
+            if (topLevel || isMainModule || structs.get(v).isExported) {
+                return true;
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.structExists(v, false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
-    public void addGlobalVar(GlobalVar v) {
+    public boolean structExists(String v) {
+        return structExists(v, true);
+    }
+
+    public void addGlobalVar(GlobalVar v, String filename) {
+        v.filename = filename;
         vars.put(v.I.spelling, v);
     }
 
-    public void addFunction(Function f) {
+    public void addFunction(Function f, String filename) {
+        f.filename = filename;
         functions.add(f);
     }
 
-    public boolean entityExists(String v) {
-        return vars.containsKey(v) || functionWithNameExists(v)
-            || enums.containsKey(v) || structs.containsKey(v);
+    public boolean varExists(String v, boolean topLevel) {
+        if (vars.containsKey(v)) {
+            if (topLevel || isMainModule || vars.get(v).isExported) {
+                return true;
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.varExists(v, false)) {
+                    return true;
+                }
+            }
+        }
+       return false;
     }
 
     public boolean varExists(String v) {
-        return vars.containsKey(v);
+        return varExists(v, true);
     }
 
-    public GlobalVar getVar(String v) {
-        return vars.get(v);
-    }
-
-    public Enum getEnum(String v) {
-        return enums.get(v);
-    }
-
-    public Struct getStruct(String v) {
-        return structs.get(v);
-    }
-
-    public boolean functionExists(String v, List PL) {
-        for (Function f: functions) {
-            if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
-                return true;
+    public GlobalVar getVar(String v, boolean topLevel) {
+        if (vars.containsKey(v)) {
+            if (topLevel || isMainModule || vars.get(v).isExported) {
+                return vars.get(v);
             }
         }
-        return false;
-    }
 
-    public boolean functionWithNameExists(String v) {
-        for (Function f: functions) {
-            if (f.I.spelling.equals(v)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    public Function getFunction(String v, List PL) {
-        for (Function f: functions) {
-            if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
-                return f;
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.varExists(v)) {
+                    return m.getVar(v, false);
+                }
             }
         }
         return null;
     }
 
-  
+    public GlobalVar getVar(String v) {
+        return getVar(v, true);
+    } 
+
+    public Enum getEnum(String v, boolean topLevel) {
+        if (enums.containsKey(v)) {
+            if (topLevel || isMainModule || enums.get(v).isExported) {
+                return enums.get(v);
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.enumExists(v)) {
+                    return m.getEnum(v, false);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public Enum getEnum(String v) {
+        return getEnum(v, true);
+    }
+
+    public Struct getStruct(String v, boolean topLevel) {
+        if (structs.containsKey(v)) {
+            if (topLevel || isMainModule || structs.get(v).isExported) {
+                return structs.get(v);
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.structExists(v)) {
+                    return m.getStruct(v, false);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public Struct getStruct(String v) {
+        return getStruct(v, true);
+    }
+
+    public boolean functionExists(String v, List PL, boolean topLevel) {
+        for (Function f: functions) {
+            if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
+                if (topLevel || isMainModule || f.isExported) {
+                    return true;
+                }
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.functionExists(v, PL, false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean functionExists(String v, List PL) {
+        return functionExists(v, PL, true);
+    }
+
+    public boolean functionExistsNotExported(String v, List PL) {
+        for (Module M: usingFiles.values()) {
+            for (Function f: M.functions) {
+                if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
+                    if (!f.isExported) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean functionWithNameExists(String v, boolean topLevel) {
+        for (Function f: functions) {
+            if (f.I.spelling.equals(v)) {
+                if (topLevel || isMainModule || f.isExported) {
+                    return true;
+                }
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.functionWithNameExists(v, false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean functionWithNameExists(String v) {
+        return functionWithNameExists(v, true);
+    }
+
+
+    public Function getFunction(String v, List PL, boolean topLevel) {
+        for (Function f: functions) {
+            if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
+                if (topLevel || isMainModule || f.isExported) {
+                    return f;
+                }
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.functionExists(v, PL, false)) {
+                    return m.getFunction(v, PL, false);
+                }
+            }
+        }
+        return null;
+    }
+
+    public Function getFunction(String v, List PL) {
+        return getFunction(v, PL, true);
+    }
 
     public HashMap<String, Struct> getStructs() {
         return structs;
