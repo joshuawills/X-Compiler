@@ -201,8 +201,10 @@
 *16.12.24*
 
 - using statement working
-  - TODO: update the vs code extension, the asset and the website
-  - write some new examples
+
+*18.12.24*
+
+- basic documentation updates for using keyword
 
 # TODO
 

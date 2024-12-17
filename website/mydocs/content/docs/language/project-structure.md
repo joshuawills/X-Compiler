@@ -3,10 +3,10 @@ title: "Project Structure"
 weight: 1
 ---
 
-A program is composed primarily of import statements, global variables, functions and type declarations. In the below
+A program is composed primarily of import/using statements, global variables, functions and type declarations. In the below
 example, you can see a high level summary of how all these entities are structured.
 
-All **import statements** must occur at the top of the file. All of the exported entities in the 
+All **import statements** and **using statements** must occur at the top of the file. All of the exported entities in the 
 provided file path are loaded into the specified namespace, and can be later accessed with the 
 program using the double colon notation.
 
@@ -34,7 +34,7 @@ import "../myLib/math.x" as Math;
 // This shorthand can be specified for standard libraries
 // The path to standard library can be specified with the 'X_LIB_PATH' env 
 // variable, but defaults to "$HOME/.x-lib/" 
-import std, io, math;
+using std, io, math;
 
 export enum Boolean -> {
     TRUE, FALSE
