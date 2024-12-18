@@ -114,7 +114,10 @@ public class Checker implements Visitor {
         "*85: function imported into namespace already exists",
         "*86: global var imported into namespace already exists",
         "*87: enum imported into namespace already exists",
-        "*88: struct imported into namespace already exists"
+        "*88: struct imported into namespace already exists",
+        "*89: trait exists with same name",
+        "*90: multiple methods in trait with the same name",
+        "*91: empty trait"
     };
 
     private final SymbolTable idTable;
@@ -304,6 +307,33 @@ public class Checker implements Visitor {
                         }
                     }
                 }
+                case Trait T -> {
+                    T.filename = currentFileName;
+                    if (modules.traitExists(T.I.spelling)) {
+                        Trait T2 = modules.getTrait(T.I.spelling);
+                        Position p = T2.pos;
+                        String f = T2.filename;
+                        String message = T.I.spelling + ". Also found at " + p + "in " + f;
+                        handler.reportError(errors[89] + ": %", message, T.I.pos);
+                    } else {
+                        modules.addTrait(T);
+                        // Make sure the types are valid for all the functions
+                        T.TL.visit(this, null);
+
+                        if (T.TL.isEmptyTraitList()) {
+                            handler.reportMinorError(errors[91] + ": %", T.I.spelling, T.pos);
+                        }
+
+                        // ensure there are no duplicates        
+                        ArrayList<String> duplicates = T.findDuplicates();
+                        if (!duplicates.isEmpty()) {
+                            String message = String.join(", ", duplicates) + " in trait " + T.I.spelling;
+                            handler.reportError(errors[90] + ": %", message, T.pos);
+                        }
+
+                    }
+
+                }
                 case Method M -> {
                     List P = M.PL;
 
@@ -327,7 +357,7 @@ public class Checker implements Visitor {
                     if (modules.methodExists(M.I.spelling, M.attachedStruct.T, M.PL)) {
                         handler.reportError(errors[84] + ": %", M.I.spelling, M.I.pos);
                     }
-                    modules.addMethod(M);
+                        modules.addMethod(M);
                 }
                 case Function F -> {
                     List P = F.PL;
@@ -3161,22 +3191,22 @@ public class Checker implements Visitor {
     }
 
     public Object visitTrait(Trait ast, Object o) {
-        System.out.println("TRAIT CHECKER");
         return null;
     }
 
     public Object visitTraitFunction(TraitFunction ast, Object o) {
-        System.out.println("TRAIT FUNCTION CHECKER");
+        ast.PL.visit(this, o);
+        checkMurking(ast);
         return null;
     }
 
     public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
-        System.out.println("EMPTY TRAIT LIST CHECKER");
         return null;
     }
 
     public Object visitTraitList(TraitList ast, Object o) {
-        System.out.println("TRAIT LIST CHECKER");
+        ast.TF.visit(this, o);
+        ast.L.visit(this, o);
         return null;
     }
 

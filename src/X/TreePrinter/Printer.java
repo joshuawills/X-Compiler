@@ -67,7 +67,7 @@ public class Printer implements Visitor {
     public Object visitTrait(Trait ast, Object o) {
         print(indentString() + "Trait");
         ++indent;
-        ast.name.visit(this, o);
+        ast.I.visit(this, o);
         ast.TL.visit(this, o);
         --indent;
         return null;

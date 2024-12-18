@@ -328,13 +328,15 @@ public class Parser {
     private TraitFunction parseTraitFunction() throws SyntaxError {
         Position pos = new Position();
         start(pos);
+        boolean isMut = tryConsume(TokenType.MUT);
+        boolean isPointer = tryConsume(TokenType.STAR);
         Ident I = parseIdent();
         List PL = parseParaList();
         match(TokenType.ARROW);
         Type T = parseType();
         match(TokenType.SEMI);
         finish(pos);
-        return new TraitFunction(T, I, PL, pos);
+        return new TraitFunction(T, I, PL, pos, isMut, isPointer);
     }
 
     private Stmt parseCompoundStmt() throws SyntaxError {

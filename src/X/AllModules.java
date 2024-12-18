@@ -9,6 +9,7 @@ import X.Nodes.GlobalVar;
 import X.Nodes.List;
 import X.Nodes.Method;
 import X.Nodes.Module;
+import X.Nodes.Trait;
 import X.Nodes.TupleType;
 import X.Nodes.Type;
 
@@ -21,6 +22,8 @@ public class AllModules {
     private ArrayList<Module> modules = new ArrayList<Module>();
 
     private ArrayList<Method> methods = new ArrayList<>();
+
+    private ArrayList<Trait> traits = new ArrayList<>();
 
     private static AllModules instance = null;
 
@@ -58,6 +61,10 @@ public class AllModules {
 
     public void addMethod(Method m) {
         methods.add(m);
+    }
+
+    public void addTrait(Trait t) {
+        traits.add(t);
     }
 
     public void addTupleType(TupleType tupleType) {
@@ -164,6 +171,15 @@ public class AllModules {
         return false;
     }
 
+    public boolean traitExists(String v) {
+        for (Trait t: traits) {
+            if (t.I.spelling.equals(v)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean methodWithNameExists(String v, Type T) {
         for (Method m: methods) {
             if (m.I.spelling.equals(v) && m.attachedStruct.T.equals(T)) {
@@ -182,8 +198,21 @@ public class AllModules {
         return null;
     }
 
+    public Trait getTrait(String v) {
+        for (Trait t: traits) {
+            if (t.I.spelling.equals(v)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
     public ArrayList<Method> getMethods() {
         return methods;
+    }
+
+    public ArrayList<Trait> getTraits() {
+        return traits;
     }
     
 }

@@ -756,7 +756,7 @@ public class LayoutVisitor implements Visitor {
     }
 
     public Object visitTrait(Trait ast, Object o) {
-        return layoutBinary("Trait", ast.name, ast.TL);
+        return layoutBinary("Trait", ast.I, ast.TL);
     }
 
     public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {

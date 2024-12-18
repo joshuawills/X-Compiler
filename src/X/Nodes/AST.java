@@ -168,4 +168,12 @@ public abstract class AST {
         return this instanceof MethodAccessExpr;
     }
 
+    public boolean isEmptyTraitList() {
+        return this instanceof EmptyTraitList;
+    }
+
+    public boolean isTrait() {
+        return this instanceof Trait;
+    }
+
 }
