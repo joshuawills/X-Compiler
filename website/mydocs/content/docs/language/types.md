@@ -3,7 +3,7 @@ title: "Types"
 weight: 1
 ---
 
-At the moment, X supports several different base types. They are `i64`, `i32`, `i8`, `f32`, `f64` and `bool`.
+At the moment, X supports several different base types. They are `i64`, `i32`, `i8`, `u64`, `u32`, `u8`, `f32`, `f64` and `bool`.
 Implicit type casting will occur from integers to floats, and between integers and characters. Any 
 other attempt to assign one type to another will currently fail. Statically-sized arrays are also supported, as well as enums. Some examples of these types is shown below.
 

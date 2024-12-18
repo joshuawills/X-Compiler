@@ -234,6 +234,18 @@ public class LayoutVisitor implements Visitor {
         return layoutUnary("I32Expr", ast.IL);
     }
 
+    public Object visitU8Expr(U8Expr ast, Object obj) {
+        return layoutUnary("U8Expr", ast.IL);
+    }
+
+    public Object visitU32Expr(U32Expr ast, Object obj) {
+        return layoutUnary("U32Expr", ast.IL);
+    }
+
+    public Object visitU64Expr(U64Expr ast, Object obj) {
+        return layoutUnary("U64Expr", ast.IL);
+    }
+
     public Object visitIntExpr(IntExpr ast, Object obj) {
         return layoutUnary("IntExpr", ast.IL);
     }
@@ -271,6 +283,18 @@ public class LayoutVisitor implements Visitor {
 
     public Object visitI32Type(I32Type ast, Object obj) {
         return layoutNullary("i32");
+    }
+
+    public Object visitU8Type(U8Type ast, Object obj) {
+        return layoutNullary("u8");
+    }
+
+    public Object visitU32Type(U32Type ast, Object obj) {
+        return layoutNullary("u32");
+    }
+
+    public Object visitU64Type(U64Type ast, Object obj) {
+        return layoutNullary("u64");
     }
 
     public Object visitVoidType(VoidType ast, Object obj) {

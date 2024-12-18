@@ -205,6 +205,7 @@
 *18.12.24*
 
 - basic documentation updates for using keyword
+- new unsigned types 'u8', u32' and 'u64'
 
 # TODO
 

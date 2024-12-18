@@ -644,23 +644,23 @@ public class Emitter implements Visitor {
 
     public String opToCommand(String input) {
         return switch (input)  {
-            case "i8+" ->  "add i8";
-            case "i32+" ->  "add i32";
-            case "i64+" ->  "add i64";
+            case "i8+", "u8+" ->  "add i8";
+            case "i32+", "u16+" ->  "add i32";
+            case "i64+", "u64+" ->  "add i64";
 
             case "f32+" ->  "fadd float";
             case "f64+" ->  "fadd double";
 
-            case "i8-" ->  "sub i8";
-            case "i32-" ->  "sub i32";
-            case "i64-" ->  "sub i64";
+            case "i8-", "u8-" ->  "sub i8";
+            case "i32-", "u32-" ->  "sub i32";
+            case "i64-", "u64-" ->  "sub i64";
 
             case "f32-" ->  "fsub float";
             case "f64-" ->  "fsub double";
 
-            case "i8*" -> "mul i8";
-            case "i32*" -> "mul i32";
-            case "i64*" -> "mul i64";
+            case "i8*", "u8*" -> "mul i8";
+            case "i32*", "u32*" -> "mul i32";
+            case "i64*", "u64*" -> "mul i64";
 
             case "f32*" -> "fmul float";
             case "f64*" -> "fmul double";
@@ -669,16 +669,24 @@ public class Emitter implements Visitor {
             case "i32%" -> "srem i32";
             case "i64%", "ii%" -> "srem i64";
 
+            case "u8%" -> "urem i8";
+            case "u32%" -> "urem i32";
+            case "u64%" -> "urem i64";
+
             case "i8/" -> "sdiv i8";
             case "i32/" -> "sdiv i32";
             case "i64/" -> "sdiv i64";
 
+            case "u8/" -> "udiv i8";
+            case "u32/" -> "udiv i32";
+            case "u64/" -> "udiv i64";
+
             case "f32/" -> "fdiv float";
             case "f64/" -> "fdiv double";
 
-            case "i8==" -> "icmp eq i8";
-            case "i32==" -> "icmp eq i32";
-            case "i64==" -> "icmp eq i64";
+            case "i8==", "u8==" -> "icmp eq i8";
+            case "i32==", "u32==" -> "icmp eq i32";
+            case "i64==", "u64==" -> "icmp eq i64";
 
             case "f32==" -> "fcmp oeq float";
             case "f64==" -> "fcmp oeq double";
@@ -686,43 +694,43 @@ public class Emitter implements Visitor {
             case "b==" -> "icmp eq i1";
             case "b!=" -> "icmp ne i1";
 
-            case "i8!=" -> "icmp ne i8";
-            case "i32!=" -> "icmp ne i32";
-            case "i64!=" -> "icmp ne i64";
+            case "i8!=", "u8!=" -> "icmp ne i8";
+            case "i32!=", "u32!=" -> "icmp ne i32";
+            case "i64!=", "u64!=" -> "icmp ne i64";
 
             case "f32!=" -> "fcmp one float";
             case "f64!=" -> "fcmp one double";
 
-            case "i8<=" -> "icmp sle i8";
-            case "i32<=" -> "icmp sle i32";
-            case "i64<=" -> "icmp sle i64";
+            case "i8<=", "u8<=" -> "icmp sle i8";
+            case "i32<=", "u32<=" -> "icmp sle i32";
+            case "i64<=", "u64<=" -> "icmp sle i64";
 
             case "f32<=" -> "fcmp ole float";
             case "f64<=" -> "fcmp ole double";
             
             case "p<=" -> "icmp ule ptr";
 
-            case "i8<" -> "icmp slt i8";
-            case "i32<" -> "icmp slt i32";
-            case "i64<" -> "icmp slt i64";
+            case "i8<", "u8<" -> "icmp slt i8";
+            case "i32<", "u32<" -> "icmp slt i32";
+            case "i64<", "u64<" -> "icmp slt i64";
 
             case "f32<" -> "fcmp olt float";
             case "f64<" -> "fcmp olt double";
 
             case "p<" -> "icmp ult ptr";
 
-            case "i8>" -> "icmp sgt i8";
-            case "i32>" -> "icmp sgt i32";
-            case "i64>" -> "icmp sgt i64";
+            case "i8>", "u8>" -> "icmp sgt i8";
+            case "i32>", "u32>" -> "icmp sgt i32";
+            case "i64>", "u64>" -> "icmp sgt i64";
 
             case "f32>" -> "fcmp ogt float";
             case "f64>" -> "fcmp ogt double";
 
             case "p>" -> "icmp ugt ptr";
 
-            case "i8>=" -> "icmp sge i8";
-            case "i32>=" -> "icmp sge i32";
-            case "i64>=" -> "icmp sge i64";
+            case "i8>=", "u8>=" -> "icmp sge i8";
+            case "i32>=", "u32>=" -> "icmp sge i32";
+            case "i64>=", "u64>=" -> "icmp sge i64";
 
             case "f32>=" -> "fcmp oge float";
             case "f64>=" -> "fcmp oge double";
@@ -901,6 +909,33 @@ public class Emitter implements Visitor {
         String value = ast.IL.spelling;
         int num = f.getNewIndex();
         emitN("\t%" + num + " = add i32 0, " + value);
+        ast.tempIndex = num;
+        return null;
+    }
+
+    public Object visitU8Expr(U8Expr ast, Object o) {
+        Frame f = (Frame) o;
+        String value = ast.IL.spelling;
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = add i8 0, " + value);
+        ast.tempIndex = num;
+        return null;
+    }
+
+    public Object visitU32Expr(U32Expr ast, Object o) {
+        Frame f = (Frame) o;
+        String value = ast.IL.spelling;
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = add i32 0, " + value);
+        ast.tempIndex = num;
+        return null;
+    }
+
+    public Object visitU64Expr(U64Expr ast, Object o) {
+        Frame f = (Frame) o;
+        String value = ast.IL.spelling;
+        int num = f.getNewIndex();
+        emitN("\t%" + num + " = add i64 0, " + value);
         ast.tempIndex = num;
         return null;
     }
@@ -1458,6 +1493,21 @@ public class Emitter implements Visitor {
 
     public Object visitI8Type(I8Type ast, Object o) {
         emit(LLVM.I8_TYPE);
+        return null;
+    }
+
+    public Object visitU8Type(U8Type ast, Object o) {
+        emit(LLVM.I8_TYPE);
+        return null;
+    }
+
+    public Object visitU32Type(U32Type ast, Object o) {
+        emit(LLVM.I32_TYPE);
+        return null;
+    }
+
+    public Object visitU64Type(U64Type ast, Object o) {
+        emit(LLVM.I64_TYPE);
         return null;
     }
 

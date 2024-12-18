@@ -19,16 +19,31 @@ public abstract class Type extends AST {
     }
 
     public boolean isNumeric() {
-        return (this instanceof I8Type || this instanceof I32Type || this instanceof I64Type || this instanceof F32Type
-         || this instanceof F64Type);
+        return isSignedInteger() || isFloat() || isUnsignedInteger();
     }
 
-    public boolean isInteger() {
-        return (this instanceof I8Type || this instanceof I32Type || this instanceof I64Type);
+    public boolean isSignedInteger() {
+        return this instanceof I8Type || this instanceof I32Type || this instanceof I64Type;
+    }
+
+    public boolean isUnsignedInteger() {
+        return this instanceof U8Type || this instanceof U32Type || this instanceof U64Type;
     }
 
     public boolean isFloat() {
         return (this instanceof F32Type || this instanceof F64Type);
+    }
+
+    public boolean isU8() {
+        return this instanceof U8Type;
+    }
+
+    public boolean isU32() {
+        return this instanceof U32Type;
+    }
+
+    public boolean isU64() {
+        return this instanceof U64Type;
     }
 
     public boolean isI8() {

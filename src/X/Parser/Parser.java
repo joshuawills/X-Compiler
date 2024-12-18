@@ -723,6 +723,18 @@ public class Parser {
                 accept();
                 yield new I64Type(pos);
             }
+            case "u8" -> {
+                accept();
+                yield new U8Type(pos);
+            }
+            case "u32" -> {
+                accept();
+                yield new U32Type(pos);
+            }
+            case "u64" -> {
+                accept();
+                yield new U64Type(pos);
+            }
             case "f32" -> {
                 accept();
                 yield new F32Type(pos);

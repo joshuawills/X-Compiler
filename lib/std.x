@@ -7,6 +7,14 @@ export let I32_MAX: i32 = 2147483647;
 export let I64_MIN: i64 = -9223372036854775808;
 export let I64_MAX: i64 = 9223372036854775807;
 
+export let U8_MIN: u8 = 0;
+export let U8_MAX: u8 = 255;
+
+export let U32_MIN: u32 = 0;
+export let U32_MAX: u32 = 4294967295;
+
+export let U64_MIN: u64 = 0;
+export let U64_MAX: u64 = 18446744073709551615;
 
 export enum StdErrors -> {
     MEMORY_ERROR,

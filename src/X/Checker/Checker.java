@@ -150,7 +150,7 @@ public class Checker implements Visitor {
 
     private String currentFileName;
 
-    private String[] numPriority = {"I8", "I32", "I64", "F32", "F64"}; // Later ones take priority
+    private String[] numPriority = {"U8", "I8", "U32", "I32", "U64", "I64", "F32", "F64"}; // Later ones take priority
 
     public ArrayList<Module> check(AST ast, String filename, boolean isMain) {
 
@@ -405,6 +405,9 @@ public class Checker implements Visitor {
         Environment.i8Type= new I8Type(dummyPos);
         Environment.i64Type = new I64Type(dummyPos);
         Environment.i32Type = new I32Type(dummyPos);
+        Environment.u8Type = new U8Type(dummyPos);
+        Environment.u32Type = new U32Type(dummyPos);
+        Environment.u64Type = new U64Type(dummyPos);
         Environment.f32Type = new F32Type(dummyPos);
         Environment.f64Type = new F64Type(dummyPos);
         Environment.voidType = new VoidType(dummyPos);
@@ -1092,6 +1095,12 @@ public class Checker implements Visitor {
             return "b";
         } else if (T.isPointer()) {
             return "p";
+        } else if (T.isU8()) {
+            return "u8";
+        } else if (T.isU32()) {
+            return "u32";
+        } else if (T.isU64()) {
+            return "u64";
         }
         return "TODO";
     }
@@ -1368,6 +1377,21 @@ public class Checker implements Visitor {
         return ast.type;
     }
 
+    public Object visitU8Expr(U8Expr ast, Object o) {
+        ast.type = Environment.u8Type;
+        return ast.type;
+    }
+
+    public Object visitU32Expr(U32Expr ast, Object o) {
+        ast.type = Environment.u32Type;
+        return ast.type;
+    }
+
+    public Object visitU64Expr(U64Expr ast, Object o) {
+        ast.type = Environment.u64Type;
+        return ast.type;
+    }
+
     public Object visitIntExpr(IntExpr ast, Object o) {
         
         Expr E = null;
@@ -1377,6 +1401,12 @@ public class Checker implements Visitor {
             E = new I32Expr(ast.IL, ast.pos);
         } else if (currentNumericalType.isI8()) {
             E = new I8Expr(ast.IL, ast.pos);
+        } else if (currentNumericalType.isU8()) {
+            E = new U8Expr(ast.IL, ast.pos);
+        } else if (currentNumericalType.isU32()) {
+            E = new U32Expr(ast.IL, ast.pos);
+        } else if (currentNumericalType.isU64()) {
+            E = new U64Expr(ast.IL, ast.pos);
         }
          
         if (!E.isIntExpr()) {
@@ -1421,6 +1451,18 @@ public class Checker implements Visitor {
 
     public Object visitI32Type(I32Type ast, Object o) {
         return Environment.i32Type;
+    }
+
+    public Object visitU8Type(U8Type ast, Object o) {
+        return Environment.u8Type;
+    }
+
+    public Object visitU32Type(U32Type ast, Object o) {
+        return Environment.u32Type;
+    }
+
+    public Object visitU64Type(U64Type ast, Object o) {
+        return Environment.u64Type;
     }
 
     public Object visitVariaticType(VariaticType ast, Object o) {
@@ -1873,7 +1915,7 @@ public class Checker implements Visitor {
         }
         currentNumericalType = null;
 
-        if (!T.isInteger()) {
+        if (!T.isSignedInteger()) {
             handler.reportError(errors[37] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
@@ -2535,7 +2577,7 @@ public class Checker implements Visitor {
                 }
                 currentNumericalType = null;
 
-                if (!indexType.isInteger()) {
+                if (!indexType.isSignedInteger()) {
                     handler.reportError(errors[37], "", ast.pos);
                     return errorExpr;
                 }

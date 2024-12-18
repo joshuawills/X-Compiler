@@ -236,6 +236,21 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitU8Type(U8Type ast, Object o) {
+        print(indentString() + "u8");
+        return null;
+    }
+
+    public Object visitU32Type(U32Type ast, Object o) {
+        print(indentString() + "u32");
+        return null;
+    }
+
+    public Object visitU64Type(U64Type ast, Object o) {
+        print(indentString() + "u64");
+        return null;
+    }
+
     public Object visitCharLiteral(CharLiteral ast, Object o) {
         print(indentString() + ast.spelling);
         return null;
@@ -396,6 +411,33 @@ public class Printer implements Visitor {
     @Override
     public Object visitI32Expr(I32Expr ast, Object o) {
         print(indentString() + "I32Expr");
+        ++indent;
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    @Override
+    public Object visitU8Expr(U8Expr ast, Object o) {
+        print(indentString() + "U8Expr");
+        ++indent;
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    @Override
+    public Object visitU32Expr(U32Expr ast, Object o) {
+        print(indentString() + "U32Expr");
+        ++indent;
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    @Override
+    public Object visitU64Expr(U64Expr ast, Object o) {
+        print(indentString() + "U64Expr");
         ++indent;
         ast.IL.visit(this, o);
         --indent;

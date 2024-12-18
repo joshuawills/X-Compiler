@@ -75,6 +75,30 @@ export fn println(v: bool) -> void {
 	}
 }
 
+export fn print(v: u8) -> void {
+	@printf("%hhu", v);
+}
+
+export fn println(v: u8) -> void {
+	@printf("%hhu\n", v);
+}
+
+export fn print(v: u32) -> void {
+	@printf("%u", v);
+}
+
+export fn println(v: u32) -> void {
+	@printf("%u\n", v);
+}
+
+export fn print(v: u64) -> void {
+	@printf("%llu", v);
+}
+
+export fn println(v: u64) -> void {
+	@printf("%llu\n", v);
+}
+
 export fn printaddr(v: void*) -> void {
 	@printf("%p", v);
 }

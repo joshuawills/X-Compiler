@@ -1,3 +1,5 @@
+// Testing the using keyword
+
 using io, str, std;
 
 fn main() -> void {

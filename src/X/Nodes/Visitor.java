@@ -206,4 +206,16 @@ public interface Visitor {
     Object visitMethodAccessExpr(MethodAccessExpr ast, Object o);
 
     Object visitMethodAccessWrapper(MethodAccessWrapper ast, Object o);
+
+    Object visitU8Type(U8Type ast, Object o);
+
+    Object visitU32Type(U32Type ast, Object o);
+
+    Object visitU64Type(U64Type ast, Object o);
+
+    Object visitU8Expr(U8Expr ast, Object o);
+
+    Object visitU32Expr(U32Expr ast, Object o);
+
+    Object visitU64Expr(U64Expr ast, Object o);
 }

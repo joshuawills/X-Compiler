@@ -1,5 +1,7 @@
 package X.Evaluator;
 
+import java.math.BigInteger;
+
 import X.CodeGen.LLVM;
 import X.Nodes.*;
 import X.Nodes.Enum;
@@ -171,12 +173,14 @@ public class Evaluator implements Visitor {
         Type t = (Type) o;
         return switch (ast.O.spelling) {
             case "+" -> ast.E.visit(this, o);
-            case "i8-", "i32-", "i64-", "f32-", "f64-" -> {
-                if (t.isInteger()) {
+            case "u8-", "u32-", "u64-", "i8-", "i32-", "i64-", "f32-", "f64-" -> {
+                if (t.isSignedInteger()) {
                     try {
-                        yield - (long) ast.E.visit(this, o);
+                        BigInteger v = (BigInteger) ast.E.visit(this, o);
+                        BigInteger v2 = v.negate();
+                        yield v2;
                     } catch (Exception e) {
-                        yield (long) Long.parseLong("-9223372036854775808");
+                        yield new BigInteger("-9223372036854775808");
                     }
                 } else {
                     yield -(float) ast.E.visit(this, o);
@@ -240,15 +244,27 @@ public class Evaluator implements Visitor {
 
     // integer
     public Object visitI64Expr(I64Expr ast, Object o) {
-        return Long.parseLong(ast.IL.spelling);
+        return new BigInteger(ast.IL.spelling);
     }
 
     public Object visitI32Expr(I32Expr ast, Object o) {
-        return Long.parseLong(ast.IL.spelling);
+        return new BigInteger(ast.IL.spelling);
+    }
+
+    public Object visitU8Expr(U8Expr ast, Object o) {
+        return new BigInteger(ast.IL.spelling);
+    }
+
+    public Object visitU32Expr(U32Expr ast, Object o) {
+        return new BigInteger(ast.IL.spelling);
+    }
+
+    public Object visitU64Expr(U64Expr ast, Object o) {
+        return new BigInteger(ast.IL.spelling);
     }
 
     public Object visitIntExpr(IntExpr ast, Object o) {
-        return Long.parseLong(ast.IL.spelling);
+        return new BigInteger(ast.IL.spelling);
     }
 
     public Object visitDecimalExpr(DecimalExpr ast, Object o) {
@@ -412,6 +428,18 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitU8Type(U8Type ast, Object o) {
+        return null;
+    }
+
+    public Object visitU32Type(U32Type ast, Object o) {
+        return null;
+    }
+
+    public Object visitU64Type(U64Type ast, Object o) {
+        return null;
+    }
+
     public Object visitCharLiteral(CharLiteral ast, Object o) {
         return null;
     }
@@ -420,7 +448,7 @@ public class Evaluator implements Visitor {
         if (ast.CL.isPresent()) {
             return (long) ast.CL.get().spelling.charAt(0);
         }
-        return Long.parseLong(ast.IL.get().spelling);
+        return new BigInteger(ast.IL.get().spelling);
     }
 
     public Object visitCastExpr(CastExpr ast, Object o) {
