@@ -235,6 +235,20 @@ public class Parser {
                 dlAST = new DeclList(function, dlAST2, pos);
             }
 
+        } else if (tryConsume(TokenType.TRAIT)) {
+            Ident I = parseIdent();
+            match(TokenType.ARROW);
+            match(TokenType.OPEN_CURLY);
+            List TL = parseTraitList();
+            match(TokenType.CLOSE_CURLY);
+            finish(pos);
+            Trait trait = new Trait(TL, I, pos);
+            if (isExport) {
+                trait.setExported();
+            }
+            List dlAST2 = parseDeclList();
+            finish(pos);
+            dlAST = new DeclList(trait, dlAST2, pos);
         } else if (tryConsume(TokenType.ENUM)) {
             Ident ident = parseIdent();
             match(TokenType.ARROW);
@@ -295,6 +309,32 @@ public class Parser {
             dlAST = new DeclList(globalVar, dlAST2, pos);
         }
         return dlAST;
+    }
+
+    private List parseTraitList() throws SyntaxError {
+        
+        Position pos = new Position();
+        start(pos);
+        if (currentToken.kind == TokenType.CLOSE_CURLY) {
+            finish(pos);
+            return new EmptyTraitList(pos);
+        }
+
+        TraitFunction TF = parseTraitFunction();
+        finish(pos);
+        return new TraitList(TF, parseTraitList(), pos);
+    }
+
+    private TraitFunction parseTraitFunction() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Ident I = parseIdent();
+        List PL = parseParaList();
+        match(TokenType.ARROW);
+        Type T = parseType();
+        match(TokenType.SEMI);
+        finish(pos);
+        return new TraitFunction(T, I, PL, pos);
     }
 
     private Stmt parseCompoundStmt() throws SyntaxError {

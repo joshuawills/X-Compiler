@@ -71,5 +71,6 @@ public enum TokenType {
     AT_SYMBOL,
     NULL,
     ELLIPSIS,
-    USING
+    USING,
+    TRAIT
 }

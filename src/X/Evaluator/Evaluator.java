@@ -627,4 +627,20 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitTrait(Trait ast, Object o) {
+        return null;
+    }
+
+    public Object visitTraitFunction(TraitFunction ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
+        return null;
+    }
+
+    public Object visitTraitList(TraitList ast, Object o) {
+        return null;
+    }
+
 }

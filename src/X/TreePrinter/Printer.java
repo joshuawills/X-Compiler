@@ -63,6 +63,27 @@ public class Printer implements Visitor {
          return null;
     }
 
+    @Override
+    public Object visitTrait(Trait ast, Object o) {
+        print(indentString() + "Trait");
+        ++indent;
+        ast.name.visit(this, o);
+        ast.TL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    @Override
+    public Object visitTraitFunction(TraitFunction ast, Object o) {
+        print(indentString() + "TraitFunction");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.T.visit(this, o);
+        ast.PL.visit(this, o);
+        --indent;
+        return null;
+    }
+
     @Override 
     public Object visitMethod(Method ast, Object o) {
         print(indentString() + "Method");
@@ -873,6 +894,20 @@ public class Printer implements Visitor {
 
     public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
         print(indentString() + "EmptyIdentsList");
+        return null;
+    }
+
+    public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
+        print(indentString() + "EmptyTraitList");
+        return null;
+    }
+
+    public Object visitTraitList(TraitList ast, Object o) {
+        print(indentString() + "TraitList");
+        ++indent;
+        ast.TF.visit(this, o);
+        ast.L.visit(this, o);
+        --indent;
         return null;
     }
 

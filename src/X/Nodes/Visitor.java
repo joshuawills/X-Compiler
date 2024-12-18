@@ -218,4 +218,12 @@ public interface Visitor {
     Object visitU32Expr(U32Expr ast, Object o);
 
     Object visitU64Expr(U64Expr ast, Object o);
+
+    Object visitTrait(Trait ast, Object o);
+
+    Object visitTraitFunction(TraitFunction ast, Object o);
+
+    Object visitEmptyTraitList(EmptyTraitList ast, Object o);
+
+    Object visitTraitList(TraitList ast, Object o);
 }

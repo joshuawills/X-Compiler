@@ -62,6 +62,10 @@ public class LayoutVisitor implements Visitor {
         return layoutQuaternary("FunDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S);
     }
 
+    public Object visitTraitFunction(TraitFunction ast, Object obj) {
+        return layoutTernary("TraitFunction", ast.I, ast.T, ast.PL);
+    }
+
     public Object visitMethod(Method ast, Object obj) {
         return layoutQuinary("MethodDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S, ast.attachedStruct);
     }
@@ -750,4 +754,17 @@ public class LayoutVisitor implements Visitor {
     public Object visitEmptyIdentsList(EmptyIdentsList ast, Object o) {
         return layoutNullary("EmptyIdentsList");
     }
+
+    public Object visitTrait(Trait ast, Object o) {
+        return layoutBinary("Trait", ast.name, ast.TL);
+    }
+
+    public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
+        return layoutNullary("EmptyTraitList");
+    }
+
+    public Object visitTraitList(TraitList ast, Object o) {
+        return layoutBinary("TraitList", ast.TF, ast.L);
+    } 
+
 }

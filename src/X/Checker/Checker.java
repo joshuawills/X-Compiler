@@ -3160,4 +3160,24 @@ public class Checker implements Visitor {
         return ast.type;
     }
 
+    public Object visitTrait(Trait ast, Object o) {
+        System.out.println("TRAIT CHECKER");
+        return null;
+    }
+
+    public Object visitTraitFunction(TraitFunction ast, Object o) {
+        System.out.println("TRAIT FUNCTION CHECKER");
+        return null;
+    }
+
+    public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
+        System.out.println("EMPTY TRAIT LIST CHECKER");
+        return null;
+    }
+
+    public Object visitTraitList(TraitList ast, Object o) {
+        System.out.println("TRAIT LIST CHECKER");
+        return null;
+    }
+
 }

@@ -2618,4 +2618,22 @@ public class Emitter implements Visitor {
         ast.tempIndex = MAE.tempIndex;
         return null;
     }
+
+    public Object visitTrait(Trait ast, Object o) {
+        System.out.println("TRAIT EMITTER");
+        return null;
+    }
+
+    public Object visitTraitFunction(TraitFunction ast, Object o) {
+        System.out.println("TRAIT FUNCTION EMITTER");
+        return null;
+    }
+
+    public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
+        return null;
+    }
+
+    public Object visitTraitList(TraitList ast, Object o) {
+        return null;
+    }
 }
