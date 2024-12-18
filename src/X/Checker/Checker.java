@@ -1915,7 +1915,7 @@ public class Checker implements Visitor {
         }
         currentNumericalType = null;
 
-        if (!T.isSignedInteger()) {
+        if (!T.isSignedInteger() && !T.isUnsignedInteger()) {
             handler.reportError(errors[37] + ": %", ast.I.spelling, ast.I.pos);
             return Environment.errorType;
         }
@@ -2577,7 +2577,7 @@ public class Checker implements Visitor {
                 }
                 currentNumericalType = null;
 
-                if (!indexType.isSignedInteger()) {
+                if (!indexType.isSignedInteger() && !indexType.isUnsignedInteger()) {
                     handler.reportError(errors[37], "", ast.pos);
                     return errorExpr;
                 }

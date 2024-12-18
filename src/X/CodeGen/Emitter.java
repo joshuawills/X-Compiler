@@ -1547,30 +1547,36 @@ public class Emitter implements Visitor {
             return null;
         }
 
-        if (from.isI64()) {
+        if (from.isI64() || from.isU64()) {
             switch (to) {
                 case I32Type _ -> emit("trunc i64 %" + numOne + " to i32");
+                case U32Type _ -> emit("trunc i64 %" + numOne + " to i32");
                 case I8Type  _ -> emit("trunc i64 %" + numOne + " to i8");
+                case U8Type  _ -> emit("trunc i64 %" + numOne + " to i8");
                 case F32Type _ -> emit("sitofp i64 %" + numOne + " to float");
                 case F64Type _ -> emit("sitofp i64 %" + numOne + " to double");
                 default -> System.out.println("CastExpr not implemented");
             }
         }
 
-        if (from.isI32()) {
+        if (from.isI32() || from.isU32()) {
             switch (to) {
                 case I64Type _ -> emit("sext i32 %" + numOne + " to i64");
+                case U64Type _ -> emit("sext i32 %" + numOne + " to i64");
                 case I8Type  _ -> emit("trunc i32 %" + numOne + " to i8");
+                case U8Type  _ -> emit("trunc i32 %" + numOne + " to i8");
                 case F32Type _ -> emit("sitofp i32 %" + numOne + " to float");
                 case F64Type _ -> emit("sitofp i32 %" + numOne + " to double");
                 default -> System.out.println("CastExpr not implemented");
             }
         }
 
-        if (from.isI8()) {
+        if (from.isI8() || from.isU8()) {
             switch (to) {
                 case I64Type _ -> emit("sext i8 %" + numOne + " to i64");
+                case U64Type _ -> emit("sext i8 %" + numOne + " to i64");
                 case I32Type _ -> emit("sext i8 %" + numOne + " to i32");
+                case U32Type _ -> emit("sext i8 %" + numOne + " to i32");
                 case F32Type _ -> emit("sitofp i8 %" + numOne + " to float");
                 case F64Type _ -> emit("sitofp i8 %" + numOne + " to double");
                 default -> System.out.println("CastExpr not implemented");
@@ -1580,8 +1586,11 @@ public class Emitter implements Visitor {
         if (from.isF32()) {
             switch (to) {
                 case I64Type _ -> emit("fptosi float %" + numOne + " to i64");
+                case U64Type _ -> emit("fptosi float %" + numOne + " to i64");
                 case I32Type _ -> emit("fptosi float %" + numOne + " to i32");
+                case U32Type _ -> emit("fptosi float %" + numOne + " to i32");
                 case I8Type  _ -> emit("fptosi float %" + numOne + " to i8");
+                case U8Type  _ -> emit("fptosi float %" + numOne + " to i8");
                 case F64Type _ -> emit("fpext float %" + numOne + " to double");
                 default -> System.out.println("CastExpr not implemented");
             }
@@ -1590,8 +1599,11 @@ public class Emitter implements Visitor {
         if (from.isF64()) {
             switch (to) {
                 case I64Type _ -> emit("fptosi double %" + numOne + " to i64");
+                case U64Type _ -> emit("fptosi double %" + numOne + " to i64");
                 case I32Type _ -> emit("fptosi double %" + numOne + " to i32");
+                case U32Type _ -> emit("fptosi double %" + numOne + " to i32");
                 case I8Type  _ -> emit("fptosi double %" + numOne + " to i8");
+                case U8Type  _ -> emit("fptosi double %" + numOne + " to i8");
                 case F32Type _ -> emit("fptrunc double %" + numOne + " to float");
                 default -> System.out.println("CastExpr not implemented");
             }
