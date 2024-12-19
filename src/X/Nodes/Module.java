@@ -78,6 +78,15 @@ public class Module extends AST {
         enums.put(e.I.spelling, e);
     }
 
+    public String enumExistsInUsing(String v) {
+        for (Module m: usingFiles.values()) {
+            if (m.enumExists(v, false)) {
+                return m.fileName;
+            }
+        }
+        return "";
+    }
+
     public boolean enumExists(String v, boolean topLevel) {
         if (enums.containsKey(v)) {
             if (topLevel || isMainModule || enums.get(v).isExported) {
@@ -103,6 +112,15 @@ public class Module extends AST {
     public void addStruct(Struct s, String filename) {
         s.filename = filename;
         structs.put(s.I.spelling, s);
+    }
+
+    public String structExistsWithUsing(String v) {
+        for (Module m: usingFiles.values()) {
+            if (m.structExists(v, false)) {
+                return m.fileName;
+            }
+        }
+        return "";
     }
 
     public boolean structExists(String v, boolean topLevel) {
@@ -152,6 +170,15 @@ public class Module extends AST {
             }
         }
        return false;
+    }
+
+    public String varExistsInUsing(String v) {
+        for (Module m: usingFiles.values()) {
+            if (m.varExists(v, false)) {
+                return m.fileName;
+            }
+        }
+        return "";
     }
 
     public boolean varExists(String v) {
@@ -221,6 +248,16 @@ public class Module extends AST {
 
     public Struct getStruct(String v) {
         return getStruct(v, true);
+    }
+
+
+    public String functionExistsInUsing(String v, List PL) {
+        for (Module m: usingFiles.values()) {
+            if (m.functionExists(v, PL, false)) {
+                return m.fileName;
+            }
+        }
+        return "";
     }
 
     public boolean functionExists(String v, List PL, boolean topLevel) {

@@ -181,6 +181,9 @@ public class Checker implements Visitor {
        
         // Load in function names, method names and global vars
         loadFunctionsAndGlobalVars(L);
+
+        // Loading in implementations
+        loadImplementations(L);
        
         // Actually visiting everything
         v.visit(this, null);
@@ -199,7 +202,7 @@ public class Checker implements Visitor {
 
     private AST loadModules(DeclList L) {
         while (true) {
-            if (L.D.isImportStmt()) {
+            if (L.D.isImportStmt() || L.D.isUsingStmt()) {
                 L.D.visit(this, null);
             } else {
                 return L;
@@ -233,8 +236,15 @@ public class Checker implements Visitor {
                     // Duplicate type definitions
                     String message = "enum '" + E.I.spelling + "' clashes with previously declared ";
                     if (mainModule.enumExists(E.I.spelling)) {
-                        message += "enum";
-                        handler.reportError(errors[47] + ": %", message, E.I.pos);
+                        String f = mainModule.enumExistsInUsing(E.I.spelling);
+                        if (!f.equals("")) {
+                            message = "enum in module '" + f + "'";
+                            handler.reportError(errors[87] + ": %", message, E.pos);
+
+                        } else {
+                            message += "enum";
+                            handler.reportError(errors[47] + ": %", message, E.I.pos);
+                        }
                     } else if (mainModule.structExists(E.I.spelling)) {
                         message += "struct";
                         handler.reportError(errors[47] + ": %", message, E.I.pos);
@@ -261,8 +271,15 @@ public class Checker implements Visitor {
                         message += "enum";
                         handler.reportError(errors[47] + ": %", message, S.I.pos);
                     } else if (mainModule.structExists(S.I.spelling)) {
-                        message += "struct";
-                        handler.reportError(errors[47] + ": %", message, S.I.pos);
+                        String f = mainModule.structExistsWithUsing(S.I.spelling);
+                        if (!f.equals("")) {
+                            message += "struct in module'" + f + "'";
+                            handler.reportError(errors[88] + ": %", message, S.pos);
+
+                        } else {
+                            message += "struct";
+                            handler.reportError(errors[47] + ": %", message, S.I.pos);
+                        }
                     }
 
                     // header type is validated here
@@ -377,9 +394,15 @@ public class Checker implements Visitor {
                     checkMurking(F);
 
                     if (mainModule.functionExists(F.I.spelling, F.PL)) {
-                        String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
-                                F.pos.lineStart);
-                        handler.reportError(errors[2] + ": %", message, F.I.pos);
+                        String f = mainModule.functionExistsInUsing(F.I.spelling, F.PL);
+                        if (!f.equals("")) {
+                            String message = "function '" + F.I.spelling + "' from module '" + f + "'";
+                            handler.reportError(errors[85] + ": %", message, F.I.pos);
+                        } else {
+                            String message = String.format("'%s'. Previously declared at line %d", F.I.spelling,
+                                    F.pos.lineStart);
+                            handler.reportError(errors[2] + ": %", message, F.I.pos);
+                        }
                     }
 
                     F.setTypeDef();
@@ -393,6 +416,19 @@ public class Checker implements Visitor {
                 break;
             }
             L = (DeclList) L.DL;
+        }
+    }
+
+    private void loadImplementations(DeclList D) {
+        while (true) {
+            switch (D.D) {
+                case Impl I -> I.visit(this, null);
+                default -> {}
+            }
+            if (D.DL.isEmptyDeclList()) {
+                return;
+            }
+            D = (DeclList) D.DL;
         }
     }
 
@@ -1350,7 +1386,9 @@ public class Checker implements Visitor {
     }
 
     public Object visitDeclList(DeclList ast, Object o) {
-        ast.D.visit(this, null);
+        if (!ast.D.isImpl()) {
+            ast.D.visit(this, null);
+        }
         ast.DL.visit(this, null);
         return null;
     }
@@ -1557,7 +1595,13 @@ public class Checker implements Visitor {
 
         if (decl.isGlobalVar()) {
             if (mainModule.varExists(ident.spelling)) {
-                handler.reportError(errors[2] + ": %", ident.spelling, ident.pos);
+                String f = mainModule.varExistsInUsing(ident.spelling);
+                if (!f.equals("")) {
+                    GlobalVar G1 = mainModule.getVar(ident.spelling, true);
+                    mainModule.thisHandler.reportError(errors[86] + ": %", "variable '" + ident.spelling  + "' from module '" + f + "'. Existing declaration below.", G1.I.pos);
+                } else {
+                    handler.reportError(errors[2] + ": %", ident.spelling, ident.pos);
+                }
             }
             mainModule.addGlobalVar((GlobalVar) decl, currentFileName);
         } else {
@@ -2875,13 +2919,13 @@ public class Checker implements Visitor {
         if (modules.moduleExists(fileName)) {
             // We've already checked this module, but we need to load it into the current module
             Module M = modules.getModule(fileName);
-            CheckDuplicatesInModule(M, ast, fileName); 
+            mainModule.addUsingFile(M, fileName);
             return null;
         }
 
         // We need to actually analyse the module
         Module M = AnalyseModule(fileName);
-        CheckDuplicatesInModule(M, ast, fileName);
+        mainModule.addUsingFile(M, fileName);
         return null;
     }
     
@@ -2914,36 +2958,6 @@ public class Checker implements Visitor {
             moduleName = ast.ident.spelling;
         }
 
-        for (Function F : M.getFunctions()) {
-            if (mainModule.functionExists(F.I.spelling, F.PL, true)) {
-                Function F2 = mainModule.getFunction(F.I.spelling, F.PL, true);
-                String message = "function '" + F.I.spelling + "' from module '" + moduleName + "'. Existing declaration below.";
-                mainModule.thisHandler.reportError(errors[85] + ": %", message, F2.I.pos);
-            }
-        }
-        for (GlobalVar G : M.getVars().values()) {
-            if (mainModule.varExists(G.I.spelling, true)) {
-                GlobalVar G1 = mainModule.getVar(G.I.spelling, true);
-                mainModule.thisHandler.reportError(errors[86] + ": %", "variable '" + G.I.spelling + "' from module '" + moduleName + "'. Existing declaration below.", G1.I.pos);
-            }
-        }
-
-        for (Enum E : M.getEnums().values()) {
-            if (mainModule.enumExists(E.I.spelling, true)) {
-                Enum E1 = mainModule.getEnum(E.I.spelling, true);
-                mainModule.thisHandler.reportError(errors[87] + ": %", "enum '" + E.I.spelling + "' from module '" + moduleName + "'. Existing declaration below.", E1.I.pos);
-            }
-        }
-
-        for (Struct S: M.getStructs().values()) {
-            if (mainModule.structExists(S.I.spelling, true)) {
-                Struct S2 = mainModule.getStruct(S.I.spelling, true);
-                String message = "struct '" + S.I.spelling + "' from module '" + moduleName + "'";
-                mainModule.thisHandler.reportError(errors[88] + ": %", message, S2.I.pos);
-            }
-        }
-
-        mainModule.addUsingFile(M, filename);
     }
 
     public Object visitImportStmt(ImportStmt ast, Object o) {

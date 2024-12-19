@@ -176,4 +176,12 @@ public abstract class AST {
         return this instanceof Trait;
     }
 
+    public boolean isImpl() {
+        return this instanceof Impl;
+    }
+
+    public boolean isUsingStmt() {
+        return this instanceof UsingStmt;
+    }
+
 }

@@ -256,7 +256,6 @@ public class Parser {
             match(TokenType.ARROW);
             match(TokenType.OPEN_CURLY);
             List ML = parseMethodList();
-            System.out.println(ML);
             match(TokenType.CLOSE_CURLY);
             finish(pos);
             Impl impl = new Impl(ML, traitName, structName, pos);
