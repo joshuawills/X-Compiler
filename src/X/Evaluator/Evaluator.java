@@ -643,4 +643,15 @@ public class Evaluator implements Visitor {
         return null;
     }
 
+    public Object visitImpl(Impl ast, Object o) {
+        return null;
+    }
+
+    public Object visitMethodList(MethodList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
+        return null;
+    }
 }

@@ -343,6 +343,7 @@ public class Lex {
                 case "as" -> TokenType.AS;
                 case "null" -> TokenType.NULL;
                 case "trait" -> TokenType.TRAIT;
+                case "impl" -> TokenType.IMPL;
                 default -> TokenType.IDENT;
             };
         }

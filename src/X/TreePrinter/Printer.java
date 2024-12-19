@@ -911,4 +911,28 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitImpl(Impl ast, Object o) {
+        print(indentString() + "Impl");
+        ast.trait.visit(this, o);
+        ast.struct.visit(this, o);
+        ++indent;
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitMethodList(MethodList ast, Object o) {
+        print(indentString() + "MethodList");
+        ++indent;
+        ast.M.visit(this, o);
+        ast.L.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
+        print(indentString() + "EmptyMethodList");
+        return null;
+    }
+
 }

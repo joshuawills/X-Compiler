@@ -767,4 +767,16 @@ public class LayoutVisitor implements Visitor {
         return layoutBinary("TraitList", ast.TF, ast.L);
     } 
 
+    public Object visitImpl(Impl ast, Object o) {
+        return layoutUnary("Impl", ast.IL);
+    }
+
+    public Object visitMethodList(MethodList ast, Object o) {
+        return layoutBinary("MethodList", ast.M, ast.L);
+    }
+
+    public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
+        return layoutNullary("EmptyMethodList");
+    }
+
 }

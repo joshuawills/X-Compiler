@@ -226,4 +226,10 @@ public interface Visitor {
     Object visitEmptyTraitList(EmptyTraitList ast, Object o);
 
     Object visitTraitList(TraitList ast, Object o);
+
+    Object visitImpl(Impl ast, Object o);
+
+    Object visitMethodList(MethodList ast, Object o);
+
+    Object visitEmptyMethodList(EmptyMethodList ast, Object o);
 }

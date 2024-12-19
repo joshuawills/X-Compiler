@@ -3210,4 +3210,19 @@ public class Checker implements Visitor {
         return null;
     }
 
+    public Object visitImpl(Impl ast, Object o) {
+        System.out.println("IMPL CHECKER");
+        return null;
+    }
+
+    public Object visitMethodList(MethodList ast, Object o) {
+        System.out.println("METHOD LIST CHECKER");
+        return null;
+    }
+
+    public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
+        System.out.println("EMPTY METHOD LIST CHECKER");
+        return null;
+    }
+
 }

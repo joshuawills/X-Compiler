@@ -72,5 +72,6 @@ public enum TokenType {
     NULL,
     ELLIPSIS,
     USING,
-    TRAIT
+    TRAIT,
+    IMPL
 }

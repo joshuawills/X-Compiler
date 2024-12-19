@@ -2636,4 +2636,18 @@ public class Emitter implements Visitor {
     public Object visitTraitList(TraitList ast, Object o) {
         return null;
     }
+
+    public Object visitImpl(Impl ast, Object o) {
+        return null;
+    }
+
+    public Object visitMethodList(MethodList ast, Object o) {
+        System.out.println("METHOD LIST EMITTER");
+        return null;
+    }
+
+    public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
+        System.out.println("EMPTY METHOD LIST EMITTER");
+        return null;
+    }
 }

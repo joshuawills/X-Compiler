@@ -249,6 +249,23 @@ public class Parser {
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(trait, dlAST2, pos);
+        }  else if (tryConsume(TokenType.IMPL)) {
+            Ident traitName = parseIdent();
+            match(TokenType.FOR);
+            Ident structName = parseIdent();
+            match(TokenType.ARROW);
+            match(TokenType.OPEN_CURLY);
+            List ML = parseMethodList();
+            System.out.println(ML);
+            match(TokenType.CLOSE_CURLY);
+            finish(pos);
+            Impl impl = new Impl(ML, traitName, structName, pos);
+            if (isExport) {
+                impl.setExported();
+            }
+            List dlAST2 = parseDeclList();
+            finish(pos);
+            dlAST = new DeclList(impl, dlAST2, pos);
         } else if (tryConsume(TokenType.ENUM)) {
             Ident ident = parseIdent();
             match(TokenType.ARROW);
@@ -309,6 +326,39 @@ public class Parser {
             dlAST = new DeclList(globalVar, dlAST2, pos);
         }
         return dlAST;
+    }
+
+    private List parseMethodList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        if (currentToken.kind == TokenType.CLOSE_CURLY) {
+            finish(pos);
+            return new EmptyMethodList(pos);
+        }
+        Method M = parseMethod();
+        finish(pos);
+        return new MethodList(M, parseMethodList(), pos);
+    }
+
+    private Method parseMethod() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        match(TokenType.FN);
+        match(TokenType.OPEN_PAREN);
+        boolean isStructAttachedMut = tryConsume(TokenType.MUT);
+        Ident I1 = parseIdent();
+        match(TokenType.COLON);
+        Type T1 = parseType();
+        match(TokenType.CLOSE_PAREN);
+        ParaDecl PE = new ParaDecl(T1, I1, pos, isStructAttachedMut);
+
+        Ident name = parseIdent();
+        List pL = parseParaList();
+        match(TokenType.ARROW);
+        Type tAST = parseType();
+        Stmt sAST = parseCompoundStmt();
+        finish(pos);
+        return new Method(tAST, name, pL, sAST, PE, pos);
     }
 
     private List parseTraitList() throws SyntaxError {
