@@ -196,7 +196,7 @@
 
 *14.12.2024*
 
-- able to map methods directlyt to raw expressions
+- able to map methods directly to raw expressions
 
 *16.12.24*
 

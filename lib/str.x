@@ -193,6 +193,37 @@ export fn (mut v: str*) push(mut s: i8*) -> str_error {
 	return str_error { false, StrErrors.NO_ERROR, "No error" };
 }
 
+export fn (mut v: str*) push(mut s: i8) -> str_error {
+	let mut new_len = v.len() + 1;
+	if new_len >= v->cap {
+		let mut new_cap = v->cap * 2;
+		let mut new_s: i8* = std::malloc(new_cap);
+		if new_s == null {
+			return str_error { true, StrErrors.MEMORY_ERROR, "Memory error" };
+		}
+		(v->s).copy(new_s);
+		std::free(v->s);
+		v->s = new_s;
+		v->cap = new_cap;
+	}
+	let mut addr: i8* = v->s + v->len;
+	*addr = s;
+	v->len = new_len;
+	return str_error { false, StrErrors.NO_ERROR, "No error" };
+}
+
+export fn (mut v: str*) reverse() -> void {
+	let mut start: i8* = v->s;
+	let mut end: i8* = v->s + v->len - 1;
+	while (start < end) {
+		let mut temp: i8 = *start;
+		*start = *end;
+		*end = temp;
+		start += 1;
+		end -= 1;
+	}
+}
+
 export fn print(v: str*) -> void {
 	@printf("%s", v->s);
 }

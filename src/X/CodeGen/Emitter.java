@@ -837,6 +837,26 @@ public class Emitter implements Visitor {
             }
             emitN(", ptr %" + i1 + ", i64 %" + i2);
             return null;
+        } else if (ast.O.spelling.equals("p-")) {
+            emitN("\t;foo");
+            Type innerT = ((PointerType) ast.E1.type).t;
+            ast.E1.visit(this, o);
+            int i1 = ast.E1.tempIndex;
+            ast.E2.visit(this, o);
+            int i2 = ast.E2.tempIndex;
+            // Negate i2
+            int i3 = f.getNewIndex();
+            emitN("\t%" + i3 + " = sub i64 0, %" + i2);
+            int v = f.getNewIndex();
+            ast.tempIndex = v;
+            emit("\t%" + v + " = getelementptr inbounds ");
+            if (ast.E1.isDerefExpr()) {
+                emit("ptr");
+            } else {
+                innerT.visit(this, o);
+            }
+            emitN(", ptr %" + i1 + ", i64 %" + i3);
+            return null;
         }
 
         ast.E1.visit(this, o);
