@@ -117,7 +117,11 @@ public class Checker implements Visitor {
         "*88: struct imported into namespace already exists",
         "*89: trait exists with same name",
         "*90: multiple methods in trait with the same name",
-        "*91: empty trait"
+        "*91: empty trait",
+        "*92: no such trait to implement",
+        "*93: no such struct to implement trait for",
+        "*94: unrecognised method for trait",
+        "*95: missing methods for trait implementation"
     };
 
     private final SymbolTable idTable;
@@ -3225,7 +3229,27 @@ public class Checker implements Visitor {
     }
 
     public Object visitImpl(Impl ast, Object o) {
-        System.out.println("IMPL CHECKER");
+        
+        // Validating the trait exists
+        if (!modules.traitExists(ast.trait.spelling)) {
+            String m = ast.trait.spelling;
+            handler.reportError(errors[92] + ": %", m, ast.trait.pos);
+        }
+        Trait T = modules.getTrait(ast.trait.spelling);
+        ast.setTrait(T);
+
+        // Validating the struct exists
+        if (!mainModule.structExists(ast.struct.spelling)) {
+            String m = "struct '" + ast.struct.spelling + "'";
+            handler.reportError(errors[93] + ": %", m, ast.struct.pos);
+        }
+        Struct S = mainModule.getStruct(ast.struct.spelling);
+        ast.setStruct(S);
+
+        // "*94: unrecognised method for trait",
+        // "*95: missing methods for trait implementation"
+
+
         return null;
     }
 
