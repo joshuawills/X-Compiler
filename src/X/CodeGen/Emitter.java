@@ -2664,11 +2664,6 @@ public class Emitter implements Visitor {
         return null;
     }
 
-    public Object visitTraitFunction(TraitFunction ast, Object o) {
-        System.out.println("TRAIT FUNCTION EMITTER");
-        return null;
-    }
-
     public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
         return null;
     }

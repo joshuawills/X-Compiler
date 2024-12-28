@@ -15,6 +15,8 @@ public class Method extends Decl {
 
     public String filename;
 
+    public boolean isTraitFunction = false;
+
     public Method(Type tAST, Ident idAST, List fplAST, Stmt cAST, ParaDecl asASt, Position pos) {
         super(pos, false);
         T = tAST;

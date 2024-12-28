@@ -62,10 +62,6 @@ public class LayoutVisitor implements Visitor {
         return layoutQuaternary("FunDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S);
     }
 
-    public Object visitTraitFunction(TraitFunction ast, Object obj) {
-        return layoutTernary("TraitFunction", ast.I, ast.T, ast.PL);
-    }
-
     public Object visitMethod(Method ast, Object obj) {
         return layoutQuinary("MethodDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S, ast.attachedStruct);
     }

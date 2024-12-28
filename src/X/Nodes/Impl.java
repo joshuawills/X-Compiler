@@ -15,7 +15,7 @@ public class Impl extends Decl {
     private Trait refTrait;
     private Struct refStruct;
 
-    private HashMap<TraitFunction, Boolean> MethodToVisitedMapping = new HashMap<>();
+    private HashMap<Method, Boolean> MethodToVisitedMapping = new HashMap<>();
 
     public Impl(List ilAST, Ident traitAST, Ident structAST, Position pos) {
         super(pos, false);
@@ -34,7 +34,7 @@ public class Impl extends Decl {
         List TL = T.TL;
         if (!TL.isEmptyTraitList()) {
             while (true) {
-                TraitFunction TF = ((TraitList) TL).TF;
+                Method TF = ((TraitList) TL).TF;
                 MethodToVisitedMapping.put(TF, false);
                 if (((TraitList) TL).L.isEmptyTraitList()) {
                     break;
@@ -50,7 +50,7 @@ public class Impl extends Decl {
 
     // returns false if already true
     public boolean addTraitFunction(Method M) {
-        TraitFunction TF = refTrait.getRelatedTF(M);
+        Method TF = refTrait.getRelatedTF(M);
         if (MethodToVisitedMapping.get(TF)) {
             return true;
         }
@@ -58,9 +58,9 @@ public class Impl extends Decl {
         return false;
     }
 
-    public ArrayList<TraitFunction> getUnimplementedMethods() {
-        ArrayList<TraitFunction> unimplementedMethods = new ArrayList<>();
-        for (TraitFunction TF: MethodToVisitedMapping.keySet()) {
+    public ArrayList<Method> getUnimplementedMethods() {
+        ArrayList<Method> unimplementedMethods = new ArrayList<>();
+        for (Method TF: MethodToVisitedMapping.keySet()) {
             if (!MethodToVisitedMapping.get(TF)) {
                 unimplementedMethods.add(TF);
             }
@@ -69,6 +69,7 @@ public class Impl extends Decl {
     }
 
     public void setStruct(Struct S) {
+        S.addTrait(refTrait);
         refStruct = S;
     }
 

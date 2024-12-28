@@ -369,12 +369,13 @@ public class Parser {
             return new EmptyTraitList(pos);
         }
 
-        TraitFunction TF = parseTraitFunction();
+        Method TF = parseTraitFunction();
+        TF.isTraitFunction = true;
         finish(pos);
         return new TraitList(TF, parseTraitList(), pos);
     }
 
-    private TraitFunction parseTraitFunction() throws SyntaxError {
+    private Method parseTraitFunction() throws SyntaxError {
         Position pos = new Position();
         start(pos);
         boolean isMut = tryConsume(TokenType.MUT);
@@ -385,7 +386,11 @@ public class Parser {
         Type T = parseType();
         match(TokenType.SEMI);
         finish(pos);
-        return new TraitFunction(T, I, PL, pos, isMut, isPointer);
+        ParaDecl PD = new ParaDecl(T, I, pos, isMut);
+        if (isPointer) {
+            PD = new ParaDecl(new PointerType(pos, T), I, pos, isMut);
+        }
+        return new Method(T, I, PL, new EmptyStmt(pos), PD, pos);
     }
 
     private Stmt parseCompoundStmt() throws SyntaxError {

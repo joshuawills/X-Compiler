@@ -27,7 +27,7 @@ public class Trait extends Decl {
         List L = TL;
         if (!L.isEmptyTraitList()) {
             while (true) {
-                TraitFunction fn = ((TraitList) L).TF;
+                Method fn = ((TraitList) L).TF;
                 if (!nameToCountMapping.containsKey(fn.I.spelling)) {
                     nameToCountMapping.put(fn.I.spelling, 1);
                 } else {
@@ -51,15 +51,15 @@ public class Trait extends Decl {
         return fns;
     }
 
-    public TraitFunction getRelatedTF(Method M) {
+    public Method getRelatedTF(Method M) {
         List L = TL;
         if (!L.isEmptyTraitList()) {
             while (true) {
-                TraitFunction fn = ((TraitList) L).TF;
+                Method fn = ((TraitList) L).TF;
                 boolean eqName = fn.I.spelling.equals(M.I.spelling);
                 boolean eqParams = fn.PL.equals(M.PL);
                 boolean eqType = fn.T.equals(M.T);
-                boolean pointerEqual = fn.isPointer == M.attachedStruct.T.isPointer();
+                boolean pointerEqual = fn.attachedStruct.T.isPointer() == M.attachedStruct.T.isPointer();
                 boolean eqMut = fn.isMut == M.isMut;
                 if (eqName && eqParams && eqType && pointerEqual && eqMut) {
                     return fn;
@@ -79,11 +79,11 @@ public class Trait extends Decl {
         List L = TL;
         if (!L.isEmptyTraitList()) {
             while (true) {
-                TraitFunction fn = ((TraitList) L).TF;
+                Method fn = ((TraitList) L).TF;
                 boolean eqName = fn.I.spelling.equals(M.I.spelling);
                 boolean eqParams = fn.PL.equals(M.PL);
                 boolean eqType = fn.T.equals(M.T);
-                boolean pointerEqual = fn.isPointer == M.attachedStruct.T.isPointer();
+                boolean pointerEqual = fn.attachedStruct.T.isPointer() == M.attachedStruct.T.isPointer();
                 boolean eqMut = fn.isMut == M.isMut;
                 if (eqName && eqParams && eqType && pointerEqual && eqMut) {
                     return true;

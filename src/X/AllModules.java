@@ -6,9 +6,11 @@ import java.util.HashMap;
 
 import X.Nodes.Function;
 import X.Nodes.GlobalVar;
+import X.Nodes.Impl;
 import X.Nodes.List;
 import X.Nodes.Method;
 import X.Nodes.Module;
+import X.Nodes.Struct;
 import X.Nodes.Trait;
 import X.Nodes.TupleType;
 import X.Nodes.Type;
@@ -24,6 +26,10 @@ public class AllModules {
     private ArrayList<Method> methods = new ArrayList<>();
 
     private ArrayList<Trait> traits = new ArrayList<>();
+
+    private HashMap<Struct, ArrayList<Trait>> structToTraitMapping = new HashMap<>();
+
+    private HashMap<Trait, ArrayList<Impl>> traitToImplMapping = new HashMap<>();
 
     private static AllModules instance = null;
 
@@ -63,8 +69,23 @@ public class AllModules {
         methods.add(m);
     }
 
+    public void addImplToTrait(Trait T, Impl I) {
+        if (!traitToImplMapping.containsKey(T)) {
+            traitToImplMapping.put(T, new ArrayList<>());
+        }
+        traitToImplMapping.get(T).add(I);
+    }
+
+    public void addTraitToStruct(Struct S, Trait T) {
+        if (!structToTraitMapping.containsKey(S)) {
+            structToTraitMapping.put(S, new ArrayList<>());
+        }
+        structToTraitMapping.get(S).add(T);
+    }
+
     public void addTrait(Trait t) {
         traits.add(t);
+        traitToImplMapping.put(t, new ArrayList<>());
     }
 
     public void addTupleType(TupleType tupleType) {

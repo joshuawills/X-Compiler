@@ -73,17 +73,6 @@ public class Printer implements Visitor {
         return null;
     }
 
-    @Override
-    public Object visitTraitFunction(TraitFunction ast, Object o) {
-        print(indentString() + "TraitFunction");
-        ++indent;
-        ast.I.visit(this, o);
-        ast.T.visit(this, o);
-        ast.PL.visit(this, o);
-        --indent;
-        return null;
-    }
-
     @Override 
     public Object visitMethod(Method ast, Object o) {
         print(indentString() + "Method");

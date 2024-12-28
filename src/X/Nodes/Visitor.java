@@ -221,8 +221,6 @@ public interface Visitor {
 
     Object visitTrait(Trait ast, Object o);
 
-    Object visitTraitFunction(TraitFunction ast, Object o);
-
     Object visitEmptyTraitList(EmptyTraitList ast, Object o);
 
     Object visitTraitList(TraitList ast, Object o);

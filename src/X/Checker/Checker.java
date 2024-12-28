@@ -380,7 +380,7 @@ public class Checker implements Visitor {
                     if (modules.methodExists(M.I.spelling, M.attachedStruct.T, M.PL)) {
                         handler.reportError(errors[84] + ": %", M.I.spelling, M.I.pos);
                     }
-                        modules.addMethod(M);
+                    modules.addMethod(M);
                 }
                 case Function F -> {
                     List P = F.PL;
@@ -622,6 +622,12 @@ public class Checker implements Visitor {
 
     public Object visitMethod(Method ast, Object o) {
         baseStatementCounter = 0;
+
+        if (ast.isTraitFunction) {
+            ast.PL.visit(this, o);
+            checkMurking(ast);
+            return null;
+        }
 
         checkMurking(ast.attachedStruct);
         checkMurking(ast);
@@ -3215,12 +3221,6 @@ public class Checker implements Visitor {
         return null;
     }
 
-    public Object visitTraitFunction(TraitFunction ast, Object o) {
-        ast.PL.visit(this, o);
-        checkMurking(ast);
-        return null;
-    }
-
     public Object visitEmptyTraitList(EmptyTraitList ast, Object o) {
         return null;
     }
@@ -3252,21 +3252,24 @@ public class Checker implements Visitor {
         }
         Struct S = mainModule.getStruct(ast.struct.spelling);
         ast.setStruct(S);
+        modules.addTraitToStruct(S, T);
 
         currentImpl = ast;
         ast.IL.visit(this, o);
         currentImpl = null;
 
-        ArrayList<TraitFunction> unimplementedMethods = ast.getUnimplementedMethods();
+        ArrayList<Method> unimplementedMethods = ast.getUnimplementedMethods();
         if (!unimplementedMethods.isEmpty()) {
             String message = "trait '" + ast.trait.spelling + "' requires the following methods to be implemented: ";
-            for (TraitFunction TF : unimplementedMethods) {
+            for (Method TF : unimplementedMethods) {
                 message += "'" + TF.I.spelling + "', ";
             }
             message = message.substring(0, message.length() - 2);
             handler.reportError(errors[95] + ": %", message, ast.pos);
+            return null;
         }
 
+        modules.addImplToTrait(T, ast);
         return null;
     }
 

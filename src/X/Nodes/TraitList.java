@@ -4,10 +4,10 @@ import X.Lexer.Position;
 
 public class TraitList extends List {
 
-    public TraitFunction TF;
+    public Method TF;
     public List L;
 
-    public TraitList(TraitFunction tfAST, List lAST, Position pos) {
+    public TraitList(Method tfAST, List lAST, Position pos) {
         super(pos);
         TF = tfAST;
         L = lAST;

@@ -14,12 +14,18 @@ public class Struct extends Decl {
     private int length = -1;
     public String fileName;
 
+    public ArrayList<Trait> traits = new ArrayList<>();
+
     public Struct(List slAST, Ident iAST, Position pos) {
         super(pos, false);
         I = iAST;
         SL = slAST;
         length = -1;
         I.parent = SL.parent = this;
+    }
+
+    public void addTrait(Trait t) {
+        traits.add(t);
     }
 
     public int getLength() {
