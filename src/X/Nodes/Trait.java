@@ -50,5 +50,53 @@ public class Trait extends Decl {
 
         return fns;
     }
+
+    public TraitFunction getRelatedTF(Method M) {
+        List L = TL;
+        if (!L.isEmptyTraitList()) {
+            while (true) {
+                TraitFunction fn = ((TraitList) L).TF;
+                boolean eqName = fn.I.spelling.equals(M.I.spelling);
+                boolean eqParams = fn.PL.equals(M.PL);
+                boolean eqType = fn.T.equals(M.T);
+                boolean pointerEqual = fn.isPointer == M.attachedStruct.T.isPointer();
+                boolean eqMut = fn.isMut == M.isMut;
+                if (eqName && eqParams && eqType && pointerEqual && eqMut) {
+                    return fn;
+                }
+
+                if (((TraitList) L).L.isEmptyTraitList()) {
+                    break;
+                }
+                L = ((TraitList) L).L;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean containsMethod(Method M) {
+        List L = TL;
+        if (!L.isEmptyTraitList()) {
+            while (true) {
+                TraitFunction fn = ((TraitList) L).TF;
+                boolean eqName = fn.I.spelling.equals(M.I.spelling);
+                boolean eqParams = fn.PL.equals(M.PL);
+                boolean eqType = fn.T.equals(M.T);
+                boolean pointerEqual = fn.isPointer == M.attachedStruct.T.isPointer();
+                boolean eqMut = fn.isMut == M.isMut;
+                if (eqName && eqParams && eqType && pointerEqual && eqMut) {
+                    return true;
+                }
+
+                if (((TraitList) L).L.isEmptyTraitList()) {
+                    break;
+                }
+                L = ((TraitList) L).L;
+            }
+        }
+
+        return false;
+    }
     
 }

@@ -1,5 +1,6 @@
 package X.Nodes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import X.Lexer.Position;
@@ -24,6 +25,10 @@ public class Impl extends Decl {
         struct.parent = trait.parent = IL.parent = this;
     }
 
+    public String getStructType() {
+        return refStruct.I.spelling;
+    }
+
     public void setTrait(Trait T) {
         refTrait = T;
         List TL = T.TL;
@@ -37,6 +42,30 @@ public class Impl extends Decl {
                 TL = ((TraitList) TL).L;
             }
         }
+    }
+
+    public boolean methodExistsOnTrait(Method M) {
+        return refTrait.containsMethod(M);
+    }
+
+    // returns false if already true
+    public boolean addTraitFunction(Method M) {
+        TraitFunction TF = refTrait.getRelatedTF(M);
+        if (MethodToVisitedMapping.get(TF)) {
+            return true;
+        }
+        MethodToVisitedMapping.put(TF, true);
+        return false;
+    }
+
+    public ArrayList<TraitFunction> getUnimplementedMethods() {
+        ArrayList<TraitFunction> unimplementedMethods = new ArrayList<>();
+        for (TraitFunction TF: MethodToVisitedMapping.keySet()) {
+            if (!MethodToVisitedMapping.get(TF)) {
+                unimplementedMethods.add(TF);
+            }
+        }
+        return unimplementedMethods;
     }
 
     public void setStruct(Struct S) {

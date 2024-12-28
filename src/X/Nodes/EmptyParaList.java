@@ -11,4 +11,9 @@ public class EmptyParaList extends List {
     public Object visit(Visitor v, Object o) {
         return v.visitEmptyParaList(this, o);
     }
+
+    public boolean equals(Object o) {
+        return o instanceof EmptyParaList;
+    }
+
 }

@@ -35,4 +35,12 @@ public class ParaList extends List {
         }
         return true;
     }
+
+    public boolean equal(Object o) {
+        if (o instanceof ParaList) {
+            ParaList pl = (ParaList) o;
+            return P.equals(pl.P) && PL.equals(pl.PL);
+        }
+        return false;
+    }
 }

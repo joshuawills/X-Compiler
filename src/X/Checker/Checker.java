@@ -121,7 +121,9 @@ public class Checker implements Visitor {
         "*92: no such trait to implement",
         "*93: no such struct to implement trait for",
         "*94: unrecognised method for trait",
-        "*95: missing methods for trait implementation"
+        "*95: missing methods for trait implementation",
+        "*96: multiple method implementations for trait",
+        "*97: type doesn't match with specified implementation"
     };
 
     private final SymbolTable idTable;
@@ -3229,12 +3231,15 @@ public class Checker implements Visitor {
         return null;
     }
 
+    private Impl currentImpl = null;
+
     public Object visitImpl(Impl ast, Object o) {
         
         // Validating the trait exists
         if (!modules.traitExists(ast.trait.spelling)) {
             String m = ast.trait.spelling;
             handler.reportError(errors[92] + ": %", m, ast.trait.pos);
+            return null;
         }
         Trait T = modules.getTrait(ast.trait.spelling);
         ast.setTrait(T);
@@ -3243,24 +3248,60 @@ public class Checker implements Visitor {
         if (!mainModule.structExists(ast.struct.spelling)) {
             String m = "struct '" + ast.struct.spelling + "'";
             handler.reportError(errors[93] + ": %", m, ast.struct.pos);
+            return null;
         }
         Struct S = mainModule.getStruct(ast.struct.spelling);
         ast.setStruct(S);
 
-        // "*94: unrecognised method for trait",
-        // "*95: missing methods for trait implementation"
+        currentImpl = ast;
+        ast.IL.visit(this, o);
+        currentImpl = null;
 
+        ArrayList<TraitFunction> unimplementedMethods = ast.getUnimplementedMethods();
+        if (!unimplementedMethods.isEmpty()) {
+            String message = "trait '" + ast.trait.spelling + "' requires the following methods to be implemented: ";
+            for (TraitFunction TF : unimplementedMethods) {
+                message += "'" + TF.I.spelling + "', ";
+            }
+            message = message.substring(0, message.length() - 2);
+            handler.reportError(errors[95] + ": %", message, ast.pos);
+        }
 
         return null;
     }
 
     public Object visitMethodList(MethodList ast, Object o) {
-        System.out.println("METHOD LIST CHECKER");
+        // Validating the trait function names are unique and actually exist
+        ast.M.visit(this, o);
+
+        Type MethodT = ast.M.attachedStruct.T;
+        if (MethodT.isPointerToStruct()) {
+            MethodT = ((PointerType) MethodT).t;
+        }
+        if (!MethodT.isStruct() || !(((StructType) MethodT).S.I.spelling).equals(currentImpl.getStructType())) {
+            String message = "expected " + currentImpl.getStructType() + ", received " + MethodT;
+            handler.reportError(errors[97] + ": %", message, ast.M.I.pos);
+            return null;
+        }
+
+        if (currentImpl.methodExistsOnTrait(ast.M)) {
+            if (currentImpl.addTraitFunction(ast.M)) {
+                // Function is already implemented
+                String message = "method '" + ast.M.I.spelling + "' is already implemented on trait '" + currentImpl.trait.spelling + "'";
+                handler.reportError(errors[96] + ": %", message, ast.M.I.pos);
+                return null;
+            }
+        } else {
+            String message = "method '" + ast.M.I.spelling + "' does not exist on trait '" + currentImpl.trait.spelling + "'";
+            handler.reportError(errors[94] + ": %", message, ast.M.I.pos);
+            return null;
+        }
+
+        ast.L.visit(this, o);
         return null;
     }
 
     public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
-        System.out.println("EMPTY METHOD LIST CHECKER");
         return null;
     }
 
