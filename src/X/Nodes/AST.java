@@ -184,4 +184,16 @@ public abstract class AST {
         return this instanceof UsingStmt;
     }
 
+    public boolean isEmptyTupleExprList() {
+        return this instanceof EmptyTupleExprList;
+    }
+
+    public boolean isEmptyIdentsList() {
+        return this instanceof EmptyIdentsList;
+    }
+
+    public boolean isEmptyMethodList() {
+        return this instanceof EmptyMethodList;
+    }
+
 }

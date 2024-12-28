@@ -51,7 +51,7 @@ public class Trait extends Decl {
         return fns;
     }
 
-    public Method getRelatedTF(Method M) {
+    public Method getRelatedMethod(Method M) {
         List L = TL;
         if (!L.isEmptyTraitList()) {
             while (true) {
@@ -73,6 +73,48 @@ public class Trait extends Decl {
         }
 
         return null;
+    }
+
+    public Method getRelatedMethod(String name, List PL, boolean isPointer) {
+        List L = TL;
+        if (!L.isEmptyTraitList()) {
+            while (true) {
+                Method fn = ((TraitList) L).TF;
+                boolean eqName = fn.I.spelling.equals(name);
+                boolean eqParams = fn.PL.equals(PL);
+                if (eqName && eqParams && fn.attachedStruct.T.isPointer() == isPointer) {
+                    return fn;
+                }
+
+                if (((TraitList) L).L.isEmptyTraitList()) {
+                    break;
+                }
+                L = ((TraitList) L).L;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean containsMethod(String name, List PL, boolean isPointer) {
+        List L = TL;
+        if (!L.isEmptyTraitList()) {
+            while (true) {
+                Method fn = ((TraitList) L).TF;
+                boolean eqName = fn.I.spelling.equals(name);
+                boolean eqParams = fn.PL.equals(PL);
+                if (eqName && eqParams && fn.attachedStruct.T.isPointer() == isPointer) {
+                    return true;
+                }
+
+                if (((TraitList) L).L.isEmptyTraitList()) {
+                    break;
+                }
+                L = ((TraitList) L).L;
+            }
+        }
+
+        return false;
     }
 
     public boolean containsMethod(Method M) {

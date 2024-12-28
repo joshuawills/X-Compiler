@@ -13,7 +13,8 @@ public class EmptyParaList extends List {
     }
 
     public boolean equals(Object o) {
-        return o instanceof EmptyParaList;
+        return o instanceof EmptyParaList
+            || o instanceof EmptyArgList;
     }
 
 }

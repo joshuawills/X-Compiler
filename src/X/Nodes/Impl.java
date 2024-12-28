@@ -13,7 +13,7 @@ public class Impl extends Decl {
     public Ident struct;
 
     private Trait refTrait;
-    private Struct refStruct;
+    public Struct refStruct;
 
     private HashMap<Method, Boolean> MethodToVisitedMapping = new HashMap<>();
 
@@ -50,7 +50,7 @@ public class Impl extends Decl {
 
     // returns false if already true
     public boolean addTraitFunction(Method M) {
-        Method TF = refTrait.getRelatedTF(M);
+        Method TF = refTrait.getRelatedMethod(M);
         if (MethodToVisitedMapping.get(TF)) {
             return true;
         }
@@ -66,6 +66,27 @@ public class Impl extends Decl {
             }
         }
         return unimplementedMethods;
+    }
+
+    public Method getRelatedMethod(String v, List PL, boolean isPointer) {
+        List L = IL;
+        if (!L.isEmptyMethodList()) {
+            while (true) {
+                Method fn = ((MethodList) L).M;
+                boolean eqName = fn.I.spelling.equals(v);
+                boolean eqParams = fn.PL.equals(PL);
+                boolean pointerEqual = fn.attachedStruct.T.isPointer() == isPointer;
+                if (eqName && eqParams && pointerEqual) {
+                    return fn;
+                }
+
+                if (((MethodList) L).L.isEmptyMethodList()) {
+                    break;
+                }
+                L = ((MethodList) L).L;
+            }
+        }
+        return null;
     }
 
     public void setStruct(Struct S) {

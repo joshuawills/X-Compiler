@@ -101,6 +101,10 @@ public class Emitter implements Visitor {
             currentModule = modules.getModule(m.filename);
             m.visit(this, null);
         }
+        for (Impl I: modules.getImpls()) {
+            currentModule = modules.getModule(I.filename);
+            I.visit(this, null);
+        }
 
         LLVM.dump(outputName);
     }
@@ -2673,16 +2677,17 @@ public class Emitter implements Visitor {
     }
 
     public Object visitImpl(Impl ast, Object o) {
+        ast.IL.visit(this, o);
         return null;
     }
 
     public Object visitMethodList(MethodList ast, Object o) {
-        System.out.println("METHOD LIST EMITTER");
+        ast.M.visit(this, o);
+        ast.L.visit(this, o);
         return null;
     }
 
     public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
-        System.out.println("EMPTY METHOD LIST EMITTER");
         return null;
     }
 }

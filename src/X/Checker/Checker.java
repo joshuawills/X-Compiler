@@ -3277,6 +3277,10 @@ public class Checker implements Visitor {
         // Validating the trait function names are unique and actually exist
         ast.M.visit(this, o);
 
+        checkMurking(ast.M.attachedStruct);
+        checkMurking(ast.M);
+        ast.M.setTypeDef();
+        ast.M.filename = currentFileName;
         Type MethodT = ast.M.attachedStruct.T;
         if (MethodT.isPointerToStruct()) {
             MethodT = ((PointerType) MethodT).t;

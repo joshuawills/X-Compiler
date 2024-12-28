@@ -10,7 +10,9 @@ import X.Nodes.Impl;
 import X.Nodes.List;
 import X.Nodes.Method;
 import X.Nodes.Module;
+import X.Nodes.PointerType;
 import X.Nodes.Struct;
+import X.Nodes.StructType;
 import X.Nodes.Trait;
 import X.Nodes.TupleType;
 import X.Nodes.Type;
@@ -183,12 +185,34 @@ public class AllModules {
         return null;
     }
 
+    // T is the type mapping to
     public boolean methodExists(String v, Type T, List PL) {
         for (Method m: methods) {
             if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
                 return true;
             }
         }
+
+        if (T.isStruct()) {
+            Struct S = ((StructType) T).S;
+            if (structToTraitMapping.containsKey(S)) {
+                for (Trait t: structToTraitMapping.get(S)) {
+                    if (t.containsMethod(v, PL, false)) {
+                        return true;
+                    }
+                }
+            }
+        } else if (T.isPointerToStruct()) {
+            Struct S = ((StructType) ((PointerType) T).t).S;
+            if (structToTraitMapping.containsKey(S)) {
+                for (Trait t: structToTraitMapping.get(S)) {
+                    if (t.containsMethod(v, PL, true)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
         return false;
     }
 
@@ -216,6 +240,33 @@ public class AllModules {
                 return m;
             }
         }
+
+        if (T.isStruct()) {
+            Struct S = ((StructType) T).S;
+            if (structToTraitMapping.containsKey(S)) {
+                for (Trait t: structToTraitMapping.get(S)) {
+                    ArrayList<Impl> impls = traitToImplMapping.get(t);
+                    for (Impl impl: impls) {
+                        if (impl.refStruct.I.spelling.equals(S.I.spelling)) {
+                            return impl.getRelatedMethod(v, PL, false);
+                        }
+                    }
+                    
+                }
+            }
+        } else if (T.isPointerToStruct()) {
+            Struct S = ((StructType) ((PointerType) T).t).S;
+            if (structToTraitMapping.containsKey(S)) {
+                for (Trait t: structToTraitMapping.get(S)) {
+                    ArrayList<Impl> impls = traitToImplMapping.get(t);
+                    for (Impl impl: impls) {
+                        if (impl.refStruct.I.spelling.equals(S.I.spelling)) {
+                            return impl.getRelatedMethod(v, PL, true);
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -234,6 +285,14 @@ public class AllModules {
 
     public ArrayList<Trait> getTraits() {
         return traits;
+    }
+
+    public ArrayList<Impl> getImpls() {
+        ArrayList<Impl> impls = new ArrayList<>();
+        for (ArrayList<Impl> implList: traitToImplMapping.values()) {
+            impls.addAll(implList);
+        }
+        return impls;
     }
     
 }

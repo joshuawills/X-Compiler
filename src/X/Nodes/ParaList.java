@@ -40,6 +40,9 @@ public class ParaList extends List {
         if (o instanceof ParaList) {
             ParaList pl = (ParaList) o;
             return P.equals(pl.P) && PL.equals(pl.PL);
+        } else if (o instanceof Args) {
+            Args a = (Args) o;
+            return P.T.equals(a.E.type) && PL.equals(a.EL);
         }
         return false;
     }
