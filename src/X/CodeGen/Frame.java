@@ -16,6 +16,8 @@ public class Frame {
 
     private int dollarDepth = 0;
 
+    private int precedingV = -1;
+
     public void setDollarDepth(int val) {
         dollarDepth = val;
     }
@@ -42,15 +44,20 @@ public class Frame {
         return localVarIndex++;
     }
 
+    public void setPreceding(int v) {
+        precedingV = v;
+    }
+
     public String getNewLabel() {
+        precedingV = label;
         return "L" + label++;
     }
 
     public String getPreceding() {
-        if (label == 0) {
+        if (precedingV == -1) {
             return "0";
         } else {
-            return "L" + (label - 1);
+            return "L" + precedingV;
         }
     }
 

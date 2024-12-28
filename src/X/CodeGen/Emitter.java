@@ -452,6 +452,8 @@ public class Emitter implements Visitor {
 
         emitN("\n" + bottom + ":");
         trueBottom = "";
+        int bV = Integer.parseInt(bottom.substring(1));
+        f.setPreceding(bV);
         return null;
     }
 
