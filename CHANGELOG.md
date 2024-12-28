@@ -215,6 +215,7 @@
 *28.12.24*
 
 - extern keyword and its meaning
+- small test fixes
 
 # TODO
 

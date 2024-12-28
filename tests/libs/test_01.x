@@ -1,61 +1,61 @@
 // Testing sin and cos in the math lib
 
-import std, io, math;
+using std, io, math;
 
 fn main() -> void {
 
-    let pi = Math::PI;
+    let pi = PI;
 
-    io::print("===\n");
-    io::print(Math::sin(0.0));
-    io::print(Math::sin(pi / 2.0));
-    io::print(Math::sin(pi));
-    io::print(Math::sin(pi + pi / 2.0));
-    io::print(Math::sin(2.0 * pi));
+    println("===");
+    println(sin(0.0));
+    println(sin(pi / 2.0));
+    println(sin(pi));
+    println(sin(pi + pi / 2.0));
+    println(sin(2.0 * pi));
 
-    let mut degreesOption = Math::TrigOptions.DEGREES;
-    io::print("===\n");
+    let mut degreesOption = TrigOptions.DEGREES;
+    println("===");
 
-    io::print(Math::sin(0.0, degreesOption));
-    io::print(Math::sin(90.0, degreesOption));
-    io::print(Math::sin(180.0, degreesOption));
-    io::print(Math::sin(270.0, degreesOption));
-    io::print(Math::sin(360.0, degreesOption));
-    io::print("===\n");
+    println(sin(0.0, degreesOption));
+    println(sin(90.0, degreesOption));
+    println(sin(180.0, degreesOption));
+    println(sin(270.0, degreesOption));
+    println(sin(360.0, degreesOption));
+    println("===");
 
-    degreesOption = Math::TrigOptions.RADIANS;
+    degreesOption = TrigOptions.RADIANS;
 
-    io::print(Math::sin(0.0, degreesOption));
-    io::print(Math::sin(pi / 2.0, degreesOption));
-    io::print(Math::sin(pi, degreesOption));
-    io::print(Math::sin(pi + pi / 2.0, degreesOption));
-    io::print(Math::sin(2.0 * pi, degreesOption));
-    io::print("===\n");
+    println(sin(0.0, degreesOption));
+    println(sin(pi / 2.0, degreesOption));
+    println(sin(pi, degreesOption));
+    println(sin(pi + pi / 2.0, degreesOption));
+    println(sin(2.0 * pi, degreesOption));
+    println("===");
 
-    io::print("===\n");
-    io::print(Math::cos(0.0));
-    io::print(Math::cos(pi / 2.0));
-    io::print(Math::cos(pi));
-    io::print(Math::cos(pi + pi / 2.0));
-    io::print(Math::cos(2.0 * pi));
+    println("===");
+    println(cos(0.0));
+    println(cos(pi / 2.0));
+    println(cos(pi));
+    println(cos(pi + pi / 2.0));
+    println(cos(2.0 * pi));
 
-    degreesOption = Math::TrigOptions.DEGREES;
-    io::print("===\n");
+    degreesOption = TrigOptions.DEGREES;
+    println("===");
 
-    io::print(Math::cos(0.0, degreesOption));
-    io::print(Math::cos(90.0, degreesOption));
-    io::print(Math::cos(180.0, degreesOption));
-    io::print(Math::cos(270.0, degreesOption));
-    io::print(Math::cos(360.0, degreesOption));
-    io::print("===\n");
+    println(cos(0.0, degreesOption));
+    println(cos(90.0, degreesOption));
+    println(cos(180.0, degreesOption));
+    println(cos(270.0, degreesOption));
+    println(cos(360.0, degreesOption));
+    println("===");
 
-    degreesOption = Math::TrigOptions.RADIANS;
+    degreesOption = TrigOptions.RADIANS;
 
-    io::print(Math::cos(0.0, degreesOption));
-    io::print(Math::cos(pi / 2.0, degreesOption));
-    io::print(Math::cos(pi, degreesOption));
-    io::print(Math::cos(pi + pi / 2.0, degreesOption));
-    io::print(Math::cos(2.0 * pi, degreesOption));
-    io::print("===\n");
+    println(cos(0.0, degreesOption));
+    println(cos(pi / 2.0, degreesOption));
+    println(cos(pi, degreesOption));
+    println(cos(pi + pi / 2.0, degreesOption));
+    println(cos(2.0 * pi, degreesOption));
+    println("===");
 
 }
