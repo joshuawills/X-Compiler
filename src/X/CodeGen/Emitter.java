@@ -1391,7 +1391,10 @@ public class Emitter implements Visitor {
                 innerType.visit(this, o);
                 emit(" %" + lastIndex + ", ");
                 innerType.visit(this, o);
-                emitN("* %" + tempIndex);
+                if (!innerType.isPointer()) {
+                    emit("*");
+                }
+                emitN(" %" + tempIndex);
                 index += 1;
             }
             return null;
@@ -1438,7 +1441,10 @@ public class Emitter implements Visitor {
                 innerType.visit(this, o);
                 emit(" %" + lastIndex + ", ");
                 innerType.visit(this, o);
-                emitN("* %" + tempIndex);
+                if (!innerType.isPointer()) {
+                    emit("*");
+                }
+                emitN(" %" + tempIndex);
             }
 
             index += 1;
@@ -1458,6 +1464,7 @@ public class Emitter implements Visitor {
 
     public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
 
+        emitN("\t;foo");
         Type t = ast.parentType;
         Type innerT = null;
         if (t.isArray()) {
@@ -1470,11 +1477,21 @@ public class Emitter implements Visitor {
         int pointerV = -1;
         if (t.isPointer()) {
             pointerV = f.getNewIndex();
-            emit("\t%" + pointerV + " = load ptr, ptr ");
-            switch (ast.I.decl) {
-                case LocalVar L -> emitN("%" + ast.I.spelling + L.index);
-                case ParaDecl _ -> emitN("%" + ast.I.spelling);
-                default -> System.out.println("ArrayIndexExpr not implemented");
+            if (innerT.isPointer()) {
+                emit("\t%" + pointerV + " = bitcast ptr ");
+                switch (ast.I.decl) {
+                    case LocalVar L -> emit("%" + ast.I.spelling + L.index);
+                    case ParaDecl _ -> emit("%" + ast.I.spelling);
+                    default -> System.out.println("ArrayIndexExpr not implemented");
+                }
+                emitN(" to ptr");
+            } else {
+                emit("\t%" + pointerV + " = load ptr, ptr ");
+                switch (ast.I.decl) {
+                    case LocalVar L -> emitN("%" + ast.I.spelling + L.index);
+                    case ParaDecl _ -> emitN("%" + ast.I.spelling);
+                    default -> System.out.println("ArrayIndexExpr not implemented");
+                }
             }
         }
 
@@ -1510,6 +1527,7 @@ public class Emitter implements Visitor {
         }
 
         ast.tempIndex = newV;
+        emitN("\t;bar");
         return null;
     }
 
