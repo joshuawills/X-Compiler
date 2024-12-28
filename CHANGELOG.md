@@ -207,6 +207,15 @@
 - basic documentation updates for using keyword
 - new unsigned types 'u8', u32' and 'u64'
 
+*19.12.24* - *28.12.24*
+
+- impls and traits
+- more standard library development
+
+*28.12.24*
+
+- extern keyword and its meaning
+
 # TODO
 
 - in-compilation expression everywhere possible
@@ -225,6 +234,9 @@
 - clean up all the todos
 - set default values for uninitialised
 - underline relevant part in error messages
+
+- ability to define external functions
+- big bug fix cleanup time
 
 HERE
 

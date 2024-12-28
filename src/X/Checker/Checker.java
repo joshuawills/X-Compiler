@@ -123,7 +123,8 @@ public class Checker implements Visitor {
         "*94: unrecognised method for trait",
         "*95: missing methods for trait implementation",
         "*96: multiple method implementations for trait",
-        "*97: type doesn't match with specified implementation"
+        "*97: type doesn't match with specified implementation",
+        "*98: duplicate definitions of extern function or variable"
     };
 
     private final SymbolTable idTable;
@@ -185,7 +186,7 @@ public class Checker implements Visitor {
         // Load  in all unique types
         loadUniqueTypes(L);
        
-        // Load in function names, method names and global vars
+        // Load in function names, extern functions, method names and global vars
         loadFunctionsAndGlobalVars(L);
 
         // Loading in implementations
@@ -414,8 +415,20 @@ public class Checker implements Visitor {
                     F.setTypeDef();
                     mainModule.addFunction(F, currentFileName);
                 }
+                case Extern E -> {
+                    if (E.F != null) {
+                        if (modules.libCFunctionExists(E.F.I.spelling)) {
+                            handler.reportError(errors[98] + ": %", E.F.I.spelling, E.F.I.pos);
+                        }
+                        modules.addLibCFunction(E.F);
+                    } else {
+                        if (modules.libCVariableExists(E.G.I.spelling)) {
+                            handler.reportError(errors[98] + ": %", E.G.I.spelling, E.G.I.pos);
+                        }
+                        modules.addLibCVariable(E.G);
+                    }
+                }
                 default -> {}
-                
             }
 
             if (L.DL.isEmptyDeclList()) {
@@ -472,7 +485,6 @@ public class Checker implements Visitor {
     }
 
     private void establishEnv() {
-        Ident i = new Ident("x", dummyPos);
         Environment.booleanType = new BooleanType(dummyPos);
         Environment.i8Type= new I8Type(dummyPos);
         Environment.i64Type = new I64Type(dummyPos);
@@ -487,119 +499,7 @@ public class Checker implements Visitor {
         Environment.voidPointerType = new PointerType(dummyPos, Environment.voidType);
         Environment.errorType = new ErrorType(dummyPos);
         Environment.charPointerType = new PointerType(dummyPos, Environment.i8Type);
-      
-        // Lib C ones
-        Environment.printf = stdFunctionLibC(Environment.i32Type, "printf", new ParaList(
-                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
-                new ParaList(
-                    new ParaDecl(Environment.variaticType, i, dummyPos, false),
-                    new EmptyParaList(dummyPos), dummyPos
-                ), dummyPos
-        ));
-        Environment.getchar = stdFunctionLibC(Environment.i32Type, "getchar", new EmptyParaList(dummyPos));
-        Environment.__isoc99_scanf = stdFunctionLibC(Environment.i32Type, "__isoc99_scanf", new ParaList(
-                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
-                new ParaList(
-                    new ParaDecl(Environment.variaticType, i, dummyPos, false),
-                    new EmptyParaList(dummyPos), dummyPos
-                ), dummyPos
-        ));
-        Environment.fgets = stdFunctionLibC(Environment.charPointerType, "fgets", new ParaList(
-                new ParaDecl(Environment.charPointerType, i, dummyPos, false),
-                new ParaList(
-                    new ParaDecl(Environment.i32Type, i, dummyPos, false),
-                    new ParaList(
-                        new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
-                        new EmptyParaList(dummyPos), dummyPos
-                    ), dummyPos
-                ), dummyPos
-        ));
-
-        Environment.stdin = stdVariableLibC(Environment.voidPointerType, "stdin");
-
-        Environment.fmod = stdFunctionLibC(Environment.f64Type, "fmod", new ParaList(
-                new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                new ParaList(
-                    new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                    new EmptyParaList(dummyPos), dummyPos
-                ), dummyPos
-        ));
-        Environment.fabs = stdFunctionLibC(Environment.f64Type, "fabs", new ParaList(
-                new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.exit = stdFunctionLibC(Environment.voidType, "exit", new ParaList(
-                new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.free = stdFunctionLibC(Environment.voidType, "free", new ParaList(
-                new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.malloc = stdFunctionLibC(Environment.voidPointerType, "malloc", new ParaList(
-                new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.calloc = stdFunctionLibC(Environment.voidPointerType, "calloc", new ParaList(
-                new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                new ParaList(
-                    new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                    new EmptyParaList(dummyPos), dummyPos
-                ), dummyPos
-        ));
-        Environment.realloc = stdFunctionLibC(Environment.voidPointerType, "realloc", new ParaList(
-            new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
-            new ParaList(
-                new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-            ), dummyPos
-        ));
-        Environment.sin = stdFunctionLibC(Environment.f64Type, "sin", new ParaList(
-                new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.cos = stdFunctionLibC(Environment.f64Type, "cos", new ParaList(
-                new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                new EmptyParaList(dummyPos), dummyPos
-        ));
-        Environment.pow = stdFunctionLibC(Environment.f64Type, "pow", new ParaList(
-                new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                new ParaList(
-                    new ParaDecl(Environment.f64Type, i, dummyPos, false),
-                    new EmptyParaList(dummyPos), dummyPos
-                ), dummyPos
-        ));
-        Environment.memcmp = stdFunctionLibC(Environment.i32Type, "memcmp", new ParaList(
-                new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
-                new ParaList(
-                    new ParaDecl(Environment.voidPointerType, i, dummyPos, false),
-                    new ParaList(
-                        new ParaDecl(Environment.i64Type, i, dummyPos, false),
-                        new EmptyParaList(dummyPos), dummyPos
-                    ), dummyPos
-                ), dummyPos
-        ));
    }
-
-    private Function stdFunctionLibC(Type resultType, String id, List pl) {
-        Function binding = new Function(resultType, new Ident(id, dummyPos),
-            pl, new EmptyStmt(dummyPos), dummyPos);
-        binding.setTypeDef();
-        binding.isUsed = true;
-        if (!modules.libCFunctionExists(id)) {
-            modules.addLibCFunction(binding);
-        }
-        return binding;
-    }
-
-    private GlobalVar stdVariableLibC(Type resultType, String id) {
-        GlobalVar binding = new GlobalVar(resultType, new Ident(id, dummyPos), new EmptyExpr(dummyPos), dummyPos, false);
-        binding.isUsed = true;
-        if (!modules.libCVariableExists(id)) {
-            modules.addLibCVariable(binding);
-        }
-        return binding;
-    }
 
     public Object visitProgram(Program ast, Object o) {
         ast.PL.visit(this, null);
@@ -3309,6 +3209,10 @@ public class Checker implements Visitor {
     }
 
     public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
+        return null;
+    }
+
+    public Object visitExtern(Extern ast, Object o) {
         return null;
     }
 

@@ -2,6 +2,8 @@ import std, io;
 
 // Basic C-Like string functions
 
+extern fn memcmp(mut a: i8*, mut b: i8*, mut len: i64) -> i64;
+
 export fn (mut v: i8*) len() -> i64 {
 	let mut s: i8*;
 	let mut count = 0;

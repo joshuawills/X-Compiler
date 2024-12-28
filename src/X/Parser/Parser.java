@@ -301,6 +301,30 @@ public class Parser {
             List dlAST2 = parseDeclList();
             finish(pos);
             dlAST = new DeclList(S, dlAST2, pos);
+        } else if (tryConsume(TokenType.EXTERN)) {
+            // Assume it's only for functions at the moment
+            if (tryConsume(TokenType.FN)) {
+                Ident I = parseIdent();
+                List pL = parseParaList();
+                match(TokenType.ARROW);
+                Type tAST = parseType();
+                Function F = new Function(tAST, I, pL, new EmptyStmt(pos), pos);
+                match(TokenType.SEMI);
+                finish(pos);
+                Extern E = new Extern(F, pos);
+                dlAST = new DeclList(E, parseDeclList(), pos);
+            } else {
+                match(TokenType.LET);
+                Ident I = parseIdent();
+                match(TokenType.COLON);
+                Type T = parseType();
+                finish(pos);
+                GlobalVar G = new GlobalVar(T, I, new EmptyExpr(pos), pos, false);
+                match(TokenType.SEMI);
+                finish(pos);
+                Extern E = new Extern(G, pos);
+                dlAST = new DeclList(E, parseDeclList(), pos);
+            }
         } else {
             match(TokenType.LET);
             boolean isMut = tryConsume(TokenType.MUT);

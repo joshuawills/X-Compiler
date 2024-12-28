@@ -344,6 +344,7 @@ public class Lex {
                 case "null" -> TokenType.NULL;
                 case "trait" -> TokenType.TRAIT;
                 case "impl" -> TokenType.IMPL;
+                case "extern" -> TokenType.EXTERN;
                 default -> TokenType.IDENT;
             };
         }

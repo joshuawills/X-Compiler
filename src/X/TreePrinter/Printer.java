@@ -924,4 +924,16 @@ public class Printer implements Visitor {
         return null;
     }
 
+    public Object visitExtern(Extern ast, Object o) {
+        print(indentString() + "Extern");
+        ++indent;
+        if (ast.F != null) {
+            ast.F.visit(this, o);
+        } else {
+            ast.G.visit(this, o);
+        }
+        --indent;
+        return null;
+    }
+
 }

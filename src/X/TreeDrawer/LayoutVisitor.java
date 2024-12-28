@@ -775,4 +775,12 @@ public class LayoutVisitor implements Visitor {
         return layoutNullary("EmptyMethodList");
     }
 
+    public Object visitExtern(Extern ast, Object o) {
+        if (ast.F != null) {
+            return layoutUnary("Extern", ast.F);
+        } else {
+            return layoutUnary("Extern", ast.G);
+        }
+    }
+
 }

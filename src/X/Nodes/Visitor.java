@@ -230,4 +230,6 @@ public interface Visitor {
     Object visitMethodList(MethodList ast, Object o);
 
     Object visitEmptyMethodList(EmptyMethodList ast, Object o);
+
+    Object visitExtern(Extern ast, Object o);
 }

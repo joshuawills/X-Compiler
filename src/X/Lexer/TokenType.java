@@ -73,5 +73,6 @@ public enum TokenType {
     ELLIPSIS,
     USING,
     TRAIT,
-    IMPL
+    IMPL,
+    EXTERN
 }

@@ -650,4 +650,8 @@ public class Evaluator implements Visitor {
     public Object visitEmptyMethodList(EmptyMethodList ast, Object o) {
         return null;
     }
+
+    public Object visitExtern(Extern ast, Object o) {
+        return null;
+    }
 }
