@@ -1,3 +1,5 @@
+using libc;
+
 export let I8_MIN: i8 = -128;
 export let I8_MAX: i8 = 127;
 
@@ -15,12 +17,6 @@ export let U32_MAX: u32 = 4294967295;
 
 export let U64_MIN: u64 = 0;
 export let U64_MAX: u64 = 18446744073709551615;
-
-extern fn malloc(v: i64) -> void*;
-extern fn calloc(n: i64, size_of: i64) -> void*;
-extern fn free(v: void*) -> void;
-extern fn realloc(v: void*, size_of: i64) -> void*;
-extern fn exit(v: i64) -> void;
 
 export enum StdErrors -> {
     MEMORY_ERROR,

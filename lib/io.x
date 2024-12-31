@@ -1,9 +1,4 @@
-extern fn printf(mut fmt: i8*, v: ...) -> i64;
-extern fn fgets(mut s: i8*, mut n: i32, mut stream: void*) -> i8*;
-extern fn getchar() -> i32;
-extern fn __isoc99_scanf(mut fmt: i8*, v: ...) -> i32;
-
-extern let stdin: void*;
+using libc;
 
 export enum IOErrors -> {
 	MEMORY_ERROR,

@@ -1,8 +1,6 @@
-import std, io;
+using libc, std, io;
 
 // Basic C-Like string functions
-
-extern fn memcmp(mut a: i8*, mut b: i8*, mut len: i64) -> i64;
 
 export fn (mut v: i8*) len() -> i64 {
 	let mut s: i8*;
@@ -121,16 +119,16 @@ export struct str -> {
 let STR_CAP: i64 = 1024;
 
 export fn (mut v: str*) free() -> void {
-	std::free(v->s);
-	std::free(v);
+	free(v->s);
+	free(v);
 }
 
 export fn Str(mut start: i8*) -> (str*, str_error) {
-    let mut new_str: str* = std::malloc(size(str));
+    let mut new_str: str* = malloc(size(str));
     if new_str == null {
         return (new_str, str_error { true, StrErrors.MEMORY_ERROR, "Memory error" });
     }
-	new_str->s = std::malloc(start.len() + 1);
+	new_str->s = malloc(start.len() + 1);
 	if new_str->s == null {
 		return (new_str, str_error { true, StrErrors.MEMORY_ERROR, "Memory error" });
 	}
@@ -180,12 +178,12 @@ export fn (mut v: str*) push(mut s: i8*) -> str_error {
 	let mut new_len = v.len() + s.len();
 	if new_len >= v->cap {
 		let mut new_cap = v->cap * 2;
-		let mut new_s: i8* = std::malloc(new_cap);
+		let mut new_s: i8* = malloc(new_cap);
 		if new_s == null {
 			return str_error { true, StrErrors.MEMORY_ERROR, "Memory error" };
 		}
 		(v->s).copy(new_s);
-		std::free(v->s);
+		free(v->s);
 		v->s = new_s;
 		v->cap = new_cap;
 	}
@@ -199,12 +197,12 @@ export fn (mut v: str*) push(mut s: i8) -> str_error {
 	let mut new_len = v.len() + 1;
 	if new_len >= v->cap {
 		let mut new_cap = v->cap * 2;
-		let mut new_s: i8* = std::malloc(new_cap);
+		let mut new_s: i8* = malloc(new_cap);
 		if new_s == null {
 			return str_error { true, StrErrors.MEMORY_ERROR, "Memory error" };
 		}
 		(v->s).copy(new_s);
-		std::free(v->s);
+		free(v->s);
 		v->s = new_s;
 		v->cap = new_cap;
 	}

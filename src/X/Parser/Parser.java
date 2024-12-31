@@ -305,7 +305,10 @@ public class Parser {
             // Assume it's only for functions at the moment
             if (tryConsume(TokenType.FN)) {
                 Ident I = parseIdent();
-                List pL = parseParaList();
+                match(TokenType.OPEN_PAREN);
+                List pL = parseTypeList();
+                match(TokenType.CLOSE_PAREN);
+                pL = typeListToParaList(pL);
                 match(TokenType.ARROW);
                 Type tAST = parseType();
                 Function F = new Function(tAST, I, pL, new EmptyStmt(pos), pos);
@@ -361,6 +364,16 @@ public class Parser {
         Method M = parseMethod();
         finish(pos);
         return new MethodList(M, parseMethodList(), pos);
+    }
+
+    private List typeListToParaList(List lt) {
+        Position pos = new Position();
+        if (lt.isEmptyTypeList()) {
+            return new EmptyParaList(lt.pos);
+        }
+        TypeList l = (TypeList) lt;
+        ParaDecl P = new ParaDecl(l.T, new Ident("", pos), pos, true);
+        return new ParaList(P, typeListToParaList(l.TL), lt.pos);
     }
 
     private Method parseMethod() throws SyntaxError {
@@ -831,6 +844,10 @@ public class Parser {
     private Type parseType() throws SyntaxError {
         Position pos = currentToken.pos;
         Type t = switch (currentToken.lexeme) {
+            case "..." -> {
+                accept();
+                yield new VariaticType(pos);
+            }
             case "i8" -> {
                 accept();
                 yield new I8Type(pos);

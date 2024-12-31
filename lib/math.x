@@ -1,10 +1,4 @@
-import std, io;
-
-extern fn sin(val: f64) -> f64;
-extern fn cos(val: f64) -> f64;
-extern fn pow(base: f64, exponent: f64) -> f64;
-extern fn fmod(val: f64, divisor: f64) -> f64;
-extern fn fabs(val: f64) -> f64;
+using libc;
 
 export let PI: f64 = 3.14159265;
 export let E: f64 = 2.71828182;
