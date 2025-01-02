@@ -79,3 +79,7 @@ export fn fmod(val: f64, divisor: f64) -> f64 {
 export fn fabs(val: f64) -> f64 {
 	return @fabs(val);
 }
+
+export fn (v: f64) square() -> f64 {
+	return v * v;
+}

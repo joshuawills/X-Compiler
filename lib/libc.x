@@ -18,3 +18,8 @@ extern fn cos(f64) -> f64;
 extern fn pow(f64, f64) -> f64;
 extern fn fmod(f64, f64) -> f64;
 extern fn fabs(f64) -> f64;
+
+extern fn srand(i32) -> void;
+extern fn rand() -> i32;
+
+extern fn time(void*) -> i64;
