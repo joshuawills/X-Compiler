@@ -8,3 +8,7 @@ fn say_hello() -> void {
 export fn say_bye() -> void {
 	println("bye");
 }
+
+export fn id<T>(v: T) -> T {
+	return v;
+}

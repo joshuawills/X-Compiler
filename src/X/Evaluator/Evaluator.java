@@ -654,4 +654,28 @@ public class Evaluator implements Visitor {
     public Object visitExtern(Extern ast, Object o) {
         return null;
     }
+
+    public Object visitGenericType(GenericType ast, Object o) {
+        return null;
+    }
+
+    public Object visitGenericTypeList(GenericTypeList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyGenericTypeList(EmptyGenericTypeList ast, Object o) {
+        return null;
+    }
+
+    public Object visitGenericFunction(GenericFunction ast, Object o) {
+        return null;
+    }
+
+    public Object visitImplementsList(ImplementsList ast, Object o) {
+        return null;
+    }
+
+    public Object visitEmptyImplementsList(EmptyImplementsList ast, Object o) {
+        return null;
+    }
 }

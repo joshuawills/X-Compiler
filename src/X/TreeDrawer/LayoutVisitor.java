@@ -62,6 +62,10 @@ public class LayoutVisitor implements Visitor {
         return layoutQuaternary("FunDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S);
     }
 
+    public Object visitGenericFunction(GenericFunction ast, Object o) {
+        return layoutQuinary("GenericFunction", ast.GTL, ast.T, ast.I, ast.PL, ast.S);
+    }
+
     public Object visitMethod(Method ast, Object obj) {
         return layoutQuinary("MethodDec(" + ast.TypeDef + ")", ast.T, ast.I, ast.PL, ast.S, ast.attachedStruct);
     }
@@ -781,6 +785,26 @@ public class LayoutVisitor implements Visitor {
         } else {
             return layoutUnary("Extern", ast.G);
         }
+    }
+
+    public Object visitGenericType(GenericType ast, Object o) {
+        return layoutBinary("GenericType", ast.I, ast.TL);
+    }
+
+    public Object visitGenericTypeList(GenericTypeList ast, Object o) {
+        return layoutTernary("GenericTypeList", ast.I, ast.IL, ast.GTL);
+    }
+
+    public Object visitEmptyGenericTypeList(EmptyGenericTypeList ast, Object o) {
+        return layoutNullary("EmptyGenericTypeList");
+    }
+
+    public Object visitImplementsList(ImplementsList ast, Object o) {
+        return layoutBinary("ImplementsList", ast.I, ast.IL);
+    }
+
+    public Object visitEmptyImplementsList(EmptyImplementsList ast, Object o) {
+        return layoutNullary("EmptyImplementsList");
     }
 
 }

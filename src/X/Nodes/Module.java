@@ -12,6 +12,8 @@ public class Module extends AST {
 
     private ArrayList<Function> functions = new ArrayList<>();
 
+    private ArrayList<GenericFunction> genericFunctions = new ArrayList<>();
+
     private HashMap<String, GlobalVar> vars = new HashMap<>();
     private HashMap<String, Enum> enums = new HashMap<>();
     private HashMap<String, Struct> structs = new HashMap<>();
@@ -155,6 +157,11 @@ public class Module extends AST {
         functions.add(f);
     }
 
+    public void addGenericFunction(GenericFunction f, String filename) {
+        f.filename = filename;
+        genericFunctions.add(f);
+    }
+
     public boolean varExists(String v, boolean topLevel) {
         if (vars.containsKey(v)) {
             if (topLevel || isMainModule || vars.get(v).isExported) {
@@ -251,18 +258,27 @@ public class Module extends AST {
     }
 
 
-    public String functionExistsInUsing(String v, List PL) {
+    public String functionExistsInUsing(String functionName, List functionParameters) {
         for (Module m: usingFiles.values()) {
-            if (m.functionExists(v, PL, false)) {
+            if (m.functionExists(functionName, functionParameters, false)) {
                 return m.fileName;
             }
         }
         return "";
     }
 
-    public boolean functionExists(String v, List PL, boolean topLevel) {
+    public String genericFunctionExistsInUsing(String genericFunctionName, List functionParams) {
+        for (Module m: usingFiles.values()) {
+            if (m.genericFunctionExists(genericFunctionName, functionParams, false)) {
+                return m.fileName;
+            }
+        }
+        return "";
+    }
+
+    public boolean functionExists(String functionName, List functionParameters, boolean topLevel) {
         for (Function f: functions) {
-            if (f.I.spelling.equals(v) && f.equalTypeParameters(PL)) {
+            if (f.I.spelling.equals(functionName) && f.equalTypeParameters(functionParameters)) {
                 if (topLevel || isMainModule || f.isExported) {
                     return true;
                 }
@@ -271,7 +287,7 @@ public class Module extends AST {
 
         if (topLevel) {
             for (Module m: usingFiles.values()) {
-                if (m.functionExists(v, PL, false)) {
+                if (m.functionExists(functionName, functionParameters, false)) {
                     return true;
                 }
             }
@@ -280,8 +296,36 @@ public class Module extends AST {
         return false;
     }
 
-    public boolean functionExists(String v, List PL) {
-        return functionExists(v, PL, true);
+    // What makes two generic functions identical
+
+    // They have the same name, and parameters
+    //     - with generic parameters, they have the same trait bounds
+    public boolean genericFunctionExists(String functionName, List functionParameters, boolean topLevel) {
+        for (GenericFunction GF: genericFunctions) {
+            if (GF.I.spelling.equals(functionName) && GF.equalTypeParameters(functionParameters)) {
+                if (topLevel || isMainModule || GF.isExported) {
+                    return true;
+                }
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.genericFunctionExists(functionName, functionParameters, false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean genericFunctionExists(String functionName, List functionParameters) {
+        return genericFunctionExists(functionName, functionParameters, true);
+    }
+
+    public boolean functionExists(String functionName, List functionParameters) {
+        return functionExists(functionName, functionParameters, true);
     }
 
     public boolean functionExistsNotExported(String v, List PL) {

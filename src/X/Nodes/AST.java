@@ -196,4 +196,15 @@ public abstract class AST {
         return this instanceof EmptyMethodList;
     }
 
+    public boolean isGenericTypeList() {
+        return this instanceof GenericTypeList;
+    }
+
+    public boolean isEmptyGenericTypeList() {
+        return this instanceof EmptyGenericTypeList;
+    }
+
+    public boolean isEmptyImplementsList() {
+        return this instanceof EmptyImplementsList;
+    }
 }

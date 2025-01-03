@@ -124,7 +124,11 @@ public class Checker implements Visitor {
         "*95: missing methods for trait implementation",
         "*96: multiple method implementations for trait",
         "*97: type doesn't match with specified implementation",
-        "*98: duplicate definitions of extern function or variable"
+        "*98: duplicate definitions of extern function or variable",
+        "*99: duplicate generic types with same name",
+        "*100: no such trait to specify as a generic bound",
+        "*101: redeclaration of generic function",
+        "*102: generic function imported into namespace already exists"
     };
 
     private final SymbolTable idTable;
@@ -186,11 +190,15 @@ public class Checker implements Visitor {
         // Load  in all unique types
         loadUniqueTypes(L);
        
-        // Load in function names, extern functions, method names and global vars
+        // Load in function names, extern functions, method names, 
+        // generic functions and global vars
         loadFunctionsAndGlobalVars(L);
 
         // Loading in implementations
         loadImplementations(L);
+
+        // Loading in generic functions
+        loadGenerics(L);
        
         // Actually visiting everything
         v.visit(this, null);
@@ -402,7 +410,7 @@ public class Checker implements Visitor {
 
                     if (mainModule.functionExists(F.I.spelling, F.PL)) {
                         String f = mainModule.functionExistsInUsing(F.I.spelling, F.PL);
-                        if (!f.equals("")) {
+                        if (!f.isEmpty()) {
                             String message = "function '" + F.I.spelling + "' from module '" + f + "'";
                             handler.reportError(errors[85] + ": %", message, F.I.pos);
                         } else {
@@ -442,6 +450,57 @@ public class Checker implements Visitor {
         while (true) {
             switch (D.D) {
                 case Impl I -> I.visit(this, null);
+                default -> {}
+            }
+            if (D.DL.isEmptyDeclList()) {
+                return;
+            }
+            D = (DeclList) D.DL;
+        }
+    }
+
+    private ArrayList<String> currentGenericTypes = new ArrayList<>();
+    private GenericFunction currentGenericFunction = null;
+
+    private void loadGenerics(DeclList D) {
+        while (true) {
+            switch (D.D) {
+                case GenericFunction G -> {
+                    // Visit the generic types list and make sure all the traits exist
+                    currentGenericFunction = G;
+                    G.GTL.visit(this, null);
+
+                    // Recalculating params for abstract types
+                    List P = G.PL;
+                    if (!P.isEmptyParaList()) {
+                        while (true) {
+                            ParaDecl PE = ((ParaList) P).P;
+                            checkMurking(PE);
+                            if (((ParaList) P).PL.isEmptyParaList()) {
+                                break;
+                            }
+                            P = ((ParaList) P).PL;
+                        }
+                    } 
+
+                    checkMurking(G);
+
+                    // Checking if the generic function already exists
+                    if (mainModule.genericFunctionExists(G.I.spelling, G.PL)) {
+                        String f = mainModule.genericFunctionExistsInUsing(G.I.spelling, G.PL);
+                        if (!f.isEmpty()) {
+                            String message = "generic function '" + G.I.spelling + "' from module '" + f + "'";
+                            handler.reportError(errors[102] + ": %", message, G.I.pos);
+                        } else {
+                            String message = String.format("'%s'. Previously declared at line %d", G.I.spelling,
+                                    G.pos.lineStart);
+                            handler.reportError(errors[101] + ": %", message, G.I.pos);
+                        }
+                    }
+
+                    mainModule.addGenericFunction(G, currentFileName);
+                    currentGenericTypes.clear();
+                }
                 default -> {}
             }
             if (D.DL.isEmptyDeclList()) {
@@ -590,9 +649,29 @@ public class Checker implements Visitor {
         return null;
     }
 
+    private List getCurrentImplementsList(GenericFunction G, String s) {
+        GenericTypeList GTL = (GenericTypeList) G.GTL;
+        while (true) {
+            if (GTL.I.spelling.equals(s)) {
+                return GTL.IL;
+            }
+            if (GTL.GTL.isEmptyGenericTypeList()) {
+                break;
+            }
+            GTL = (GenericTypeList) GTL.GTL;
+        }
+        return null;
+    }
+
     private Type unMurk(MurkyType type) {
         String s = type.V.spelling;
         Module M = mainModule;
+
+        // Handle generic functions
+        if (currentGenericTypes.contains(s)) {
+            List IL = getCurrentImplementsList(currentGenericFunction, s);
+            return new GenericType(type.V, IL, type.pos);
+        }
 
         Type T = null;
         if (type.V.isModuleAccess) {
@@ -2339,7 +2418,7 @@ public class Checker implements Visitor {
     }
 
     public Object visitNullExpr(NullExpr ast, Object o) {
-        if (ast.parent.isLocalVar() || ast.parent.isAssignmentExpr() || ast.parent.isBinaryExpr()) {
+        if (ast.parent.isArgs() || ast.parent.isLocalVar() || ast.parent.isAssignmentExpr() || ast.parent.isBinaryExpr()) {
             ast.type = Environment.voidPointerType;
             return Environment.voidPointerType;
         }
@@ -3085,7 +3164,6 @@ public class Checker implements Visitor {
     public Object visitIdentsList(IdentsList ast, Object o) {
         TypeList TL = (TypeList) o;
         String s = ast.I.spelling;
-        Decl d = idTable.retrieve(s);
 
         LocalVar L = new LocalVar(TL.T, ast.I, new EmptyExpr(dummyPos), ast.pos, isCurrentTupleDestructureMut);
         L.index = String.format("%d_%d", loopAssignDepth, baseStatementCounter);
@@ -3216,4 +3294,51 @@ public class Checker implements Visitor {
         return null;
     }
 
+    public Object visitGenericType(GenericType ast, Object o) {
+        System.out.println("CHECKER: GENERIC TYPE");
+        return null;
+    }
+
+    public Object visitGenericTypeList(GenericTypeList ast, Object o) {
+        // Check the trait exists
+        if (currentGenericTypes.contains(ast.I.spelling)) {
+            handler.reportError(errors[99] + ": %", "generic type '" + ast.I.spelling + "' already exists", ast.I.pos);
+            return null;
+        }
+
+        currentGenericTypes.add(ast.I.spelling);
+
+        // Checking all the traits really exist
+        ast.IL.visit(this, o);
+
+        // Checking the rest of the generic types
+        ast.GTL.visit(this, o);
+
+        return null;
+    }
+
+    public Object visitEmptyGenericTypeList(EmptyGenericTypeList ast, Object o) {
+        return null;
+    }
+
+    public Object visitImplementsList(ImplementsList ast, Object o) {
+        
+        if (!modules.traitExists(ast.I.spelling)) {
+            String m = "trait '" + ast.I.spelling + "' for generic function '" + currentGenericFunction.I.spelling + "'";
+            handler.reportError(errors[100] + ": %", m, ast.I.pos);
+            return null;
+        }
+
+        ast.refTrait = modules.getTrait(ast.I.spelling);
+        ast.IL.visit(this, o);
+        return null;
+    }
+
+    public Object visitEmptyImplementsList(EmptyImplementsList ast, Object o) {
+        return null;
+    }
+
+    public Object visitGenericFunction(GenericFunction ast, Object o) {
+        return null;
+    }
 }

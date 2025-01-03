@@ -844,7 +844,6 @@ public class Emitter implements Visitor {
             emitN(", ptr %" + i1 + ", i64 %" + i2);
             return null;
         } else if (ast.O.spelling.equals("p-")) {
-            emitN("\t;foo");
             Type innerT = ((PointerType) ast.E1.type).t;
             ast.E1.visit(this, o);
             int i1 = ast.E1.tempIndex;
@@ -1468,7 +1467,6 @@ public class Emitter implements Visitor {
 
     public Object visitArrayIndexExpr(ArrayIndexExpr ast, Object o) {
 
-        emitN("\t;foo");
         Type t = ast.parentType;
         Type innerT = null;
         if (t.isArray()) {
@@ -1531,7 +1529,6 @@ public class Emitter implements Visitor {
         }
 
         ast.tempIndex = newV;
-        emitN("\t;bar");
         return null;
     }
 
@@ -2153,7 +2150,6 @@ public class Emitter implements Visitor {
     }
 
     public Object visitNullExpr(NullExpr ast, Object o) {
-        System.out.println("NEVER REACHED: NULL EXPR");
         return null;
     }
 
@@ -2692,6 +2688,36 @@ public class Emitter implements Visitor {
     }
 
     public Object visitExtern(Extern ast, Object o) {
+        return null;
+    }
+
+    public Object visitGenericType(GenericType ast, Object o) {
+        System.out.println("EMITTER: GENERIC TYPE");
+        return null;
+    }
+
+    public Object visitGenericTypeList(GenericTypeList ast, Object o) {
+        System.out.println("EMITTER: GENERIC TYPE LIST");
+        return null;
+    }
+
+    public Object visitEmptyGenericTypeList(EmptyGenericTypeList ast, Object o) {
+        System.out.println("EMITTER: EMPTY GENERIC TYPE LIST");
+        return null;
+    }
+
+    public Object visitGenericFunction(GenericFunction ast, Object o) {
+        System.out.println("EMITTER: GENERIC FUNCTION");
+        return null;
+    }
+
+    public Object visitImplementsList(ImplementsList ast, Object o) {
+        System.out.println("EMITTER: IMPLEMENTS LIST");
+        return null;
+    }
+
+    public Object visitEmptyImplementsList(EmptyImplementsList ast, Object o) {
+        System.out.println("EMITTER: EMPTY IMPLEMENTS LIST");
         return null;
     }
 }

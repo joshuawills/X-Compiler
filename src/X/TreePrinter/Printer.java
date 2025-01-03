@@ -63,6 +63,18 @@ public class Printer implements Visitor {
          return null;
     }
 
+    public Object visitGenericFunction(GenericFunction ast, Object o) {
+        print(indentString() + "GenericFunction");
+        ast.GTL.visit(this, o);
+        ++indent;
+        ast.T.visit(this, o);
+        ast.I.visit(this, o);
+        ast.PL.visit(this, o);
+        ast.S.visit(this, o);
+        --indent;
+        return null;
+    }
+
     @Override
     public Object visitTrait(Trait ast, Object o) {
         print(indentString() + "Trait");
@@ -933,6 +945,41 @@ public class Printer implements Visitor {
             ast.G.visit(this, o);
         }
         --indent;
+        return null;
+    }
+
+    public Object visitGenericType(GenericType ast, Object o) {
+        print("GenericType: " + ast.I.spelling);
+        ast.TL.visit(this, o);
+        return null;
+    }
+
+    public Object visitGenericTypeList(GenericTypeList ast, Object o) {
+        print(indentString() + "GenericTypeList");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.IL.visit(this, o);
+        ast.GTL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitEmptyGenericTypeList(EmptyGenericTypeList ast, Object o) {
+        print(indentString() + "EmptyGenericTypeList");
+        return null;
+    }
+
+    public Object visitImplementsList(ImplementsList ast, Object o) {
+        print(indentString() + "ImplementsList");
+        ++indent;
+        ast.I.visit(this, o);
+        ast.IL.visit(this, o);
+        --indent;
+        return null;
+    }
+
+    public Object visitEmptyImplementsList(EmptyImplementsList ast, Object o) {
+        print(indentString() + "EmptyImplementsList");
         return null;
     }
 

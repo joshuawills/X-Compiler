@@ -232,4 +232,16 @@ public interface Visitor {
     Object visitEmptyMethodList(EmptyMethodList ast, Object o);
 
     Object visitExtern(Extern ast, Object o);
+
+    Object visitGenericType(GenericType ast, Object o);
+
+    Object visitGenericTypeList(GenericTypeList ast, Object o);
+
+    Object visitEmptyGenericTypeList(EmptyGenericTypeList ast, Object o);
+
+    Object visitGenericFunction(GenericFunction ast, Object o);
+
+    Object visitImplementsList(ImplementsList ast, Object o);
+
+    Object visitEmptyImplementsList(EmptyImplementsList ast, Object o);
 }

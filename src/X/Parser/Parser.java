@@ -202,6 +202,8 @@ public class Parser {
             Ident I1 = null;
             Type T1 = null;
             boolean subMut = false;
+            
+            // Parsing a method attachment
             if (tryConsume(TokenType.OPEN_PAREN)) {
                 subMut = tryConsume(TokenType.MUT);
                 I1 = parseIdent();
@@ -211,11 +213,20 @@ public class Parser {
             }
 
             Ident ident = parseIdent();
+
+            List gtlAST = null;
+            if (tryConsume(TokenType.LESS_THAN)) {
+                // Generic type specification
+                gtlAST = parseGenericsList();
+                match(TokenType.GREATER_THAN);
+            }
+
             List pL = parseParaList();
             match(TokenType.ARROW);
             Type tAST = parseType();
             Stmt sAST = parseCompoundStmt();
             finish(pos);
+
             if (I1 != null) {
                 ParaDecl PD = new ParaDecl(T1, I1, pos, subMut);
                 Method method = new Method(tAST, ident, pL, sAST, PD, pos);
@@ -226,13 +237,18 @@ public class Parser {
                 finish(pos);
                 dlAST = new DeclList(method, dlAST2, pos);
             } else {
-                Function function = new Function(tAST, ident, pL, sAST, pos);
+                Decl D;
+                if (gtlAST != null) {
+                    D = new GenericFunction(tAST, ident, pL, gtlAST, sAST, pos);
+                } else {
+                    D = new Function(tAST, ident, pL, sAST, pos);
+                }
                 if (isExport) {
-                    function.setExported();
+                    D.setExported();
                 }
                 List dlAST2 = parseDeclList();
                 finish(pos);
-                dlAST = new DeclList(function, dlAST2, pos);
+                dlAST = new DeclList(D, dlAST2, pos);
             }
 
         } else if (tryConsume(TokenType.TRAIT)) {
@@ -352,6 +368,38 @@ public class Parser {
             dlAST = new DeclList(globalVar, dlAST2, pos);
         }
         return dlAST;
+    }
+
+    private List parseGenericsList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        if (currentToken.kind == TokenType.GREATER_THAN) {
+            finish(pos);
+            return new EmptyGenericTypeList(pos);
+        }
+        Ident I = parseIdent();
+
+        finish(pos);
+        List L = new EmptyImplementsList(pos);
+        if (tryConsume(TokenType.COLON)) {
+            L = parseImplementsList();
+        }
+
+        tryConsume(TokenType.COMMA);
+        finish(pos);
+        return new GenericTypeList(I, L, parseGenericsList(), pos);
+    }
+
+    private List parseImplementsList() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Ident I = parseIdent();
+        if (tryConsume(TokenType.PLUS)) {
+            finish(pos);
+            return new ImplementsList(I, parseImplementsList(), pos);
+        }
+        finish(pos);
+        return new ImplementsList(I, new EmptyImplementsList(pos), pos);
     }
 
     private List parseMethodList() throws SyntaxError {
