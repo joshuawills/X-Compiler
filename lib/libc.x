@@ -23,3 +23,13 @@ extern fn srand(i32) -> void;
 extern fn rand() -> i32;
 
 extern fn time(void*) -> i64;
+
+extern fn fopen(i8*, i8*) -> void*;
+extern fn fseek(void*, i64, i32) -> i32;
+extern fn ftell(void*) -> i64;
+extern fn fread(void*, i64, i64, void*) -> i64;
+extern fn fclose(void*) -> i32;
+extern fn rewind(void*) -> void;
+extern fn fwrite(i8*, i64, i64, void*) -> i64;
+
+extern fn stat(i8*, void*) -> i32;

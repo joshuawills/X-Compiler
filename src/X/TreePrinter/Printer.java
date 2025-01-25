@@ -814,6 +814,13 @@ public class Printer implements Visitor {
 
     public Object visitUsingStmt(UsingStmt ast, Object o) {
         print(indentString() + "UsingStmt");
+        ++indent;
+        if (ast.path != null) {
+            ast.path.visit(this, o);
+        } else {
+            ast.ident.visit(this, o);
+        }
+        --indent;
         return null;
     }
 

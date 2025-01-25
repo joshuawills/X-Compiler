@@ -12,16 +12,19 @@ public class Module extends AST {
 
     private ArrayList<Function> functions = new ArrayList<>();
 
+    private ArrayList<Method> methods = new ArrayList<>();
+
     private ArrayList<GenericFunction> genericFunctions = new ArrayList<>();
 
     private HashMap<String, GlobalVar> vars = new HashMap<>();
     private HashMap<String, Enum> enums = new HashMap<>();
     private HashMap<String, Struct> structs = new HashMap<>();
-    private HashMap<String, Module> importedFiles = new HashMap<>();
 
+    private HashMap<String, Module> importedFiles = new HashMap<>();
     private HashMap<String, Module> usingFiles = new HashMap<>();
 
     private HashMap<String, Module> aliasToModule = new HashMap<>();
+
     private boolean isMainModule = false;
     public ErrorHandler thisHandler;
 
@@ -401,6 +404,10 @@ public class Module extends AST {
         return functions;
     }
 
+    public ArrayList<Method> getMethods() {
+        return methods;
+    }
+
     public HashMap<String, Enum> getEnums() {
         return enums;
     }
@@ -419,4 +426,124 @@ public class Module extends AST {
         }
     }
 
+    public void addMethod(Method m) {
+        methods.add(m);
+    }
+
+    public boolean methodExists(String v, Type T, List PL, boolean topLevel) {
+        for (Method m: methods) {
+            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
+                if (topLevel || isMainModule || m.isExported) {
+                    return true;
+                }
+            }
+        }
+
+        // Check the imported files
+        for (Module m: importedFiles.values()) {
+            if (m.methodExists(v, T, PL, false)) {
+                return true;
+            }
+        }
+
+        // Check the using files
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.methodExists(v, T, PL, false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean methodExists(String v, Type T, List PL) {
+        return methodExists(v, T, PL, true);
+    }
+
+    public boolean methodWithNameExists(String v, Type T, boolean topLevel) {
+        for (Method m: methods) {
+            if (m.I.spelling.equals(v) && m.attachedStruct.T.equals(T)) {
+                return true;
+            }
+        }
+
+        // Check the import files
+        for (Module m: importedFiles.values()) {
+            if (m.methodWithNameExists(v, T, false)) {
+                return true;
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.methodWithNameExists(v, T, false)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean methodExistsNotExported(String v, Type T, List PL) {
+
+        // Check imported files
+        for (Module M: importedFiles.values()) {
+            for (Method m: M.methods) {
+                if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
+                    if (!m.isExported) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        for (Module M: usingFiles.values()) {
+            for (Method m: M.methods) {
+                if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
+                    if (!m.isExported) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean methodWithNameExists(String v, Type T) {
+        return methodWithNameExists(v, T, true);
+    }
+
+    public Method getMethod(String v, Type T, List PL, boolean topLevel) {
+        for (Method m: methods) {
+            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
+                if (topLevel || isMainModule || m.isExported) {
+                    return m;
+                }
+            }
+        }
+
+        // Check the imported files
+        for (Module m: importedFiles.values()) {
+            if (m.methodExists(v, T, PL, false)) {
+                return m.getMethod(v, T, PL, false);
+            }
+        }
+
+        if (topLevel) {
+            for (Module m: usingFiles.values()) {
+                if (m.methodExists(v, T, PL, false)) {
+                    return m.getMethod(v, T, PL, false);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public Method getMethod(String v, Type T, List PL) {
+        return getMethod(v, T, PL, true);
+    }
 }

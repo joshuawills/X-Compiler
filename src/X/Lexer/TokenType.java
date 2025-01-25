@@ -74,5 +74,8 @@ public enum TokenType {
     USING,
     TRAIT,
     IMPL,
-    EXTERN
+    EXTERN,
+    LEFT_SHIFT,
+    RIGHT_SHIFT,
+    BITWISE_NOT,
 }

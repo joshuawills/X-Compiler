@@ -13,4 +13,6 @@ fn main() -> void {
 
     say_hello();
 
+	let v = (21).subtract_one();
+
 }

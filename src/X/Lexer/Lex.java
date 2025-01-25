@@ -148,6 +148,14 @@ public class Lex {
                 acceptWithSpelling();
                 yield TokenType.MOD;
             }
+            case '^' -> {
+                acceptWithSpelling();
+                yield TokenType.BITWISE_XOR;
+            }
+            case '~' -> {
+                acceptWithSpelling();
+                yield TokenType.BITWISE_NOT;
+            }
             case ':' -> {
                 acceptWithSpelling();
                 if (currChar == ':') {
@@ -198,6 +206,9 @@ public class Lex {
                 if (currChar == '=') {
                     acceptWithSpelling();
                     yield TokenType.GREATER_EQ;
+                } else if (currChar == '>') {
+                    acceptWithSpelling();
+                    yield TokenType.RIGHT_SHIFT;
                 } else {
                     yield TokenType.GREATER_THAN;
                 }
@@ -207,6 +218,9 @@ public class Lex {
                 if (currChar == '=') {
                     acceptWithSpelling();
                     yield TokenType.LESS_EQ;
+                } else if (currChar == '<') {
+                    acceptWithSpelling();
+                    yield TokenType.LEFT_SHIFT;
                 } else {
                     yield TokenType.LESS_THAN;
                 }

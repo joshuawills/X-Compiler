@@ -6,6 +6,7 @@ public class Extern extends Decl {
 
     public Function F = null;
     public GlobalVar G = null;
+    public Struct S = null;
 
     public Extern(Function fAST, Position pos) {
         super(pos, false);
@@ -17,6 +18,12 @@ public class Extern extends Decl {
         super(pos, false);
         G = gAST;
         G.parent = this;
+    }
+
+    public Extern(Struct sAST, Position pos) {
+        super(pos, false);
+        S = sAST;
+        S.parent = this;
     }
 
     public Object visit(Visitor v, Object o) {

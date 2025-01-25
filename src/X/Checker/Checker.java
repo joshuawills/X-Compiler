@@ -90,7 +90,7 @@ public class Checker implements Visitor {
         "*61: imported file does not exist",
         "*62: imported file already imported",
         "*63: alias does not exist for module access",
-        "*64: can't access variable/function/type that is not exported",
+        "*64: can't access variable/function/type/method that is not exported",
         "*65: no such function in module",
         "*66: no such variable in module",
         "*67: no such type in module",
@@ -386,10 +386,10 @@ public class Checker implements Visitor {
 
                     M.setTypeDef();
                     M.filename = currentFileName;
-                    if (modules.methodExists(M.I.spelling, M.attachedStruct.T, M.PL)) {
+                    if (mainModule.methodExists(M.I.spelling, M.attachedStruct.T, M.PL)) {
                         handler.reportError(errors[84] + ": %", M.I.spelling, M.I.pos);
                     }
-                    modules.addMethod(M);
+                    mainModule.addMethod(M);
                 }
                 case Function F -> {
                     List P = F.PL;
@@ -1228,6 +1228,14 @@ public class Checker implements Visitor {
                 }
                ast.type = Environment.booleanType;
             }
+            case "&", "|", "^", "<<", ">>" -> {
+                if (!t1.isInteger() || !t2.isInteger()) {
+                    handler.reportError(errors[7], "", ast.pos);
+                    ast.type = Environment.errorType;
+                    break;
+                }
+                ast.type = t1;
+            }
             case "+", "-", "/", "*", "%" -> {
                 boolean validV1 = v1Numeric || t1.isPointer();
                 boolean validV2 = v2Numeric || t2.isPointer();
@@ -1324,6 +1332,15 @@ public class Checker implements Visitor {
         }
 
         switch (ast.O.spelling) {
+            case "~" -> {
+                if (!eT.isInteger()) {
+                    handler.reportError(errors[8], "", ast.O.pos);
+                    ast.type = Environment.errorType;
+                    break;
+                }
+                ast.O.spelling = getPrefix(eT) + ast.O.spelling;
+                ast.type = eT;
+            }
             case "+", "-" -> {
                 if (!eT.isNumeric()) {
                     handler.reportError(errors[8], "", ast.O.pos);
@@ -2448,17 +2465,19 @@ public class Checker implements Visitor {
         }
 
         Type T = currentTypeMethodAccess;
-        if (!modules.methodExists(ast.I.spelling, T, ast.args)) {
-            String message = " type " + T + ", with method name " + ast.I.spelling;
-            if (!modules.methodWithNameExists(ast.I.spelling, T)) {
+        if (!mainModule.methodExists(ast.I.spelling, T, ast.args)) {
+            String message = "type " + T + ", with method name '" + ast.I.spelling + "'";
+            if (!mainModule.methodWithNameExists(ast.I.spelling, T)) {
                 handler.reportError(errors[81] + ": %", message, ast.pos);
+            } else if (mainModule.methodExistsNotExported(ast.I.spelling, T, ast.args)) {
+                handler.reportError(errors[64] + ": %", message, ast.pos);
             } else {
                 handler.reportError(errors[82] + ": %", message, ast.pos);
             }
             return errorExpr;
         }
         
-        Method M = modules.getMethod(ast.I.spelling, T, ast.args);
+        Method M = mainModule.getMethod(ast.I.spelling, T, ast.args);
 
         if (M.attachedStruct.isMut && !isCurrentMethodMutable) {
             handler.reportError(errors[83] + ": %", "'" + ast.I.spelling + "'", ast.pos);

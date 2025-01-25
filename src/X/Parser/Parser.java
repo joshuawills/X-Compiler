@@ -332,6 +332,14 @@ public class Parser {
                 finish(pos);
                 Extern E = new Extern(F, pos);
                 dlAST = new DeclList(E, parseDeclList(), pos);
+            } else if (tryConsume(TokenType.STRUCT)) {
+                Ident I = parseIdent();
+                match(TokenType.ARROW);
+                List SL = parseStructList();
+                finish(pos);
+                Struct S = new Struct(SL, I, pos);
+                Extern E = new Extern(S, pos);
+                dlAST = new DeclList(E, parseDeclList(), pos);
             } else {
                 match(TokenType.LET);
                 Ident I = parseIdent();
@@ -1089,7 +1097,7 @@ public class Parser {
     private Expr parseAssignmentExpr() throws SyntaxError {
         Position pos = new Position();
         start(pos);
-        Expr E = parseOrExpr();
+        Expr E = parseLogicalOrExpr();
         if (!isAssignmentOperator()) {
             return E;
         }
@@ -1100,11 +1108,50 @@ public class Parser {
         return new AssignmentExpr(E, O, E2, pos);
     }
 
-    private Expr parseOrExpr() throws SyntaxError {
+    private Expr parseLogicalOrExpr() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Expr e1AST = parseLogicalAndExpr();
+        while (currentToken.kind == TokenType.OR_LOGIC) {
+            Operator opAST = acceptOperator();
+            Expr e2AST = parseLogicalAndExpr();
+            finish(pos);
+            e1AST = new BinaryExpr(e1AST, e2AST, opAST, pos);
+        }
+        return e1AST;
+    }
+
+    private Expr parseLogicalAndExpr() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Expr e1AST = parseInclusiveOrExpr();
+        while (currentToken.kind == TokenType.AND_LOGIC) {
+            Operator opAST = acceptOperator();
+            Expr e2AST = parseInclusiveOrExpr();
+            finish(pos);
+            e1AST = new BinaryExpr(e1AST, e2AST, opAST, pos);
+        }
+        return e1AST;
+    }
+
+    private Expr parseInclusiveOrExpr() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Expr e1AST = parseExclusiveOrExpr();
+        while (currentToken.kind == TokenType.BITWISE_OR) {
+            Operator opAST = acceptOperator();
+            Expr e2AST = parseExclusiveOrExpr();
+            finish(pos);
+            e1AST = new BinaryExpr(e1AST, e2AST, opAST, pos);
+        }
+        return e1AST;
+    }
+
+    private Expr parseExclusiveOrExpr() throws SyntaxError {
         Position pos = new Position();
         start(pos);
         Expr e1AST = parseAndExpr();
-        while (currentToken.kind == TokenType.OR_LOGIC) {
+        while (currentToken.kind == TokenType.BITWISE_XOR) {
             Operator opAST = acceptOperator();
             Expr e2AST = parseAndExpr();
             finish(pos);
@@ -1117,7 +1164,7 @@ public class Parser {
         Position pos = new Position();
         start(pos);
         Expr e1AST = parseEqualityExpr();
-        while (currentToken.kind == TokenType.AND_LOGIC) {
+        while (currentToken.kind == TokenType.AMPERSAND) {
             Operator opAST = acceptOperator();
             Expr e2AST = parseEqualityExpr();
             finish(pos);
@@ -1142,9 +1189,22 @@ public class Parser {
     private Expr parseRelationalExpr() throws SyntaxError {
         Position pos = new Position();
         start(pos);
-        Expr e1AST = parseAdditiveExpr();
+        Expr e1AST = parseShiftExpr();
         while (currentToken.kind == TokenType.LESS_THAN || currentToken.kind == TokenType.LESS_EQ
                 || currentToken.kind == TokenType.GREATER_THAN || currentToken.kind == TokenType.GREATER_EQ) {
+            Operator opAST = acceptOperator();
+            Expr e2AST = parseShiftExpr();
+            finish(pos);
+            e1AST = new BinaryExpr(e1AST, e2AST, opAST, pos);
+        }
+        return e1AST;
+    }
+
+    private Expr parseShiftExpr() throws SyntaxError {
+        Position pos = new Position();
+        start(pos);
+        Expr e1AST = parseAdditiveExpr();
+        while (currentToken.kind == TokenType.LEFT_SHIFT|| currentToken.kind == TokenType.RIGHT_SHIFT) {
             Operator opAST = acceptOperator();
             Expr e2AST = parseAdditiveExpr();
             finish(pos);
@@ -1213,7 +1273,7 @@ public class Parser {
                 finish(pos);
                 yield new ArrayInitExpr(aList, pos);
             }
-            case PLUS, DASH, NEGATE, AMPERSAND -> {
+            case PLUS, DASH, NEGATE, AMPERSAND, BITWISE_NOT -> {
                 Operator opAST = acceptOperator();
                 Expr eAST = parseUnaryExpr();
                 finish(pos);

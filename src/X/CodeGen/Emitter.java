@@ -87,20 +87,20 @@ public class Emitter implements Visitor {
             }
         }
         
-        // Visiting all the functions
+        // Visiting all the functions and methods
         for (Module m: allModules) {
             currentModule = m;
 
             for (Function f: m.getFunctions()) {
                 f.visit(this, null);
             }
+
+            for (Method f: m.getMethods()) {
+                currentModule = m;
+                f.visit(this, null);
+            }
         }
 
-        // Visiting all the methods
-        for (Method m: modules.getMethods()) {
-            currentModule = modules.getModule(m.filename);
-            m.visit(this, null);
-        }
         for (Impl I: modules.getImpls()) {
             currentModule = modules.getModule(I.filename);
             I.visit(this, null);
@@ -631,6 +631,18 @@ public class Emitter implements Visitor {
                     default -> {}
                 }
             }
+            case "i8~", "i32~", "i64~", "u8~", "u32~", "u64~" -> {
+                switch (ast.parent) {
+                    case UnaryExpr U -> {
+                        int numOne = U.E.tempIndex;
+                        int newNum = f.getNewIndex();
+                        U.tempIndex = newNum;
+                        String type = ast.spelling.substring(0, ast.spelling.length() - 1);
+                        emitN("\t%" + newNum + " = " +  "xor " + type + " %" + numOne + ", -1");
+                    }
+                    default -> {}
+                }
+            }
             default -> {
                 switch (ast.parent) {
                     case BinaryExpr B -> {
@@ -656,7 +668,27 @@ public class Emitter implements Visitor {
 
             case "f32+" ->  "fadd float";
             case "f64+" ->  "fadd double";
+            
+            case "i8&", "u8&" ->  "and i8";
+            case "i32&", "u32&" ->  "and i32";
+            case "i64&", "u64&" ->  "and i64";
 
+            case "i8|", "u8|" ->  "or i8";
+            case "i32|", "u32|" ->  "or i32";
+            case "i64|", "u64|" ->  "or i64";
+
+            case "i8^", "u8^" ->  "xor i8";
+            case "i32^", "u32^" ->  "xor i32";
+            case "i64^", "u64^" ->  "xor i64";
+
+            case "i8<<", "u8<<" ->  "shl i8";
+            case "i32<<", "u32<<" ->  "shl i32";
+            case "i64<<", "u64<<" ->  "shl i64";
+
+            case "i8>>", "u8>>" ->  "lshr i8";
+            case "i32>>", "u32>>" ->  "lshr i32";
+            case "i64>>", "u64>>" ->  "lshr i64";
+            
             case "i8-", "u8-" ->  "sub i8";
             case "i32-", "u32-" ->  "sub i32";
             case "i64-", "u64-" ->  "sub i64";
@@ -1585,6 +1617,20 @@ public class Emitter implements Visitor {
             emit("bitcast ");
             from.visit(this, o);
             emitN(" %" + numOne + " to ptr");
+            return null;
+        }
+
+        if (from.isSignedInteger() && to.isUnsignedInteger()) {
+            emit("add ");
+            from.visit(this, o);
+            emit(" 0, %" + numOne);
+            return null;
+        }
+
+        if (from.isUnsignedInteger() && to.isSignedInteger()) {
+            emit("add ");
+            from.visit(this, o);
+            emit(" 0, %" + numOne);
             return null;
         }
 

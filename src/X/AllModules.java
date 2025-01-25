@@ -7,15 +7,10 @@ import java.util.HashMap;
 import X.Nodes.Function;
 import X.Nodes.GlobalVar;
 import X.Nodes.Impl;
-import X.Nodes.List;
-import X.Nodes.Method;
 import X.Nodes.Module;
-import X.Nodes.PointerType;
 import X.Nodes.Struct;
-import X.Nodes.StructType;
 import X.Nodes.Trait;
 import X.Nodes.TupleType;
-import X.Nodes.Type;
 
 public class AllModules {
 
@@ -24,8 +19,6 @@ public class AllModules {
     private ArrayList<GlobalVar> libCVariables = new ArrayList<GlobalVar>();
 
     private ArrayList<Module> modules = new ArrayList<Module>();
-
-    private ArrayList<Method> methods = new ArrayList<>();
 
     private ArrayList<Trait> traits = new ArrayList<>();
 
@@ -65,10 +58,6 @@ public class AllModules {
 
     public void addModule(Module mainModule) {
         modules.add(mainModule);
-    }
-
-    public void addMethod(Method m) {
-        methods.add(m);
     }
 
     public void addImplToTrait(Trait T, Impl I) {
@@ -185,36 +174,7 @@ public class AllModules {
         return null;
     }
 
-    // T is the type mapping to
-    public boolean methodExists(String v, Type T, List PL) {
-        for (Method m: methods) {
-            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
-                return true;
-            }
-        }
 
-        if (T.isStruct()) {
-            Struct S = ((StructType) T).S;
-            if (structToTraitMapping.containsKey(S)) {
-                for (Trait t: structToTraitMapping.get(S)) {
-                    if (t.containsMethod(v, PL, false)) {
-                        return true;
-                    }
-                }
-            }
-        } else if (T.isPointerToStruct()) {
-            Struct S = ((StructType) ((PointerType) T).t).S;
-            if (structToTraitMapping.containsKey(S)) {
-                for (Trait t: structToTraitMapping.get(S)) {
-                    if (t.containsMethod(v, PL, true)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
 
     public boolean traitExists(String v) {
         for (Trait t: traits) {
@@ -225,51 +185,6 @@ public class AllModules {
         return false;
     }
 
-    public boolean methodWithNameExists(String v, Type T) {
-        for (Method m: methods) {
-            if (m.I.spelling.equals(v) && m.attachedStruct.T.equals(T)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public Method getMethod(String v, Type T, List PL) {
-        for (Method m: methods) {
-            if (m.I.spelling.equals(v) && m.equalTypeParameters(PL) && m.attachedStruct.T.equals(T)) {
-                return m;
-            }
-        }
-
-        if (T.isStruct()) {
-            Struct S = ((StructType) T).S;
-            if (structToTraitMapping.containsKey(S)) {
-                for (Trait t: structToTraitMapping.get(S)) {
-                    ArrayList<Impl> impls = traitToImplMapping.get(t);
-                    for (Impl impl: impls) {
-                        if (impl.refStruct.I.spelling.equals(S.I.spelling)) {
-                            return impl.getRelatedMethod(v, PL, false);
-                        }
-                    }
-                    
-                }
-            }
-        } else if (T.isPointerToStruct()) {
-            Struct S = ((StructType) ((PointerType) T).t).S;
-            if (structToTraitMapping.containsKey(S)) {
-                for (Trait t: structToTraitMapping.get(S)) {
-                    ArrayList<Impl> impls = traitToImplMapping.get(t);
-                    for (Impl impl: impls) {
-                        if (impl.refStruct.I.spelling.equals(S.I.spelling)) {
-                            return impl.getRelatedMethod(v, PL, true);
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
     public Trait getTrait(String v) {
         for (Trait t: traits) {
             if (t.I.spelling.equals(v)) {
@@ -277,10 +192,6 @@ public class AllModules {
             }
         }
         return null;
-    }
-
-    public ArrayList<Method> getMethods() {
-        return methods;
     }
 
     public ArrayList<Trait> getTraits() {

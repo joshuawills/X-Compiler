@@ -19,7 +19,11 @@ public abstract class Type extends AST {
     }
 
     public boolean isNumeric() {
-        return isSignedInteger() || isFloat() || isUnsignedInteger();
+        return isInteger() || isFloat();
+    }
+
+    public boolean isInteger() {
+        return isSignedInteger() || isUnsignedInteger();
     }
 
     public boolean isSignedInteger() {
